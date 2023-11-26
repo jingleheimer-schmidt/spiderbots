@@ -1,10 +1,11 @@
 
-local math_util = require("util/math")
-local maximum_length = math_util.maximum_length
+local general_util = require("util/general")
+local entity_uuid = general_util.entity_uuid
 local spider_leg_bounding_box = { { -0.01, -0.01 }, { 0.01, 0.01 } }
 local collision_mask = { "water-tile", "colliding-with-tiles-only", "consider-tile-transitions" }
 local path_to_entity_flags = { cache = false, low_priority = true }
 local path_to_position_flags = { cache = true, low_priority = true }
+
 
 ---@param surface LuaSurface
 ---@param spider_id string|integer
@@ -71,7 +72,38 @@ local function request_spider_path_to_position(surface, spider_id, spider, start
     global.path_requested[spider_id] = true
 end
 
+---@param spider LuaEntity
+---@param player LuaPlayer
+---@param surface LuaSurface
+---@param spider_id uuid?
+---@param player_index integer?
+local function request_spider_path_to_inventory(spider, player, surface, spider_id, player_index)
+    local request_parameters = {
+        bounding_box = spider_leg_bounding_box,
+        collision_mask = collision_mask,
+        start = spider.position,
+        goal = player.position,
+        force = spider.force,
+        radius = 1,
+        can_open_gates = true,
+        path_resolution_modifier = 0,
+        pathfind_flags = path_to_position_flags,
+    }
+    local path_request_id = surface.request_path(request_parameters)
+    spider_id = spider_id or entity_uuid(spider)
+    player_index = player_index or player.index
+    global.spider_path_to_inventory_requests[path_request_id] = {
+        spider = spider,
+        spider_id = spider_id,
+        player = player,
+        player_index = player_index,
+        path_request_id = path_request_id,
+    }
+    global.path_requested[spider_id] = true
+end
+
 return {
     request_spider_path_to_entity = request_spider_path_to_entity,
     request_spider_path_to_position = request_spider_path_to_position,
+    request_spider_path_to_inventory = request_spider_path_to_inventory,
 }
