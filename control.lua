@@ -29,13 +29,8 @@ local double_max_task_range = constants.double_max_task_range
 local half_max_task_range = constants.half_max_task_range
 local max_task_range = constants.max_task_range
 
-local function toggle_debug()
-  global.debug = not global.debug
-  for _, player in pairs(game.connected_players) do
-    local messaage = global.debug and { "spiderbot-messages.debug-mode-enabled" } or { "spiderbot-messages.debug-mode-disabled" }
-    player.print(messaage)
-  end
-end
+local command_util = require("util/commands")
+local add_commands = command_util.add_commands
 
 local function add_commands()
   commands.add_command("spiderbots-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
