@@ -33,8 +33,9 @@ end
 ---@param entity_position MapPosition
 ---@param degrees number
 ---@param minimum_distance number
+---@param maximum_distance number
 ---@return MapPosition
-local function rotate_around_target(target_position, entity_position, degrees, minimum_distance)
+local function rotate_around_target(target_position, entity_position, degrees, minimum_distance, maximum_distance)
     -- Calculate the vector from the target_position to the entity_position
     local dx = entity_position.x - target_position.x
     local dy = entity_position.y - target_position.y
@@ -54,6 +55,11 @@ local function rotate_around_target(target_position, entity_position, degrees, m
     -- Ensure the new position is at least minimum_distance away from the target
     if distance < minimum_distance then
         distance = minimum_distance
+    end
+
+    -- Ensure the new position is at most maximum_distance away from the target
+    if distance > maximum_distance then
+        distance = maximum_distance
     end
 
     -- Calculate the new position

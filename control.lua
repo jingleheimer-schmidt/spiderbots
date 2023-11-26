@@ -459,7 +459,8 @@ local function on_spider_command_completed(event)
         end
 
         local retry_task = false
-        local length = 5
+        local min_distance = 5
+        local max_distance = 10
 
         if task_type == "deconstruct" then
           local entity_position = entity.position
@@ -539,8 +540,16 @@ local function on_spider_command_completed(event)
                   debug_print("task abandoned: player too far from ghost", player, spider, color.red)
                 else
                   for i = 1, 90, 10 do
-                    local rotatated_position = rotate_around_target(ghost_position, spider_position, i, length)
-                    spider.add_autopilot_destination(rotatated_position)
+                    local rotatated_position = rotate_around_target(ghost_position, spider_position, i, min_distance, max_distance)
+                    local non_colliding_position = spider.surface.find_non_colliding_position("spiderbot-leg-1", rotatated_position, 2, 0.5)
+                    if non_colliding_position then
+                      spider.add_autopilot_destination(non_colliding_position)
+                    else
+                      abandon_task(spider, player, spider_id, entity_id, player_entity)
+                      debug_print("task abandoned: no position to rotate to", player, spider, color.red)
+                      retry_task = false
+                      break
+                    end
                   end
                   retry_task = true
                   debug_print("revive task failed: retrying", player, spider, color.red)
@@ -596,7 +605,7 @@ local function on_spider_command_completed(event)
                   local upgrade_position = entity.position
                   local spider_position = spider.position
                   for i = 1, 90, 10 do
-                    local rotatated_position = rotate_around_target(upgrade_position, spider_position, i, length)
+                    local rotatated_position = rotate_around_target(upgrade_position, spider_position, i, min_distance, max_distance)
                     spider.add_autopilot_destination(rotatated_position)
                   end
                   retry_task = true
