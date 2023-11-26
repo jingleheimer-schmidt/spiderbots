@@ -788,56 +788,6 @@ end
 
 script.on_event(defines.events.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
 
----@param type string
----@param entity_id uuid
----@param entity LuaEntity
----@param spider LuaEntity
----@param player LuaPlayer
----@param surface LuaSurface
-local function new_entity_task(type, entity_id, entity, spider, player, surface)
-  local spider_id = entity_uuid(spider)
-  spider.color = color.white
-  request_spider_path_to_entity(surface, spider_id, spider, entity_id, entity, player)
-  local task_data = {
-    entity = entity,
-    entity_id = entity_id,
-    spider = spider,
-    spider_id = spider_id,
-    task_type = type,
-    player = player,
-    status = "path_requested",
-    render_ids = {},
-  }
-  global.tasks.by_entity[entity_id] = task_data
-  global.tasks.by_spider[spider_id] = task_data
-  global.tasks.nudges[spider_id] = nil
-end
-
--- ---@param type string
--- ---@param tile_id uuid
--- ---@param tile LuaTile
--- ---@param spider LuaEntity
--- ---@param player LuaPlayer
--- ---@param surface LuaSurface
--- local function new_tile_task(type, tile_id, tile, spider, player, surface)
---   local spider_id = entity_uuid(spider)
---   spider.color = color.white
---   request_spider_path_to_tile(surface, spider_id, spider, tile_id, tile, player)
---   local task_data = {
---     tile = tile,
---     tile_id = tile_id,
---     spider = spider,
---     spider_id = spider_id,
---     task_type = type,
---     player = player,
---     status = "path_requested",
---     render_ids = {},
---   }
---   global.tasks.by_tile[tile_id] = task_data
---   global.tasks.by_spider[spider_id] = task_data
---   global.tasks.nudges[spider_id] = nil
--- end
-
 ---@param event EventData.on_tick
 local function on_tick(event)
   for _, player in pairs(game.connected_players) do
