@@ -1,16 +1,16 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.0
-Date: 20NOV2023
+Date: 26NOV2023
   Changes:
     - Initial release on the mod portal
   Features:
-    - Added "Little spider", a small spidertron that can be built in the early game with basic construction abilities
-    - Little spiders follow the player who built them, and re-follow players when they and return to a surface
-    - Little spiders process work orders near the player. Deconstruction tasks are prioritized, then construction tasks, then upgrade tasks
-    - Little spiders cannot mine or place tiles or landfill
-    - Little spiders cannot repair entities using repair packs
+    - Added "Spiderbot", a small spidertron that can be built in the early game with basic construction abilities
+    - Spiderbots follow the player who built them, and re-follow players when they and return to a surface
+    - Spiderbots process work orders near the player. Deconstruction tasks are prioritized, then construction tasks, then upgrade tasks
+    - Spiderbots cannot mine or place tiles or landfill
+    - Spiderbots cannot repair entities using repair packs
     - Work order processing can be toggled with a shortcut and hotkey (default: Alt + S)
-    - Little spiders try to find new paths if they get stuck on the way to a work order or player
+    - Spiderbots try to find new paths if they get stuck on the way to a work order or player
     - Each spider is given a Backer Name when built
-    - Little spiders change color based on their task type; red for deconstruction, blue for construction, green for upgrade, white for pathfinding, and their player's color when idle
-    - Added debug mode to draw work order paths; /little-spider-debug
+    - Spiderbots change color based on their task type; red for deconstruction, blue for construction, green for upgrade, white for pathfinding, and their player's color when idle
+    - Added debug mode to draw work order paths; /spiderbot-debug

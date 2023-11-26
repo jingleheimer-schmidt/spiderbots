@@ -1,5 +1,5 @@
 
---[[ factorio mod little spiders control script created by asher_sky --]]
+--[[ factorio mod spiderbots control script created by asher_sky --]]
 
 local general_util = require("util/general")
 local entity_uuid = general_util.entity_uuid
@@ -41,7 +41,7 @@ local function toggle_debug()
 end
 
 local function add_commands()
-  commands.add_command("little-spider-debug", "- toggles debug mode for the little spiders, showing task targets and path request renderings", toggle_debug)
+  commands.add_command("spiderbot-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
 end
 
 local function on_init()
@@ -55,7 +55,7 @@ local function on_init()
   }
   global.spider_path_requests = {} --[[@type table<integer, path_request_data>]]
   global.spider_path_to_position_requests = {} --[[@type table<integer, position_path_request_data>]]
-  global.spider_leg_collision_mask = game.entity_prototypes["little-spidertron-leg-1"].collision_mask
+  global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
   global.previous_controller = {} --[[@type table<integer, defines.controllers>]]
   global.previous_player_entity = {} --[[@type table<integer, uuid>]]
   global.previous_player_color = {} --[[@type table<integer, Color>]]
@@ -75,7 +75,7 @@ local function on_configuration_changed(event)
   global.tasks.nudges = global.tasks.nudges or {}
   global.spider_path_requests = global.spider_path_requests or {}
   global.spider_path_to_position_requests = global.spider_path_to_position_requests or {}
-  global.spider_leg_collision_mask = game.entity_prototypes["little-spidertron-leg-1"].collision_mask
+  global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
   global.previous_controller = global.previous_controller or {}
   global.previous_player_entity = global.previous_player_entity or {}
   global.previous_player_color = global.previous_player_color or {}
@@ -140,7 +140,7 @@ local function on_spider_created(event)
   end
 end
 
-local filter = { { filter = "name", name = "little-spidertron" } }
+local filter = { { filter = "name", name = "spiderbot" } }
 script.on_event(defines.events.on_built_entity, on_spider_created, filter)
 
 ---@param event EventData.on_entity_destroyed
@@ -379,7 +379,7 @@ local function nudge_spidertron(spidertron, spider_id, player)
   --   limit = 1,
   -- })
   -- new_position = new_position and new_position[1] and new_position[1].position --[[@as MapPosition]] or nil
-  local new_position = surface.find_non_colliding_position("little-spidertron-leg-1", nearby_position, 10, 0.5)
+  local new_position = surface.find_non_colliding_position("spiderbot-leg-1", nearby_position, 10, 0.5)
   new_position = new_position or nearby_position
   if destination_count >= 1 then
     if not global.path_requested[spider_id] then
@@ -407,7 +407,7 @@ end
 ---@param event EventData.on_spider_command_completed
 local function on_spider_command_completed(event)
   local spider = event.vehicle
-  if not (spider.name == "little-spidertron") then return end
+  if not (spider.name == "spiderbot") then return end
   local destinations = spider.autopilot_destinations
   local destination_count = #destinations
   local spider_id = entity_uuid(spider)
@@ -440,7 +440,7 @@ local function on_spider_command_completed(event)
 
         if not global.spiders_enabled[player.index] then
           abandon_task(spider, player, spider_id, entity_id)
-          debug_print("task abandoned: player disabled little spiders", player, spider, color.red)
+          debug_print("task abandoned: player disabled sopiderbots", player, spider, color.red)
           return
         end
 
@@ -1344,13 +1344,13 @@ script.on_nth_tick(15, on_tick)
 
 --- turn selection highlighting on or off
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
-local function toggle_little_spiders(event)
+local function toggle_spiderbots(event)
 	local name = event.prototype_name or event.input_name
-	if name ~= "toggle-little-spiders" then return end
+	if name ~= "toggle-spiderbots" then return end
 	local player_index = event.player_index
 	global.spiders_enabled[player_index] = not global.spiders_enabled[player_index]
-	game.get_player(player_index).set_shortcut_toggled("toggle-little-spiders", global.spiders_enabled[player_index])
+	game.get_player(player_index).set_shortcut_toggled("toggle-spiderbots", global.spiders_enabled[player_index])
 end
 
-script.on_event("toggle-little-spiders", toggle_little_spiders)
-script.on_event(defines.events.on_lua_shortcut, toggle_little_spiders)
+script.on_event("toggle-spiderbots", toggle_spiderbots)
+script.on_event(defines.events.on_lua_shortcut, toggle_spiderbots)
