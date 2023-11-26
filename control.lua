@@ -4,6 +4,9 @@
 local general_util = require("util/general")
 local entity_uuid = general_util.entity_uuid
 local tile_uuid = general_util.tile_uuid
+local get_player_entity = general_util.get_player_entity
+local random_backer_name = general_util.random_backer_name
+local is_backer_name = general_util.is_backer_name
 
 local color_util = require("util/colors")
 local color = color_util.color
@@ -79,31 +82,6 @@ end
 script.on_init(on_init)
 script.on_load(add_commands)
 script.on_configuration_changed(on_configuration_changed)
-
----@param player LuaPlayer
----@return LuaEntity?
-local function get_player_entity(player)
-  return player.character or player.vehicle or nil
-end
-
----@return string
-local function random_backer_name()
-  local backer_names = game.backer_names
-  local index = math.random(#backer_names)
-  return backer_names[index]
-end
-
----@param name string
----@return boolean
-local function is_backer_name(name)
-  if not global.backer_name_lookup then
-    global.backer_name_lookup = {}
-    for _, backer_name in pairs(game.backer_names) do
-      global.backer_name_lookup[backer_name] = true
-    end
-  end
-  return global.backer_name_lookup[name]
-end
 
 ---@param event EventData.on_built_entity
 local function on_spider_created(event)
