@@ -4,7 +4,6 @@
 local general_util = require("util/general")
 local entity_uuid = general_util.entity_uuid
 local tile_uuid = general_util.tile_uuid
-local new_task_id = general_util.new_task_id
 
 local color_util = require("util/colors")
 local color = color_util.color
@@ -17,8 +16,6 @@ local debug_print = rendering_util.debug_print
 local destroy_associated_renderings = rendering_util.destroy_associated_renderings
 
 local math_util = require("util/math")
-local maximum_length = math_util.maximum_length
-local minimum_length = math_util.minimum_length
 local rotate_around_target = math_util.rotate_around_target
 local random_position_on_circumference = math_util.random_position_on_circumference
 local distance = math_util.distance
@@ -315,9 +312,6 @@ local function relink_following_spiders(player)
           local entity = task_data.entity
           if not (entity and entity.valid) then
             abandon_task(spider, player, spider_id, entity_id, player_entity)
-          --   global.tasks.by_entity[entity_id] = nil
-          --   global.tasks.by_spider[spider_id] = nil
-          --   -- table.insert(global.available_spiders[player_index][spider.surface_index], spider)
           end
         end
         local destinations = spider.autopilot_destinations
@@ -371,14 +365,6 @@ local function nudge_spidertron(spidertron, spider_id, player)
   local current_position = spidertron.position
   local surface = spidertron.surface
   local nearby_position = random_position_on_circumference(current_position, 20)
-  -- local new_position = surface.find_tiles_filtered({
-  --   position = nearby_position,
-  --   radius = 10,
-  --   collision_mask = { "water-tile" },
-  --   invert = true,
-  --   limit = 1,
-  -- })
-  -- new_position = new_position and new_position[1] and new_position[1].position --[[@as MapPosition]] or nil
   local new_position = surface.find_non_colliding_position("spiderbot-leg-1", nearby_position, 10, 0.5)
   new_position = new_position or nearby_position
   if destination_count >= 1 then
@@ -578,19 +564,13 @@ local function on_spider_command_completed(event)
               local item_name = item_stack.name
               local item_count = item_stack.count or 1
               if inventory.get_item_count(item_name) >= item_count then
-                -- local current_direction = entity.direction
                 local upgrade_direction = entity.get_upgrade_direction()
-                -- local current_name = entity.name
                 local upgrade_name = upgrade_target.name
                 local type = entity.type
                 local is_ug_belt = (type == "underground-belt")
                 local is_loader = (type == "loader" or type == "loader-1x1")
                 local underground_type = is_ug_belt and entity.belt_to_ground_type
                 local loader_type = is_loader and entity.loader_type
-                -- local opposite_types = { ["input"] = "output", ["output"] = "input" }
-                -- if loader_type and (current_direction == upgrade_direction) and (current_name == upgrade_name) then
-                --   loader_type = opposite_types[loader_type] or loader_type
-                -- end
                 local create_entity_type = underground_type or loader_type or nil
                 ---@diagnostic disable:missing-fields
                 local upgraded_entity = entity.surface.create_entity {
