@@ -101,3 +101,24 @@ local toggle_spiderbots_hotkey = {
     action = "lua",
 }
 data:extend({toggle_spiderbots_hotkey})
+
+local toggle_backpack_mode = {
+    type = "shortcut",
+    name = "toggle-backpack-mode",
+    action = "lua",
+    associated_control_input = "toggle-backpack-mode",
+    -- icon = {filename = "__spiderbots__/assets/targeted.png", size = 1024},
+    icon = {filename = "__spiderbots__/assets/icons8-spider-67.png", size = 67},
+    -- disabled_icon = {filename = "__spiderbots__/assets/spider-face-trans.png", size = 1024},
+    toggleable = true,
+}
+data:extend({toggle_backpack_mode})
+
+local toggle_backpack_mode_hotkey = {
+    type = "custom-input",
+    name = "toggle-backpack-mode",
+    key_sequence = "SHIFT + ALT + S",
+    -- alternative_key_sequence = "COMMAND + S",
+    action = "lua",
+}
+data:extend({toggle_backpack_mode_hotkey})
