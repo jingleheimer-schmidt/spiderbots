@@ -41,7 +41,7 @@ local function toggle_debug()
 end
 
 local function add_commands()
-  commands.add_command("spiderbot-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
+  commands.add_command("spiderbots-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
 end
 
 local function on_init()
