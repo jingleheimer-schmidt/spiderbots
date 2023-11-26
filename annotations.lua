@@ -25,3 +25,16 @@
 ---@field start_position MapPosition
 ---@field final_position MapPosition
 ---@field player LuaPlayer
+
+---@class return_to_inventory_task_data
+---@field spider LuaEntity
+---@field player LuaPlayer
+---@field spider_id uuid?
+---@field player_index integer?
+
+---@class inventory_path_request_data
+---@field spider LuaEntity
+---@field spider_id uuid
+---@field player LuaPlayer
+---@field player_index integer
+---@field path_request_id integer
