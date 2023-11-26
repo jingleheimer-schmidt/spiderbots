@@ -17,6 +17,7 @@ local draw_dotted_line = rendering_util.draw_dotted_line
 local draw_circle = rendering_util.draw_circle
 local debug_print = rendering_util.debug_print
 local destroy_associated_renderings = rendering_util.destroy_associated_renderings
+local clear_visualization_renderings = rendering_util.clear_visualization_renderings
 
 local math_util = require("util/math")
 local rotate_around_target = math_util.rotate_around_target
@@ -725,17 +726,6 @@ local function on_script_path_request_finished(event)
 end
 
 script.on_event(defines.events.on_script_path_request_finished, on_script_path_request_finished)
-
----@param player_index integer
-local function clear_visualization_renderings(player_index)
-  local render_ids = global.visualization_render_ids[player_index]
-  if render_ids then
-    for _, render_id in pairs(render_ids) do
-      rendering.destroy(render_id)
-    end
-    global.visualization_render_ids[player_index] = {}
-  end
-end
 
 ---@param event EventData.on_player_cursor_stack_changed
 local function on_player_cursor_stack_changed(event)

@@ -97,10 +97,22 @@ local function destroy_associated_renderings(spider_id)
     end
 end
 
+---@param player_index integer
+local function clear_visualization_renderings(player_index)
+    local render_ids = global.visualization_render_ids[player_index]
+    if render_ids then
+        for _, render_id in pairs(render_ids) do
+            rendering.destroy(render_id)
+        end
+        global.visualization_render_ids[player_index] = {}
+    end
+end
+
 return {
     draw_line = draw_line,
     draw_dotted_line = draw_dotted_line,
     draw_circle = draw_circle,
     debug_print = debug_print,
     destroy_associated_renderings = destroy_associated_renderings,
+    clear_visualization_renderings = clear_visualization_renderings,
 }
