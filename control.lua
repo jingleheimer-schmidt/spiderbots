@@ -674,14 +674,15 @@ local function on_spider_command_completed(event)
       -- if the player isn't valid anymore, clear any tasks associated with it
       if not (player and player.valid) then
         local entity_id = active_task_data and active_task_data.entity_id
-        -- if entity_id then
-        --   global.tasks.by_entity[entity_id] = nil
-        -- end
-        -- global.tasks.nudges[spider_id] = nil
-        -- global.tasks.by_spider[spider_id] = nil
         if entity_id then
-          abandon_task(spider, player, spider_id, entity_id)
+          global.tasks.by_entity[entity_id] = nil
         end
+        global.tasks.nudges[spider_id] = nil
+        global.tasks.by_spider[spider_id] = nil
+        destroy_associated_renderings(spider_id)
+        -- if entity_id then
+        --   abandon_task(spider, player, spider_id, entity_id)
+        -- end
         return
       end
 
