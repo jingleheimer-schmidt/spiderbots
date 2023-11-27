@@ -11,12 +11,33 @@ local function toggle_debug()
 	end
 end
 
----@param event EventData.on_console_command
-local function toggle_backpack(event)
+---@param event EventData.on_console_command | EventData.on_lua_shortcut | EventData.CustomInputEvent
+local function toggle_spiderbots(event)
+	local name = event.prototype_name or event.input_name or event.command
+	if name ~= "toggle-spiderbots" then return end
 	local player_index = event.player_index
 	if not player_index then return end
 	local player = game.get_player(player_index)
 	if not player then return end
+
+	global.spiders_enabled[player_index] = not global.spiders_enabled[player_index]
+	player.set_shortcut_toggled("toggle-spiderbots", global.spiders_enabled[player_index])
+end
+
+---@param event EventData.on_console_command | EventData.on_lua_shortcut | EventData.CustomInputEvent
+local function toggle_backpack_mode(event)
+	local name = event.prototype_name or event.input_name or event.command
+	if name ~= "toggle-backpack-mode" then return end
+	local player_index = event.player_index
+	if not player_index then return end
+	local player = game.get_player(player_index)
+	if not player then return end
+
+	global.backpack_mode_enabled[player_index] = not global.backpack_mode_enabled[player_index]
+	player.set_shortcut_toggled("toggle-backpack-mode", global.backpack_mode_enabled[player_index])
+	local message = global.backpack_mode_enabled[player_index] and { "spiderbot-messages.backpack-mode-enabled" } or { "spiderbot-messages.backpack-mode-disabled" }
+	player.print(message)
+	if not global.backpack_mode_enabled[player_index] then return end
 
 	-- abandon tasks and return to the player's inventory
 	global.spiders[player_index] = global.spiders[player_index] or {}
@@ -43,13 +64,25 @@ local function toggle_backpack(event)
 	end
 end
 
+---@param event EventData.on_lua_shortcut
+local function on_lua_shortcut(event)
+	if event.prototype_name == "toggle-spiderbots" then
+		toggle_spiderbots(event)
+	elseif event.prototype_name == "toggle-backpack-mode" then
+		toggle_backpack_mode(event)
+	end
+end
+
 local function add_commands()
 	commands.add_command("debug-spiderbots",
 		"- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
-	commands.add_command("spiderbots-backpack",
-		"- toggles backpack mode for the spiderbots, actively recalls all spiderbots to the player's inventory", toggle_backpack)
+	commands.add_command("spiderbots-backpack-mode",
+		"- toggles backpack mode for the spiderbots, actively recalls all spiderbots to the player's inventory", toggle_backpack_mode)
 end
 
 return {
 	add_commands = add_commands,
+	toggle_spiderbots = toggle_spiderbots,
+	toggle_backpack_mode = toggle_backpack_mode,
+	on_lua_shortcut = on_lua_shortcut,
 }

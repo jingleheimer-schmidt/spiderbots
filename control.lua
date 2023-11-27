@@ -35,10 +35,15 @@ local max_task_range = constants.max_task_range
 
 local command_util = require("util/commands")
 local add_commands = command_util.add_commands
+local toggle_backpack_mode = command_util.toggle_backpack_mode
+local toggle_spiderbots = command_util.toggle_spiderbots
+local on_lua_shortcut = command_util.on_lua_shortcut
 
 local tasks_util = require("util/tasks")
 local abandon_task = tasks_util.abandon_task
 local complete_task = tasks_util.complete_task
+local new_entity_task = tasks_util.new_entity_task
+local return_to_inventory = tasks_util.return_to_inventory
 
 local function on_init()
   global.spiders = {} --[[@type table<integer, table<uuid, LuaEntity>>]]
@@ -48,15 +53,18 @@ local function on_init()
     by_spider = {}, --[[@type table<uuid, entity_task_data>]]
     by_tile = {}, --[[@type table<uuid, entity_task_data>]]
     nudges = {}, --[[@type table<uuid, entity_task_data>]]
+    return_to_inventory = {}, --[[@type table<uuid, return_to_inventory_task_data>]]
   }
   global.spider_path_requests = {} --[[@type table<integer, path_request_data>]]
   global.spider_path_to_position_requests = {} --[[@type table<integer, position_path_request_data>]]
+  global.spider_path_to_inventory_requests = {} --[[@type table<integer, inventory_path_request_data>]]
   global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
   global.previous_controller = {} --[[@type table<integer, defines.controllers>]]
   global.previous_player_entity = {} --[[@type table<integer, uuid>]]
   global.previous_player_color = {} --[[@type table<integer, Color>]]
   global.path_requested = {} --[[@type table<uuid, boolean>]]
   global.spiders_enabled = {} --[[@type table<integer, boolean>]]
+  global.backpack_mode_enabled = {} --[[@type table<integer, boolean>]]
   global.visualization_render_ids = {} --[[@type table<integer, table<integer, integer>>]]
   add_commands()
 end
@@ -69,14 +77,17 @@ local function on_configuration_changed(event)
   global.tasks.by_spider = global.tasks.by_spider or {}
   global.tasks.by_tile = global.tasks.by_tile or {}
   global.tasks.nudges = global.tasks.nudges or {}
+  global.tasks.return_to_inventory = global.tasks.return_to_inventory or {}
   global.spider_path_requests = global.spider_path_requests or {}
   global.spider_path_to_position_requests = global.spider_path_to_position_requests or {}
+  global.spider_path_to_inventory_requests = global.spider_path_to_inventory_requests or {}
   global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
   global.previous_controller = global.previous_controller or {}
   global.previous_player_entity = global.previous_player_entity or {}
   global.previous_player_color = global.previous_player_color or {}
   global.path_requested = global.path_requested or {}
   global.spiders_enabled = global.spiders_enabled or {}
+  global.backpack_mode_enabled = global.backpack_mode_enabled or {}
   global.visualization_render_ids = global.visualization_render_ids or {}
 end
 
@@ -239,7 +250,9 @@ local function nudge_spidertron(spidertron, spider_id, player)
       else
         table.insert(autopilot_destinations, 1, new_position)
       end
+      local follow_target = spidertron.follow_target
       spidertron.autopilot_destination = nil
+      spidertron.follow_target = follow_target
       -- spidertron.follow_target = get_player_entity(player)
       for _, destination in pairs(autopilot_destinations) do
         spidertron.add_autopilot_destination(destination)
@@ -262,9 +275,11 @@ local function on_spider_command_completed(event)
   local destination_count = #destinations
   local spider_id = entity_uuid(spider)
   if destination_count == 0 then
-    local task_data = global.tasks.nudges[spider_id]
-    if task_data then
-      local player = task_data.player
+    local nudge_task_data = global.tasks.nudges[spider_id]
+    local active_task_data = global.tasks.by_spider[spider_id]
+    local inventory_task_data = global.tasks.return_to_inventory[spider_id]
+    if nudge_task_data then
+      local player = nudge_task_data.player
       if player and player.valid and player.connected then
         if player.surface_index == spider.surface_index then
           local player_entity = get_player_entity(player)
@@ -280,144 +295,198 @@ local function on_spider_command_completed(event)
         global.tasks.nudges[spider_id] = nil
         debug_print("nudge abandoned: no valid player", player, spider, color.red)
       end
-    else
-      task_data = global.tasks.by_spider[spider_id]
-      if task_data then
-        local entity = task_data.entity
-        local entity_id = task_data.entity_id
-        local player = task_data.player
-        local task_type = task_data.task_type
+    elseif active_task_data then
+      local entity = active_task_data.entity
+      local entity_id = active_task_data.entity_id
+      local player = active_task_data.player
+      local task_type = active_task_data.task_type
 
-        if not global.spiders_enabled[player.index] then
-          abandon_task(spider, player, spider_id, entity_id)
-          debug_print("task abandoned: player disabled sopiderbots", player, spider, color.red)
-          return
-        end
+      if not global.spiders_enabled[player.index] then
+        abandon_task(spider, player, spider_id, entity_id)
+        debug_print("task abandoned: player disabled sopiderbots", player, spider, color.red)
+        return
+      end
 
-        if not player.valid then
-          abandon_task(spider, player, spider_id, entity_id)
-          debug_print("task abandoned: no valid player", player, spider, color.red)
-          return
-        end
+      if not player.valid then
+        abandon_task(spider, player, spider_id, entity_id)
+        debug_print("task abandoned: no valid player", player, spider, color.red)
+        return
+      end
 
-        local player_entity = get_player_entity(player)
+      local player_entity = get_player_entity(player)
 
-        if not (entity and entity.valid) then
-          abandon_task(spider, player, spider_id, entity_id, player_entity)
-          debug_print("task abandoned: no valid entity", player, spider, color.red)
-          return
-        end
+      if not (entity and entity.valid) then
+        abandon_task(spider, player, spider_id, entity_id, player_entity)
+        debug_print("task abandoned: no valid entity", player, spider, color.red)
+        return
+      end
 
-        if not (player_entity and player_entity.valid) then
-          abandon_task(spider, player, spider_id, entity_id, player_entity)
-          debug_print("task abandoned: no valid player entity", player, spider, color.red)
-          return
-        end
+      if not (player_entity and player_entity.valid) then
+        abandon_task(spider, player, spider_id, entity_id, player_entity)
+        debug_print("task abandoned: no valid player entity", player, spider, color.red)
+        return
+      end
 
-        local inventory = player_entity.get_inventory(defines.inventory.character_main)
+      local inventory = player_entity.get_inventory(defines.inventory.character_main)
 
-        if not (inventory and inventory.valid) then
-          abandon_task(spider, player, spider_id, entity_id, player_entity)
-          debug_print("task abandoned: no valid inventory", player, spider, color.red)
-          return
-        end
+      if not (inventory and inventory.valid) then
+        abandon_task(spider, player, spider_id, entity_id, player_entity)
+        debug_print("task abandoned: no valid inventory", player, spider, color.red)
+        return
+      end
 
-        local retry_task = false
-        local min_distance = 5
-        local max_distance = 10
+      local retry_task = false
+      local min_distance = 5
+      local max_distance = 10
 
-        if task_type == "deconstruct" then
-          local entity_position = entity.position
-          if entity.to_be_deconstructed() then
-            local prototype = entity.prototype
-            local products = prototype and prototype.mineable_properties.products
-            local result_when_mined = (entity.type == "item-entity" and entity.stack) or (products and products[1] and products[1].name) or nil
-            local space_in_stack = result_when_mined and inventory.can_insert(result_when_mined)
-            if result_when_mined and space_in_stack then
-              while entity.valid do
-                local count = 0
-                if inventory.can_insert(result_when_mined) then
-                  local result = entity.mine { inventory = inventory, force = false, ignore_minable = false, raise_destroyed = true }
-                  count = count + 1
-                  if not result then break end
-                else break
-                end
-                if count > 4 then break end
+      if task_type == "deconstruct" then
+        local entity_position = entity.position
+        if entity.to_be_deconstructed() then
+          local prototype = entity.prototype
+          local products = prototype and prototype.mineable_properties.products
+          local result_when_mined = (entity.type == "item-entity" and entity.stack) or (products and products[1] and products[1].name) or nil
+          local space_in_stack = result_when_mined and inventory.can_insert(result_when_mined)
+          if result_when_mined and space_in_stack then
+            while entity.valid do
+              local count = 0
+              if inventory.can_insert(result_when_mined) then
+                local result = entity.mine { inventory = inventory, force = false, ignore_minable = false, raise_destroyed = true }
+                count = count + 1
+                if not result then break end
+              else break
               end
+              if count > 4 then break end
+            end
+            draw_line(spider.surface, player_entity, spider, player.color, 20)
+            global.tasks.by_entity[entity_id].status = "completed"
+            global.tasks.by_spider[spider_id].status = "completed"
+            complete_task(spider_id, entity_id, spider, player, player_entity)
+            debug_print("deconstruct task completed", player, spider, color.green)
+          elseif (entity.type == "cliff") then
+            if inventory and inventory.get_item_count("cliff-explosives") > 0 then
+              ---@diagnostic disable:missing-fields
+              spider.surface.create_entity {
+                name = "cliff-explosives",
+                position = spider.position,
+                target = entity_position,
+                force = player.force,
+                raise_built = true,
+                speed = 0.125,
+              }
+              ---@diagnostic enable:missing-fields
+              inventory.remove({ name = "cliff-explosives", count = 1 })
               draw_line(spider.surface, player_entity, spider, player.color, 20)
               global.tasks.by_entity[entity_id].status = "completed"
               global.tasks.by_spider[spider_id].status = "completed"
               complete_task(spider_id, entity_id, spider, player, player_entity)
               debug_print("deconstruct task completed", player, spider, color.green)
-            elseif (entity.type == "cliff") then
-              if inventory and inventory.get_item_count("cliff-explosives") > 0 then
-                ---@diagnostic disable:missing-fields
-                spider.surface.create_entity {
-                  name = "cliff-explosives",
-                  position = spider.position,
-                  target = entity_position,
-                  force = player.force,
-                  raise_built = true,
-                  speed = 0.125,
-                }
-                ---@diagnostic enable:missing-fields
-                inventory.remove({ name = "cliff-explosives", count = 1 })
-                draw_line(spider.surface, player_entity, spider, player.color, 20)
-                global.tasks.by_entity[entity_id].status = "completed"
-                global.tasks.by_spider[spider_id].status = "completed"
-                complete_task(spider_id, entity_id, spider, player, player_entity)
-                debug_print("deconstruct task completed", player, spider, color.green)
-              else
-                abandon_task(spider, player, spider_id, entity_id, player_entity)
-                debug_print("task abandoned: no cliff explosives", player, spider, color.red)
-              end
             else
               abandon_task(spider, player, spider_id, entity_id, player_entity)
-              debug_print("task abandoned: no space in inventory", player, spider, color.red)
+              debug_print("task abandoned: no cliff explosives", player, spider, color.red)
             end
           else
             abandon_task(spider, player, spider_id, entity_id, player_entity)
-            debug_print("task abandoned: entity no longer needs to be deconstructed", player, spider, color.red)
+            debug_print("task abandoned: no space in inventory", player, spider, color.red)
           end
+        else
+          abandon_task(spider, player, spider_id, entity_id, player_entity)
+          debug_print("task abandoned: entity no longer needs to be deconstructed", player, spider, color.red)
+        end
 
-        elseif task_type == "revive" then
-          local items = entity.ghost_prototype.items_to_place_this
+      elseif task_type == "revive" then
+        local items = entity.ghost_prototype.items_to_place_this
+        local item_stack = items and items[1]
+        if item_stack then
+          local item_name = item_stack.name
+          local item_count = item_stack.count or 1
+          if inventory.get_item_count(item_name) >= item_count then
+            local dictionary, revived_entity = entity.revive({ return_item_request_proxy = false, raise_revive = true})
+            if revived_entity then
+              inventory.remove(item_stack)
+              draw_line(spider.surface, player_entity, spider, player.color, 20)
+              global.tasks.by_entity[entity_id].status = "completed"
+              global.tasks.by_spider[spider_id].status = "completed"
+              complete_task(spider_id, entity_id, spider, player, player_entity)
+              debug_print("revive task completed", player, spider, color.green)
+            else
+              local ghost_position = entity.position
+              local spider_position = spider.position
+              local distance_to_player = distance(ghost_position, player.position)
+              if distance_to_player > double_max_task_range then
+                abandon_task(spider, player, spider_id, entity_id, player_entity)
+                debug_print("task abandoned: player too far from ghost", player, spider, color.red)
+              else
+                for i = 1, 90, 10 do
+                  local rotatated_position = rotate_around_target(ghost_position, spider_position, i, min_distance, max_distance)
+                  local non_colliding_position = spider.surface.find_non_colliding_position("spiderbot-leg-1", rotatated_position, 2, 0.5)
+                  if non_colliding_position then
+                    spider.add_autopilot_destination(non_colliding_position)
+                  else
+                    abandon_task(spider, player, spider_id, entity_id, player_entity)
+                    debug_print("task abandoned: no position to rotate to", player, spider, color.red)
+                    retry_task = false
+                    break
+                  end
+                end
+                retry_task = true
+                debug_print("revive task failed: retrying", player, spider, color.red)
+              end
+            end
+          else
+            abandon_task(spider, player, spider_id, entity_id, player_entity)
+            debug_print("task abandoned: not enough items in inventory", player, spider, color.red)
+          end
+        else
+          abandon_task(spider, player, spider_id, entity_id, player_entity)
+          debug_print("task abandoned: no items_to_place_this", player, spider, color.red)
+        end
+
+      elseif task_type == "upgrade" then
+        if entity.to_be_upgraded() then
+          local upgrade_target = entity.get_upgrade_target()
+          local items = upgrade_target and upgrade_target.items_to_place_this
           local item_stack = items and items[1]
-          if item_stack then
+          if upgrade_target and item_stack then
             local item_name = item_stack.name
             local item_count = item_stack.count or 1
             if inventory.get_item_count(item_name) >= item_count then
-              local dictionary, revived_entity = entity.revive({ return_item_request_proxy = false, raise_revive = true})
-              if revived_entity then
+              local upgrade_direction = entity.get_upgrade_direction()
+              local upgrade_name = upgrade_target.name
+              local type = entity.type
+              local is_ug_belt = (type == "underground-belt")
+              local is_loader = (type == "loader" or type == "loader-1x1")
+              local underground_type = is_ug_belt and entity.belt_to_ground_type
+              local loader_type = is_loader and entity.loader_type
+              local create_entity_type = underground_type or loader_type or nil
+              ---@diagnostic disable:missing-fields
+              local upgraded_entity = entity.surface.create_entity {
+                name = upgrade_name,
+                position = entity.position,
+                direction = upgrade_direction,
+                player = player,
+                fast_replace = true,
+                force = entity.force,
+                spill = true,
+                type = create_entity_type,
+                raise_built = true,
+              }
+              ---@diagnostic enable:missing-fields
+              if upgraded_entity then
                 inventory.remove(item_stack)
                 draw_line(spider.surface, player_entity, spider, player.color, 20)
                 global.tasks.by_entity[entity_id].status = "completed"
                 global.tasks.by_spider[spider_id].status = "completed"
                 complete_task(spider_id, entity_id, spider, player, player_entity)
-                debug_print("revive task completed", player, spider, color.green)
+                debug_print("upgrade task completed", player, spider, color.green)
               else
-                local ghost_position = entity.position
+                local upgrade_position = entity.position
                 local spider_position = spider.position
-                local distance_to_player = distance(ghost_position, player.position)
-                if distance_to_player > double_max_task_range then
-                  abandon_task(spider, player, spider_id, entity_id, player_entity)
-                  debug_print("task abandoned: player too far from ghost", player, spider, color.red)
-                else
-                  for i = 1, 90, 10 do
-                    local rotatated_position = rotate_around_target(ghost_position, spider_position, i, min_distance, max_distance)
-                    local non_colliding_position = spider.surface.find_non_colliding_position("spiderbot-leg-1", rotatated_position, 2, 0.5)
-                    if non_colliding_position then
-                      spider.add_autopilot_destination(non_colliding_position)
-                    else
-                      abandon_task(spider, player, spider_id, entity_id, player_entity)
-                      debug_print("task abandoned: no position to rotate to", player, spider, color.red)
-                      retry_task = false
-                      break
-                    end
-                  end
-                  retry_task = true
-                  debug_print("revive task failed: retrying", player, spider, color.red)
+                for i = 1, 90, 10 do
+                  local rotatated_position = rotate_around_target(upgrade_position, spider_position, i, min_distance, max_distance)
+                  spider.add_autopilot_destination(rotatated_position)
                 end
+                retry_task = true
+                debug_print("upgrade task failed: retrying", player, spider, color.red)
               end
             else
               abandon_task(spider, player, spider_id, entity_id, player_entity)
@@ -425,102 +494,66 @@ local function on_spider_command_completed(event)
             end
           else
             abandon_task(spider, player, spider_id, entity_id, player_entity)
-            debug_print("task abandoned: no items_to_place_this", player, spider, color.red)
+            debug_print("task abandoned: no upgrade_target or item_stack", player, spider, color.red)
           end
-
-        elseif task_type == "upgrade" then
-          if entity.to_be_upgraded() then
-            local upgrade_target = entity.get_upgrade_target()
-            local items = upgrade_target and upgrade_target.items_to_place_this
-            local item_stack = items and items[1]
-            if upgrade_target and item_stack then
-              local item_name = item_stack.name
-              local item_count = item_stack.count or 1
-              if inventory.get_item_count(item_name) >= item_count then
-                local upgrade_direction = entity.get_upgrade_direction()
-                local upgrade_name = upgrade_target.name
-                local type = entity.type
-                local is_ug_belt = (type == "underground-belt")
-                local is_loader = (type == "loader" or type == "loader-1x1")
-                local underground_type = is_ug_belt and entity.belt_to_ground_type
-                local loader_type = is_loader and entity.loader_type
-                local create_entity_type = underground_type or loader_type or nil
-                ---@diagnostic disable:missing-fields
-                local upgraded_entity = entity.surface.create_entity {
-                  name = upgrade_name,
-                  position = entity.position,
-                  direction = upgrade_direction,
-                  player = player,
-                  fast_replace = true,
-                  force = entity.force,
-                  spill = true,
-                  type = create_entity_type,
-                  raise_built = true,
-                }
-                ---@diagnostic enable:missing-fields
-                if upgraded_entity then
-                  inventory.remove(item_stack)
-                  draw_line(spider.surface, player_entity, spider, player.color, 20)
-                  global.tasks.by_entity[entity_id].status = "completed"
-                  global.tasks.by_spider[spider_id].status = "completed"
-                  complete_task(spider_id, entity_id, spider, player, player_entity)
-                  debug_print("upgrade task completed", player, spider, color.green)
-                else
-                  local upgrade_position = entity.position
-                  local spider_position = spider.position
-                  for i = 1, 90, 10 do
-                    local rotatated_position = rotate_around_target(upgrade_position, spider_position, i, min_distance, max_distance)
-                    spider.add_autopilot_destination(rotatated_position)
-                  end
-                  retry_task = true
-                  debug_print("upgrade task failed: retrying", player, spider, color.red)
-                end
-              else
-                abandon_task(spider, player, spider_id, entity_id, player_entity)
-                debug_print("task abandoned: not enough items in inventory", player, spider, color.red)
-              end
-            else
-              abandon_task(spider, player, spider_id, entity_id, player_entity)
-              debug_print("task abandoned: no upgrade_target or item_stack", player, spider, color.red)
-            end
-          else
-            abandon_task(spider, player, spider_id, entity_id, player_entity)
-            debug_print("task abandoned: entity no longer needs to be upgraded", player, spider, color.red)
-          end
-        elseif task_type == "item_proxy" then
-          local proxy_target = entity.proxy_target
-          if proxy_target then
-            local items = entity.item_requests
-            local item_name, item_count = next(items)
-            if inventory.get_item_count(item_name) >= item_count then
-              local item_to_insert = { name = item_name, count = item_count }
-              local request_fulfilled = false
-              if proxy_target.can_insert(item_to_insert) then
-                proxy_target.insert(item_to_insert)
-                inventory.remove(item_to_insert)
-                items[item_name] = nil
-                entity.item_requests = items
-                if not next(items) then
-                  entity.destroy()
-                end
-                request_fulfilled = true
-              end
-              if request_fulfilled then
-                complete_task(spider_id, entity_id, spider, player, player_entity)
-                debug_print("item_proxy task completed", player, spider, color.green)
-              else
-                abandon_task(spider, player, spider_id, entity_id, player_entity)
-                debug_print("proxy task abandoned: could not insert", player, spider, color.red)
-              end
-            else
-              abandon_task(spider, player, spider_id, entity_id, player_entity)
-              debug_print("proxy task abandoned: not enough items in inventory", player, spider, color.red)
-            end
-          else
-            abandon_task(spider, player, spider_id, entity_id, player_entity)
-            debug_print("proxy task abandoned: no proxy_target", player, spider, color.red)
-          end
+        else
+          abandon_task(spider, player, spider_id, entity_id, player_entity)
+          debug_print("task abandoned: entity no longer needs to be upgraded", player, spider, color.red)
         end
+      elseif task_type == "item_proxy" then
+        local proxy_target = entity.proxy_target
+        if proxy_target then
+          local items = entity.item_requests
+          local item_name, item_count = next(items)
+          if inventory.get_item_count(item_name) >= item_count then
+            local item_to_insert = { name = item_name, count = item_count }
+            local request_fulfilled = false
+            if proxy_target.can_insert(item_to_insert) then
+              proxy_target.insert(item_to_insert)
+              inventory.remove(item_to_insert)
+              items[item_name] = nil
+              entity.item_requests = items
+              if not next(items) then
+                entity.destroy()
+              end
+              request_fulfilled = true
+            end
+            if request_fulfilled then
+              complete_task(spider_id, entity_id, spider, player, player_entity)
+              debug_print("item_proxy task completed", player, spider, color.green)
+            else
+              abandon_task(spider, player, spider_id, entity_id, player_entity)
+              debug_print("proxy task abandoned: could not insert", player, spider, color.red)
+            end
+          else
+            abandon_task(spider, player, spider_id, entity_id, player_entity)
+            debug_print("proxy task abandoned: not enough items in inventory", player, spider, color.red)
+          end
+        else
+          abandon_task(spider, player, spider_id, entity_id, player_entity)
+          debug_print("proxy task abandoned: no proxy_target", player, spider, color.red)
+        end
+      end
+    elseif inventory_task_data then
+      local player = inventory_task_data.player
+      local try_again = false
+      if player.valid then
+        local distance_to_player = distance(spider.position, player.position)
+        if distance_to_player < 3 then
+          local inventory = player.get_main_inventory()
+          if inventory and inventory.can_insert("spiderbot") then
+            player.surface.create_trivial_smoke { name = "smoke-fast", position = spider.position }
+            player.mine_entity(spider)
+          else
+            try_again = true
+          end
+        else
+          try_again = true
+        end
+      end
+      global.tasks.return_to_inventory[spider_id] = nil
+      if try_again then
+        return_to_inventory(spider, player)
       end
     end
   else
@@ -722,6 +755,49 @@ local function on_script_path_request_finished(event)
     end
     global.spider_path_to_position_requests[path_request_id] = nil
     global.path_requested[spider_id] = nil
+  elseif global.spider_path_to_inventory_requests[path_request_id] then
+    local spider = global.spider_path_to_inventory_requests[path_request_id].spider
+    local player = global.spider_path_to_inventory_requests[path_request_id].player
+    local spider_id = global.spider_path_to_inventory_requests[path_request_id].spider_id
+    local player_entity = get_player_entity(player)
+    if (spider and spider.valid and player_entity and player_entity.valid) then
+      if spider.surface_index == player.surface_index then
+        if path then
+          spider.autopilot_destination = nil
+          spider.follow_target = player_entity
+          local previous_position = spider.position
+          for _, waypoint in pairs(path) do
+            local new_position = waypoint.position
+            spider.add_autopilot_destination(new_position)
+            if global.debug then
+              draw_circle(spider.surface, new_position, player.color, 0.25, 180)
+              if previous_position then
+                draw_line(spider.surface, previous_position, new_position, player.color, 180)
+              end
+              previous_position = new_position
+            end
+          end
+        else
+          local player_index = player.index
+          local surface_index = spider.surface_index
+          global.available_spiders[player_index] = global.available_spiders[player_index] or {}
+          global.available_spiders[player_index][surface_index] = global.available_spiders[player_index][surface_index] or {}
+          table.insert(global.available_spiders[player_index][surface_index], spider)
+          global.tasks.return_to_inventory[spider_id]  = nil
+        end
+      else
+        local player_index = player.index
+        local surface_index = spider.surface_index
+        global.available_spiders[player_index] = global.available_spiders[player_index] or {}
+        global.available_spiders[player_index][surface_index] = global.available_spiders[player_index][surface_index] or {}
+        table.insert(global.available_spiders[player_index][surface_index], spider)
+        global.tasks.return_to_inventory[spider_id] = nil
+      end
+    else
+      global.tasks.return_to_inventory[spider_id] = nil
+    end
+    global.spider_path_to_inventory_requests[path_request_id] = nil
+    global.path_requested[spider_id] = nil
   end
 end
 
@@ -782,10 +858,10 @@ script.on_event(defines.events.on_player_cursor_stack_changed, on_player_cursor_
 local function on_tick(event)
   for _, player in pairs(game.connected_players) do
     local player_index = player.index
-    local surface_index = player.surface_index
+    local player_surface_index = player.surface_index
     global.available_spiders[player_index] = global.available_spiders[player_index] or {}
-    global.available_spiders[player_index][surface_index] = global.available_spiders[player_index][surface_index] or {}
-    if #global.available_spiders[player_index][surface_index] == 0 then goto next_player end
+    global.available_spiders[player_index][player_surface_index] = global.available_spiders[player_index][player_surface_index] or {}
+    if #global.available_spiders[player_index][player_surface_index] == 0 then goto next_player end
 
     local controller_type = player.controller_type
     global.previous_controller[player_index] = global.previous_controller[player_index] or controller_type
@@ -812,7 +888,7 @@ local function on_tick(event)
     local previous = global.previous_player_color[player_index]
     if (previous.r ~= current.r) or (previous.g ~= current.g) or (previous.b ~= current.b) or (previous.a ~= current.a) then
       local available_spiders = global.available_spiders[player_index]
-      local spiders = available_spiders and available_spiders[surface_index]
+      local spiders = available_spiders and available_spiders[player_surface_index]
       if spiders then
         for spider_id, spider in pairs(spiders) do
           if spider.valid then
@@ -857,6 +933,28 @@ local function on_tick(event)
       end
     end
 
+    if global.backpack_mode_enabled[player_index] then
+      local available_spiders = global.available_spiders[player_index]
+      for _, spiders in pairs(available_spiders) do
+        for spider_index, spider in pairs(spiders) do
+          if spider.valid then
+            local spider_id = entity_uuid(spider)
+            local spider_surface_index = spider.surface_index
+            if spider_surface_index == player_surface_index then
+              if not global.tasks.return_to_inventory[spider_id] then
+                if not global.path_requested[spider_id] then
+                  return_to_inventory(spider, player, spider_id, player_index)
+                end
+              end
+            end
+          else
+            table.remove(spiders, spider_index)
+          end
+        end
+      end
+      goto next_player
+    end
+
     if not global.spiders_enabled[player_index] then goto next_player end
 
     local inventory = player.get_main_inventory()
@@ -886,9 +984,9 @@ local function on_tick(event)
     local max_spiders_dispatched = 9
     -- local max_distance_to_task = 100
 
-    for spider_index, spider in pairs(global.available_spiders[player_index][surface_index]) do
+    for spider_index, spider in pairs(global.available_spiders[player_index][player_surface_index]) do
       if not (spider and spider.valid) then
-        table.remove(global.available_spiders[player_index][surface_index], spider_index)
+        table.remove(global.available_spiders[player_index][player_surface_index], spider_index)
         goto next_spider
       end
 
@@ -919,7 +1017,7 @@ local function on_tick(event)
             local distance_to_task = distance(decon_entity.position, spider.position)
             if distance_to_task < double_max_task_range then
               new_entity_task("deconstruct", entity_id, decon_entity, spider, player, surface)
-              table.remove(global.available_spiders[player_index][surface_index], spider_index)
+              table.remove(global.available_spiders[player_index][player_surface_index], spider_index)
               spiders_dispatched = spiders_dispatched + 1
               decon_ordered = true
               goto next_spider
@@ -931,7 +1029,7 @@ local function on_tick(event)
               local distance_to_task = distance(decon_entity.position, spider.position)
               if distance_to_task < double_max_task_range then
                 new_entity_task("deconstruct", entity_id, decon_entity, spider, player, surface)
-                global.available_spiders[player_index][surface_index][spider_index] = nil
+                global.available_spiders[player_index][player_surface_index][spider_index] = nil
                 spiders_dispatched = spiders_dispatched + 1
                 decon_ordered = true
                 goto next_spider
@@ -975,7 +1073,7 @@ local function on_tick(event)
                 local distance_to_task = distance(revive_entity.position, spider.position)
                 if distance_to_task < double_max_task_range then
                   new_entity_task("revive", entity_id, revive_entity, spider, player, surface)
-                  table.remove(global.available_spiders[player_index][surface_index], spider_index)
+                  table.remove(global.available_spiders[player_index][player_surface_index], spider_index)
                   spiders_dispatched = spiders_dispatched + 1
                   revive_ordered = true
                   goto next_spider
@@ -1021,7 +1119,7 @@ local function on_tick(event)
                 local distance_to_task = distance(upgrade_entity.position, spider.position)
                 if distance_to_task < double_max_task_range then
                   new_entity_task("upgrade", entity_id, upgrade_entity, spider, player, surface)
-                  table.remove(global.available_spiders[player_index][surface_index], spider_index)
+                  table.remove(global.available_spiders[player_index][player_surface_index], spider_index)
                   spiders_dispatched = spiders_dispatched + 1
                   upgrade_ordered = true
                   goto next_spider
@@ -1065,7 +1163,7 @@ local function on_tick(event)
                 local distance_to_task = distance(item_proxy_entity.position, spider.position)
                 if distance_to_task < double_max_task_range then
                   new_entity_task("item_proxy", entity_id, item_proxy_entity, spider, player, surface)
-                  table.remove(global.available_spiders[player_index][surface_index], spider_index)
+                  table.remove(global.available_spiders[player_index][player_surface_index], spider_index)
                   spiders_dispatched = spiders_dispatched + 1
                   item_proxy_ordered = true
                   goto next_spider
@@ -1135,15 +1233,6 @@ end
 
 script.on_nth_tick(15, on_tick)
 
---- turn selection highlighting on or off
----@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
-local function toggle_spiderbots(event)
-	local name = event.prototype_name or event.input_name
-	if name ~= "toggle-spiderbots" then return end
-	local player_index = event.player_index
-	global.spiders_enabled[player_index] = not global.spiders_enabled[player_index]
-	game.get_player(player_index).set_shortcut_toggled("toggle-spiderbots", global.spiders_enabled[player_index])
-end
-
 script.on_event("toggle-spiderbots", toggle_spiderbots)
-script.on_event(defines.events.on_lua_shortcut, toggle_spiderbots)
+script.on_event("toggle-backpack-mode", toggle_backpack_mode)
+script.on_event(defines.events.on_lua_shortcut, on_lua_shortcut)

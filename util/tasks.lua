@@ -6,6 +6,14 @@ local get_player_entity = general_util.get_player_entity
 local rendering_util = require("util/rendering")
 local destroy_associated_renderings = rendering_util.destroy_associated_renderings
 
+local path_request_util = require("util/path_request")
+local request_spider_path_to_entity = path_request_util.request_spider_path_to_entity
+local request_spider_path_to_position = path_request_util.request_spider_path_to_position
+local request_spider_path_to_inventory = path_request_util.request_spider_path_to_inventory
+
+local colors = require("util/colors")
+local color = colors.color
+
 ---@param spider LuaEntity
 ---@param player LuaPlayer
 ---@param spider_id uuid?
@@ -130,9 +138,30 @@ end
 --   global.tasks.nudges[spider_id] = nil
 -- end
 
+---@param spider LuaEntity
+---@param player LuaPlayer
+---@param spider_id uuid?
+---@param player_index integer?
+local function return_to_inventory(spider, player, spider_id, player_index)
+    spider_id = spider_id or entity_uuid(spider)
+    player_index = player_index or player.index
+    local spider_surface_index = spider.surface_index
+    local player_surface_index = player.surface_index
+    if spider_surface_index == player_surface_index then
+        request_spider_path_to_inventory(spider, player, player.surface, spider_id, player_index)
+        global.tasks.return_to_inventory[spider_id] = {
+            spider = spider,
+            spider_id = spider_id,
+            player = player,
+            player_index = player_index,
+        }
+    end
+end
+
 return {
     abandon_task = abandon_task,
     complete_task = complete_task,
     new_entity_task = new_entity_task,
     -- new_tile_task = new_tile_task,
+    return_to_inventory = return_to_inventory,
 }
