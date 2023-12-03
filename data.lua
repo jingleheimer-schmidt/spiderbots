@@ -122,3 +122,16 @@ local toggle_backpack_mode_hotkey = {
     action = "lua",
 }
 data:extend({toggle_backpack_mode_hotkey})
+
+local no_damage_rocket = table.deepcopy(data.raw["projectile"]["rocket"])
+no_damage_rocket.name = "no-damage-rocket"
+no_damage_rocket.localised_name = { "entity-name.rocket" }
+no_damage_rocket.localised_description = { "entity-description.rocket" }
+no_damage_rocket.action = nil
+no_damage_rocket.acceleration = no_damage_rocket.acceleration / 2
+no_damage_rocket.turn_speed = no_damage_rocket.turn_speed * 2
+no_damage_rocket.animation.filename = "__spiderbots__/assets/projectile/spiderbot-projectile-3.png"
+-- no_damage_rocket.animation.width = 216 / 8
+-- no_damage_rocket.animation.height = 105
+no_damage_rocket.smoke[1].frequency = 0.125
+data:extend{no_damage_rocket}
