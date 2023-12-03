@@ -11,6 +11,7 @@ local spiderbot_arguments = {
 }
 create_spidertron(spiderbot_arguments)
 local spiderbot_prototype = data.raw["spider-vehicle"]["spiderbot"]
+spiderbot_prototype.minable.result = "spiderbot-item"
 spiderbot_prototype.guns = nil
 spiderbot_prototype.inventory_size = 0
 spiderbot_prototype.trash_inventory_size = 0
@@ -66,20 +67,82 @@ spiderbot_recipe.ingredients = {
 	{ "inserter",           8 },
 	{ "raw-fish",           1 },
 }
-spiderbot_recipe.result = "spiderbot"
+spiderbot_recipe.result = "spiderbot-item"
 spiderbot_recipe.enabled = true
 spiderbot_recipe.subgroup = "logistic-network"
 spiderbot_recipe.order = "a[robot]-a[little-spiderbot]"
 -- spiderbot_recipe.icon_size = spiderbot_recipe.icon_size * 4
 data:extend { spiderbot_recipe }
 
-local spiderbot_item = table.deepcopy(data.raw["item-with-entity-data"]["spidertron"])
-spiderbot_item.name = "spiderbot"
-spiderbot_item.place_result = "spiderbot"
-spiderbot_recipe.subgroup = "logistic-network"
-spiderbot_recipe.order = "a[robot]-a[little-spiderbot]"
--- spiderbot_item.icon_size = spiderbot_item.icon_size * 4
-data:extend{spiderbot_item}
+-- local spiderbot_item = table.deepcopy(data.raw["item-with-entity-data"]["spidertron"])
+-- spiderbot_item.name = "spiderbot"
+-- spiderbot_item.place_result = "spiderbot"
+-- spiderbot_recipe.subgroup = "logistic-network"
+-- spiderbot_recipe.order = "a[robot]-a[little-spiderbot]"
+-- -- spiderbot_item.icon_size = spiderbot_item.icon_size * 4
+-- data:extend{spiderbot_item}
+
+local spidertron_item = table.deepcopy(data.raw["item-with-entity-data"]["spidertron"])
+local spiderbot_item = {
+	type = "capsule",
+	name = "spiderbot-item",
+	icon = spidertron_item.icon,
+	icon_size = spidertron_item.icon_size,
+	stack_size = 25,
+	subgroup = "logistic-network",
+	order = "a[robot]-a[little-spiderbot]",
+	capsule_action = {
+		type = "throw",
+		attack_parameters = {
+			activation_type = "throw",
+			ammo_category = "capsule",
+			type = "projectile",
+			cooldown = 10,
+			projectile_creation_distance = .3,
+			range = 25,
+			ammo_type = {
+				category = "capsule",
+				target_type = "position",
+				action = {
+					{
+						type = "direct",
+						action_delivery = {
+							type = "projectile",
+							projectile = "spiderbot-projectile",
+							starting_speed = 0.33,
+						}
+					}
+				}
+			}
+		}
+	}
+}
+data:extend { spiderbot_item }
+
+local spiderbot_projectile = {
+	type = "projectile",
+	name = "spiderbot-projectile",
+	acceleration = 0.005,
+	action = {
+		action_delivery = {
+			target_effects = {
+				{
+					entity_name = "spiderbot",
+					type = "create-entity",
+					show_in_tooltip = true,
+					trigger_created_entity = "true"
+				}
+			},
+			type = "instant"
+		},
+		type = "direct"
+	},
+	animation = data.raw["projectile"]["distractor-capsule"].animation,
+	shadow = data.raw["projectile"]["distractor-capsule"].shadow,
+	flags = { "not-on-map" },
+	enable_drawing_with_mask = true,
+}
+data:extend { spiderbot_projectile }
 
 local toggle_spiderbots_shortcut = {
 	type = "shortcut",

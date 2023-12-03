@@ -140,6 +140,32 @@ end
 local filter = { { filter = "name", name = "spiderbot" } }
 script.on_event(defines.events.on_built_entity, on_spider_created, filter)
 
+---@param event EventData.on_trigger_created_entity
+local function on_trigger_created_entity(event)
+  local spider = event.entity
+  if not (spider.name == "spiderbot") then return end
+  local character = event.source
+  if not (character and character.valid) then return end
+  local player = character.type == "character" and character.player
+  if not (player and player.valid) then return end
+  local player_index = player.index
+  local surface_index = spider.surface_index
+  local spider_id = entity_uuid(spider)
+  spider.color = player.color
+  spider.follow_target = character
+  global.spiders[player_index] = global.spiders[player_index] or {}
+  global.spiders[player_index][spider_id] = spider
+  global.available_spiders[player_index] = global.available_spiders[player_index] or {}
+  global.available_spiders[player_index][surface_index] = global.available_spiders[player_index][surface_index] or {}
+  table.insert(global.available_spiders[player_index][surface_index], spider)
+  local entity_label = spider.entity_label
+  if (not entity_label) or (is_backer_name(entity_label)) then
+    spider.entity_label = random_backer_name()
+  end
+end
+
+script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_entity)
+
 ---@param event EventData.on_entity_destroyed
 local function on_spider_destroyed(event)
   local unit_number = event.unit_number
