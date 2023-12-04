@@ -166,6 +166,42 @@ end
 
 script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_entity)
 
+---@param event EventData.on_player_used_capsule
+local function on_player_used_capsule(event)
+  local item = event.item
+  local position = event.position
+  local player = game.get_player(event.player_index)
+  if not (player and player.valid) then return end
+  local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position, 3.75, 0.5)
+  if not non_colliding_position then
+    local inventory = player.get_main_inventory()
+    if inventory and inventory.valid then
+      local item_stack = { name = "spiderbot-item", count = 1 }
+      local cursor_stack = player.cursor_stack
+      if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == "spiderbot-item" then
+        item_stack.count = item_stack.count + cursor_stack.count
+        player.cursor_stack.set_stack(item_stack)
+      else
+        player.cursor_stack.set_stack(item_stack)
+      end
+    end
+    return
+  end
+  local player_entity = get_player_entity(player)
+  player.surface.create_entity {
+    name = "spiderbot-projectile",
+    position = player.position,
+    force = player.force,
+    player = player,
+    source = player_entity,
+    target = position,
+    speed = 0.33,
+    raise_built = true,
+  }
+end
+
+script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
+
 ---@param event EventData.on_entity_destroyed
 local function on_spider_destroyed(event)
   local unit_number = event.unit_number

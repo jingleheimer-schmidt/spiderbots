@@ -12,6 +12,7 @@ local spiderbot_arguments = {
 create_spidertron(spiderbot_arguments)
 local spiderbot_prototype = data.raw["spider-vehicle"]["spiderbot"]
 spiderbot_prototype.minable.result = "spiderbot-item"
+spiderbot_prototype.placeable_by = { item = "spiderbot-item", count = 1 }
 spiderbot_prototype.guns = nil
 spiderbot_prototype.inventory_size = 0
 spiderbot_prototype.trash_inventory_size = 0
@@ -97,22 +98,22 @@ local spiderbot_item = {
 			activation_type = "throw",
 			ammo_category = "capsule",
 			type = "projectile",
-			cooldown = 10,
+			cooldown = 7,
 			projectile_creation_distance = .3,
 			range = 25,
 			ammo_type = {
 				category = "capsule",
 				target_type = "position",
-				action = {
-					{
-						type = "direct",
-						action_delivery = {
-							type = "projectile",
-							projectile = "spiderbot-projectile",
-							starting_speed = 0.33,
-						}
-					}
-				}
+			-- 	action = {
+			-- 		{
+			-- 			type = "direct",
+			-- 			action_delivery = {
+			-- 				type = "projectile",
+			-- 				projectile = "spiderbot-projectile",
+			-- 				starting_speed = 0.33,
+			-- 			}
+			-- 		}
+			-- 	}
 			}
 		}
 	}
