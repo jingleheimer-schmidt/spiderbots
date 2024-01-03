@@ -1344,47 +1344,6 @@ local function on_tick(event)
         end
       end
 
-      -- if not item_proxy_ordered then
-      --   decon_tiles = decon_tiles or surface.find_tiles_filtered({
-      --     area = area,
-      --     to_be_deconstructed = true,
-      --     force = player_force,
-      --   })
-      --   local decon_tiles_count = #decon_tiles
-      --   for i = 1, decon_tiles_count do
-      --     local entity_index = math.random(1, decon_tiles_count)
-      --     local decon_tile = decon_tiles[entity_index] ---@type LuaTile
-      --     if not (decon_tile and decon_tile.valid) then
-      --       table.remove(decon_tiles, entity_index)
-      --       goto next_tile
-      --     end
-      --     local tile_id = tile_uuid(decon_tile)
-      --     if not global.tasks.by_tile[tile_id] then
-      --       local minable_properties = decon_tile.prototype.mineable_properties
-      --       local products = minable_properties and minable_properties.products
-      --       local result_when_mined = (products and products[1] and products[1].name) or nil
-      --       local space_for_result = result_when_mined and inventory.can_insert(result_when_mined)
-      --       if space_for_result then
-      --         local distance_to_task = distance(decon_tile.position, spider.position)
-      --         if distance_to_task < max_distance_to_task then
-      --           new_tile_task("deconstruct", tile_id, decon_tile, spider, player, surface)
-      --           table.remove(global.available_spiders[player_index][surface_index], spider_index)
-      --           spiders_dispatched = spiders_dispatched + 1
-      --           tile_decon_ordered = true
-      --           goto next_spider
-      --         else
-      --           goto next_spider
-      --         end
-      --       else
-      --         table.remove(decon_tiles, entity_index)
-      --       end
-      --     else
-      --       table.remove(decon_tiles, entity_index)
-      --     end
-      --     ::next_tile::
-      --   end
-      -- end
-
       ::next_spider::
     end
 
@@ -1394,7 +1353,6 @@ end
 
 script.on_nth_tick(15, on_tick)
 
---- turn selection highlighting on or off
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
 	local name = event.prototype_name or event.input_name
