@@ -2,7 +2,9 @@
 Version: 0.2.0
 Date: 03DEC2023
   Changes:
-    - Spiderbots are now placed by throwing them at the ground
+    - Spiderbots are now built by throwing them at the ground
+    - increased throwing range from 25 to 50 tiles
+    - decreased throwing rate from 8.5 to 3 spiderbots per second
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.0
 Date: 26NOV2023
@@ -12,7 +14,7 @@ Date: 26NOV2023
     - Added "Spiderbot", a small spidertron that can be built in the early game with basic construction abilities
     - Spiderbots follow the player who built them, and re-follow players when they and return to a surface
     - Spiderbots process work orders near the player. Deconstruction tasks are prioritized, then construction tasks, then upgrade tasks
-    - Spiderbots cannot mine or place tiles or landfill
+    - Spiderbots cannot mine or place tiles and landfill
     - Spiderbots cannot repair entities using repair packs
     - Work order processing can be toggled with a shortcut and hotkey (default: Alt + S)
     - Spiderbots try to find new paths if they get stuck on the way to a work order or player
