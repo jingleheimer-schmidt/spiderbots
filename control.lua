@@ -203,18 +203,20 @@ script.on_event(defines.events.on_entity_destroyed, on_spider_destroyed)
 ---@param spiderbot_id uuid
 ---@param player_index player_index
 local function abandon_task(spiderbot_id, player_index)
-    local spiderbots = global.spiderbots[player_index] ---@type table<uuid, spiderbot_data>
-    local data = spiderbots[spiderbot_id]
-    if data then
-        data.status = "idle"
-        data.path_request_id = nil
-        local player = data.player
-        local spiderbot = data.spiderbot
+    local spiderbots = global.spiderbots[player_index]
+    local spiderbot_data = spiderbots[spiderbot_id]
+    if spiderbot_data then
+        spiderbot_data.status = "idle"
+        spiderbot_data.path_request_id = nil
+        local player = spiderbot_data.player
+        local spiderbot = spiderbot_data.spiderbot
         if player.valid and spiderbot.valid then
             local target = get_player_entity(player)
             if target and target.valid then
                 spiderbot.follow_target = target
             end
+        else
+            spiderbots[spiderbot_id] = nil
         end
     end
 end
@@ -226,16 +228,16 @@ local function relink_following_spiderbots(player)
     local player_entity = get_player_entity(player)
     local spiderbots = global.spiderbots[player_index]
     if not spiderbots then return end
-    for spider_id, data in pairs(spiderbots) do
-        local spiderbot = data.spiderbot
+    for spider_id, spiderbot_data in pairs(spiderbots) do
+        local spiderbot = spiderbot_data.spiderbot
         if spiderbot.valid then
             if spiderbot.surface_index == player.surface_index then
-                if data.status == "idle" then
+                if spiderbot_data.status == "idle" then
                     spiderbot.follow_target = player_entity
-                elseif data.status == "path_requested" then
+                elseif spiderbot_data.status == "path_requested" then
                     spiderbot.follow_target = player_entity
-                elseif data.status == "task_assigned" then
-                    local task = data.task
+                elseif spiderbot_data.status == "task_assigned" then
+                    local task = spiderbot_data.task
                     if not (task and task.entity.valid) then
                         abandon_task(spider_id, player_index)
                     else
@@ -251,8 +253,6 @@ local function relink_following_spiderbots(player)
             end
         else
             spiderbots[spider_id] = nil
-            global.spider_path_requests[spider_id] = nil
-            global.spider_path_to_position_requests[spider_id] = nil
         end
     end
 end
@@ -266,8 +266,8 @@ local function on_player_changed_surface(event)
     if player and player.valid and surface and surface.valid then
         local spiderbots = global.spiderbots[player_index]
         if not spiderbots then return end
-        for spider_id, data in pairs(spiderbots) do
-            local spiderbot = data.spiderbot
+        for spider_id, spiderbot_data in pairs(spiderbots) do
+            local spiderbot = spiderbot_data.spiderbot
             if spiderbot.valid then
                 local non_colliding_position = surface.find_non_colliding_position("spiderbot-leg-1", player.position, 25, 0.5)
                 local position = non_colliding_position or player.position
