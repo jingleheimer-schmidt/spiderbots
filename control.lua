@@ -461,6 +461,52 @@ local function upgrade_entity(spiderbot_data)
         abandon_task(spiderbot_id, player_index) -- entity no longer needs to be upgraded
     end
 end
+
+---@param spiderbot_data spiderbot_data
+local function insert_items(spiderbot_data)
+    local spiderbot = spiderbot_data.spiderbot
+    local spiderbot_id = spiderbot_data.spiderbot_id
+    local player = spiderbot_data.player
+    local player_index = spiderbot_data.player_index
+    local entity = spiderbot_data.task.entity
+    if not (player and player.valid and entity and entity.valid) then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    local inventory = player.get_main_inventory()
+    if not (inventory and inventory.valid) then
+        abandon_task(spiderbot_id, player_index) -- no inventory to get items from
+        return
+    end
+    local proxy_target = entity.proxy_target
+    if proxy_target then
+        local items = entity.item_requests
+        local item_name, item_count = next(items)
+        if inventory.get_item_count(item_name) >= item_count then
+            local item_to_insert = { name = item_name, count = item_count }
+            local request_fulfilled = false
+            if proxy_target.can_insert(item_to_insert) then
+                proxy_target.insert(item_to_insert)
+                inventory.remove(item_to_insert)
+                items[item_name] = nil
+                entity.item_requests = items
+                if not next(items) then
+                    entity.destroy()
+                end
+                request_fulfilled = true
+            end
+            if request_fulfilled then
+                abandon_task(spiderbot_id, player_index) -- successfully inserted items. task complete. reset task data and follow player
+            else
+                abandon_task(spiderbot_id, player_index) -- could not insert items
+            end
+        else
+            abandon_task(spiderbot_id, player_index) -- not enough items in inventory
+        end
+    else
+        abandon_task(spiderbot_id, player_index) -- no proxy_target
+    end
+end
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
