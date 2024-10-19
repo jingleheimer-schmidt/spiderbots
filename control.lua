@@ -812,7 +812,8 @@ local function on_tick(event)
             global.previous_player_color[player_index] = player_color
         end
         -- if the player doesn't have an inventory, go to the next player
-        local inventory = player.get_main_inventory()
+        local entity_type = player_entity.type == "character" and "character" or "vehicle"
+        local inventory = entity_type == "character" and player_entity.get_inventory(defines.inventory.character_main) or player_entity.get_inventory(defines.inventory.character_vehicle)
         if not (inventory and inventory.valid) then goto next_player end
         -- setup local data
         local player_force = { player.force.name, "neutral" }
