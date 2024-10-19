@@ -2,6 +2,15 @@
 local general_util = require("util/general")
 local entity_uuid = general_util.entity_uuid
 
+local math_util = require("util/math")
+local distance = math_util.distance
+
+local constants = require("util/constants")
+local max_task_range = constants.max_task_range
+
+local color_util = require("util/colors")
+local color = color_util.color
+
 local function toggle_debug()
     global.debug = not global.debug
     for _, player in pairs(game.connected_players) do
