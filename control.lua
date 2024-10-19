@@ -181,6 +181,25 @@ end
 
 script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
 
+-- remove the spiderbot data when a spiderbot is destroyed
+---@param event EventData.on_entity_destroyed
+local function on_spider_destroyed(event)
+    local unit_number = event.unit_number
+    if not unit_number then return end
+    for player_index, spiderbot_data in pairs(global.spiderbots) do
+        for spider_id, data in pairs(spiderbot_data) do
+            if data.spiderbot_id == unit_number then
+                global.spiderbots[player_index][spider_id] = nil
+                return
+            end
+        end
+    end
+    global.spider_path_requests[unit_number] = nil
+    global.spider_path_to_position_requests[unit_number] = nil
+end
+
+script.on_event(defines.events.on_entity_destroyed, on_spider_destroyed)
+
 
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
