@@ -11,6 +11,7 @@
 -- -@field path_request_id integer?
 
 ---@alias uuid string|integer
+---@alias player_index string|integer
 
 ---@class path_request_data
 ---@field spider LuaEntity
@@ -25,3 +26,12 @@
 ---@field start_position MapPosition
 ---@field final_position MapPosition
 ---@field player LuaPlayer
+
+---@class spiderbot_data
+---@field spiderbot LuaEntity
+---@field spiderbot_id uuid
+---@field player LuaPlayer
+---@field player_index player_index
+---@field status string
+---@field path_request_id integer?
+
