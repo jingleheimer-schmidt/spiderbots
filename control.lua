@@ -829,15 +829,10 @@ local function on_tick(event)
         local revive_entities = nil
         local upgrade_entities = nil
         local item_proxy_entities = nil
-        local decon_tiles = nil
-        local revive_tiles = nil
         local decon_ordered = false
         local revive_ordered = false
         local upgrade_ordered = false
         local item_proxy_ordered = false
-        local tile_decon_ordered = false
-        local tile_reivive_ordered = false
-        local spiders_dispatched = 0
         local max_spiders_dispatched = 9
         local counter = 0
         for spiderbot_id, spiderbot_data in pairs(spiderbots) do
@@ -878,19 +873,16 @@ local function on_tick(event)
                 local entity = decon_entities[entity_index] ---@type LuaEntity
                 if not (entity and entity.valid) then
                     table.remove(decon_entities, entity_index)
-                    decon_entity_count = decon_entity_count - 1
                     goto next_entity
                 end
                 if entity.type == "fish" then
                     table.remove(decon_entities, entity_index)
-                    decon_entity_count = decon_entity_count - 1
                     goto next_entity
                 end
                 local entity_id = entity_uuid(entity)
                 local task_assigned = is_task_assigned(entity_id)
                 if task_assigned then
                     table.remove(decon_entities, entity_index)
-                    decon_entity_count = decon_entity_count - 1
                     goto next_entity
                 end
                 local prototype = entity.prototype
@@ -932,11 +924,9 @@ local function on_tick(event)
                         end
                     else
                         table.remove(decon_entities, entity_index)
-                        decon_entity_count = decon_entity_count - 1
                     end
                 else
                     table.remove(decon_entities, entity_index)
-                    decon_entity_count = decon_entity_count - 1
                 end
                 ::next_entity::
             end
@@ -952,14 +942,12 @@ local function on_tick(event)
                 local entity = revive_entities[entity_index] ---@type LuaEntity
                 if not (entity and entity.valid) then
                     table.remove(revive_entities, entity_index)
-                    revive_entity_count = revive_entity_count - 1
                     goto next_entity
                 end
                 local entity_id = entity_uuid(entity)
                 local task_assigned = is_task_assigned(entity_id)
                 if task_assigned then
                     table.remove(revive_entities, entity_index)
-                    revive_entity_count = revive_entity_count - 1
                     goto next_entity
                 end
                 local items = entity.ghost_prototype.items_to_place_this
@@ -985,11 +973,9 @@ local function on_tick(event)
                         end
                     else
                         table.remove(revive_entities, entity_index)
-                        revive_entity_count = revive_entity_count - 1
                     end
                 else
                     table.remove(revive_entities, entity_index)
-                    revive_entity_count = revive_entity_count - 1
                 end
                 ::next_entity::
             end
@@ -1005,14 +991,12 @@ local function on_tick(event)
                 local entity = upgrade_entities[entity_index] ---@type LuaEntity
                 if not (entity and entity.valid) then
                     table.remove(upgrade_entities, entity_index)
-                    upgrade_entity_count = upgrade_entity_count - 1
                     goto next_entity
                 end
                 local entity_id = entity_uuid(entity)
                 local task_assigned = is_task_assigned(entity_id)
                 if task_assigned then
                     table.remove(upgrade_entities, entity_index)
-                    upgrade_entity_count = upgrade_entity_count - 1
                     goto next_entity
                 end
                 local upgrade_target = entity.get_upgrade_target()
@@ -1039,11 +1023,9 @@ local function on_tick(event)
                         end
                     else
                         table.remove(upgrade_entities, entity_index)
-                        upgrade_entity_count = upgrade_entity_count - 1
                     end
                 else
                     table.remove(upgrade_entities, entity_index)
-                    upgrade_entity_count = upgrade_entity_count - 1
                 end
                 ::next_entity::
             end
@@ -1059,14 +1041,12 @@ local function on_tick(event)
                 local entity = item_proxy_entities[entity_index] ---@type LuaEntity
                 if not (entity and entity.valid) then
                     table.remove(item_proxy_entities, entity_index)
-                    item_proxy_entity_count = item_proxy_entity_count - 1
                     goto next_entity
                 end
                 local entity_id = entity_uuid(entity)
                 local task_assigned = is_task_assigned(entity_id)
                 if task_assigned then
                     table.remove(item_proxy_entities, entity_index)
-                    item_proxy_entity_count = item_proxy_entity_count - 1
                     goto next_entity
                 end
                 local proxy_target = entity.proxy_target
@@ -1091,11 +1071,9 @@ local function on_tick(event)
                         end
                     else
                         table.remove(item_proxy_entities, entity_index)
-                        item_proxy_entity_count = item_proxy_entity_count - 1
                     end
                 else
                     table.remove(item_proxy_entities, entity_index)
-                    item_proxy_entity_count = item_proxy_entity_count - 1
                 end
                 ::next_entity::
             end
