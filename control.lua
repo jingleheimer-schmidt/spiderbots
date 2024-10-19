@@ -523,6 +523,55 @@ local function complete_task(spiderbot_data)
     end
 end
 
+---@param event EventData.on_spider_command_completed
+local function on_spider_command_completed(event)
+    local spiderbot = event.vehicle
+    if not (spiderbot and spiderbot.valid) then return end
+    if not (spiderbot.name == "spiderbot") then return end
+    local destinations = spiderbot.autopilot_destinations
+    local destination_count = destinations and #destinations or 0
+    if destination_count == 0 then
+        local spiderbot_id = entity_uuid(spiderbot)
+        local spiderbot_data = get_spiderbot_data(spiderbot_id)
+        if spiderbot_data then
+            local status = spiderbot_data.status
+            if status == "task_assigned" then
+                complete_task(spiderbot_data)
+            end
+        end
+    else
+        local chance = math.random()
+        if chance < 0.0625 then -- 1/16
+            local spiderbot_id = entity_uuid(spiderbot)
+            local spiderbot_data = get_spiderbot_data(spiderbot_id)
+            if spiderbot_data then
+                local player = spiderbot_data.player
+                local player_index = spiderbot_data.player_index
+                if player.valid then
+                    -- if the player doesn't have a valid character anymore, reset the task data and attempt to follow the player
+                    local player_entity = get_player_entity(player)
+                    if not (player_entity and player_entity.valid) then
+                        abandon_task(spiderbot_id, player_index)
+                    end
+                    -- if the player is too far away from the task position, abandon the task and follow the player
+                    local task = spiderbot_data.task
+                    if task and task.entity then
+                        local task_entity = task.entity
+                        local task_position = task_entity.valid and task_entity.position
+                        if task_position then
+                            local distance_from_task = distance(task_position, player.position)
+                            if distance_from_task > (max_task_range * 2) then
+                                abandon_task(spiderbot_id, player_index)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+script.on_event(defines.events.on_spider_command_completed, on_spider_command_completed)
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
