@@ -318,9 +318,9 @@ script.on_event(defines.events.on_player_driving_changed_state, on_player_drivin
 local function get_spiderbot_data(spiderbot_id, path_request_id)
     for player_index, spiderbots in pairs(global.spiderbots) do
         for spider_id, spiderbot_data in pairs(spiderbots) do
-            if spiderbot_data.spiderbot_id == spiderbot_id then
+            if spiderbot_id and spiderbot_data.spiderbot_id == spiderbot_id then
                 return spiderbot_data
-            elseif spiderbot_data.path_request_id == path_request_id then
+            elseif path_request_id and spiderbot_data.path_request_id == path_request_id then
                 return spiderbot_data
             end
         end
