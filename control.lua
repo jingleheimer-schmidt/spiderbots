@@ -88,6 +88,7 @@ local function is_backer_name(name)
     return global.backer_name_lookup[name]
 end
 
+-- register a spiderbot. saves spiderbot data to global. updates the color, label, and follow target
 ---@param spiderbot LuaEntity
 ---@param player LuaPlayer
 ---@param player_index player_index
@@ -112,6 +113,7 @@ local function register_new_spiderbot(spiderbot, player, player_index)
     end
 end
 
+-- register spiderbots when created by the player
 ---@param event EventData.on_built_entity
 local function on_spiderbot_created(event)
     local spiderbot = event.created_entity
