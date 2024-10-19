@@ -260,6 +260,30 @@ local function relink_following_spiderbots(player)
     end
 end
 
+---@param event EventData.on_player_changed_surface
+local function on_player_changed_surface(event)
+    local player_index = event.player_index
+    local surface_index = event.surface_index
+    local player = game.get_player(player_index)
+    local surface = game.get_surface(surface_index)
+    if player and player.valid and surface and surface.valid then
+        local spiderbots = global.spiderbots[player_index]
+        if not spiderbots then return end
+        for spider_id, data in pairs(spiderbots) do
+            local spiderbot = data.spiderbot
+            if spiderbot.valid then
+                local non_colliding_position = surface.find_non_colliding_position("spiderbot-leg-1", player.position, 25, 0.5)
+                local position = non_colliding_position or player.position
+                spiderbot.teleport(position, surface, true)
+                abandon_task(spider_id, player_index)
+            end
+        end
+        relink_following_spiderbots(player)
+    end
+end
+
+script.on_event(defines.events.on_player_changed_surface, on_player_changed_surface)
+
 
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
