@@ -27,11 +27,6 @@ script.on_load(add_commands)
 
 local function on_init()
     -- spiderbot data
-
-    -- pathfinding data
-    global.spider_path_requests = {} --[[@type table<integer, path_request_data>]]
-    global.spider_path_to_position_requests = {} --[[@type table<integer, position_path_request_data>]]
-    global.path_requested = {} --[[@type table<uuid, boolean>]]
     global.spiderbots = {} --[[@type table<player_index, table<uuid, spiderbot_data>>]]
     global.spiderbots_enabled = {} --[[@type table<player_index, boolean>]]
 
@@ -53,11 +48,6 @@ local function on_configuration_changed(event)
     -- spiderbot data
     global.spiderbots = global.spiderbots or {}
     global.spiderbots_enabled = global.spiderbots_enabled or {}
-
-    -- pathfinding data
-    global.spider_path_requests = global.spider_path_requests or {}
-    global.spider_path_to_position_requests = global.spider_path_to_position_requests or {}
-    global.path_requested = global.path_requested or {}
 
     -- player data
     global.previous_controller = global.previous_controller or {}
@@ -205,8 +195,6 @@ local function on_spider_destroyed(event)
             end
         end
     end
-    global.spider_path_requests[unit_number] = nil
-    global.spider_path_to_position_requests[unit_number] = nil
 end
 
 script.on_event(defines.events.on_entity_destroyed, on_spider_destroyed)
@@ -293,6 +281,20 @@ end
 
 script.on_event(defines.events.on_player_changed_surface, on_player_changed_surface)
 
+---@param spiderbot_id uuid?
+---@param path_request_id integer?
+---@return spiderbot_data?
+local function get_spiderbot_data(spiderbot_id, path_request_id)
+    for player_index, spiderbots in pairs(global.spiderbots) do
+        for spider_id, spiderbot_data in pairs(spiderbots) do
+            if spiderbot_data.spiderbot_id == spiderbot_id then
+                return spiderbot_data
+            elseif spiderbot_data.path_request_id == path_request_id then
+                return spiderbot_data
+            end
+        end
+    end
+end
 
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
