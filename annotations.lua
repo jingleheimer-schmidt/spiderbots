@@ -1,14 +1,14 @@
 
----@class entity_task_data
----@field entity LuaEntity
----@field entity_id uuid
----@field spider LuaEntity
----@field spider_id uuid
----@field task_type string
----@field player LuaPlayer
----@field status string
----@field render_ids table<integer, boolean>
----@field path_request_id integer?
+-- -@class entity_task_data
+-- -@field entity LuaEntity
+-- -@field entity_id uuid
+-- -@field spider LuaEntity
+-- -@field spider_id uuid
+-- -@field task_type string
+-- -@field player LuaPlayer
+-- -@field status string
+-- -@field render_ids table<integer, boolean>
+-- -@field path_request_id integer?
 
 ---@alias uuid string|integer
 
