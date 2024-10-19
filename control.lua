@@ -222,6 +222,44 @@ local function abandon_task(spiderbot_id, player_index)
     end
 end
 
+---@param player LuaPlayer
+local function relink_following_spiderbots(player)
+    local player_index = player.index
+    if not (player and player.valid) then return end
+    local player_entity = get_player_entity(player)
+    local spiderbots = global.spiderbots[player_index]
+    if not spiderbots then return end
+    for spider_id, data in pairs(spiderbots) do
+        local spiderbot = data.spiderbot
+        if spiderbot.valid then
+            if spiderbot.surface_index == player.surface_index then
+                if data.status == "idle" then
+                    spiderbot.follow_target = player_entity
+                elseif data.status == "path_requested" then
+                    spiderbot.follow_target = player_entity
+                elseif data.status == "task_assigned" then
+                    local task = data.task
+                    if not (task and task.entity.valid) then
+                        abandon_task(spider_id, player_index)
+                    else
+                        local destinations = spiderbot.autopilot_destinations
+                        spiderbot.follow_target = player_entity
+                        if destinations then
+                            for _, destination in pairs(destinations) do
+                                spiderbot.add_autopilot_destination(destination)
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            spiderbots[spider_id] = nil
+            global.spider_path_requests[spider_id] = nil
+            global.spider_path_to_position_requests[spider_id] = nil
+        end
+    end
+end
+
 
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
