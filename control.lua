@@ -572,6 +572,63 @@ local function on_spider_command_completed(event)
 end
 
 script.on_event(defines.events.on_spider_command_completed, on_spider_command_completed)
+
+---@param event EventData.on_script_path_request_finished
+local function on_script_path_request_finished(event)
+    local path_request_id = event.id
+    local path = event.path
+    local spiderbot_data = get_spiderbot_data(nil, path_request_id)
+    if not spiderbot_data then return end
+    local spiderbot = spiderbot_data.spiderbot
+    local spiderbot_id = spiderbot_data.spiderbot_id
+    local player = spiderbot_data.player
+    local player_index = spiderbot_data.player_index
+    if not path then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    if not (spiderbot and spiderbot.valid) then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    if not (player and player.valid) then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    if not global.spiderbots_enabled[player_index] then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    local status = spiderbot_data.status
+    if status == "path_requested" then
+        local task = spiderbot_data.task
+        if not (task and task.entity and task.entity.valid) then
+            abandon_task(spiderbot_id, player_index)
+            return
+        end
+        local task_position = task.entity.position
+        local distance_from_task = distance(task_position, spiderbot.position)
+        if distance_from_task > max_task_range then
+            abandon_task(spiderbot_id, player_index)
+            return
+        end
+        spiderbot.autopilot_destination = nil
+        local task_type = task.task_type
+        local task_color = (task_type == "deconstruct_entity" and color.red) or (task_type == "build_ghost" and color.blue) or (task_type == "upgrade_entity" and color.green) or (task_type == "insert_items" and color.yellow) or color.white
+        spiderbot.color = task_color
+        -- local previous_position = spiderbot.position
+        for _, waypoint in pairs(path) do
+            local waypoint_position = waypoint.position
+            spiderbot.add_autopilot_destination(waypoint_position)
+            -- previous_position = waypoint_position
+        end
+        spiderbot_data.status = "task_assigned"
+        spiderbot_data.path_request_id = nil
+    end
+end
+
+script.on_event(defines.events.on_script_path_request_finished, on_script_path_request_finished)
+
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
