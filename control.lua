@@ -629,6 +629,16 @@ end
 
 script.on_event(defines.events.on_script_path_request_finished, on_script_path_request_finished)
 
+---@param player_index player_index
+local function clear_visualization_renderings(player_index)
+    local render_ids = global.visualization_render_ids[player_index]
+    if not render_ids then return end
+    for _, render_id in pairs(render_ids) do
+        rendering.destroy(render_id)
+    end
+    global.visualization_render_ids[player_index] = nil
+end
+
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
