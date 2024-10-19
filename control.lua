@@ -639,6 +639,45 @@ local function clear_visualization_renderings(player_index)
     global.visualization_render_ids[player_index] = nil
 end
 
+---@param event EventData.on_player_cursor_stack_changed
+local function on_player_cursor_stack_changed(event)
+    local player_index = event.player_index
+    local player = game.get_player(player_index)
+    if not (player and player.valid) then return end
+    local player_entity = get_player_entity(player)
+    if not (player_entity and player_entity.valid) then return end
+    if not global.spiderbots_enabled[player_index] then
+        clear_visualization_renderings(player_index)
+        return
+    end
+    local show_visualization = player.is_cursor_blueprint()
+    if not show_visualization then
+        local cursor_stack = player.cursor_stack
+        show_visualization = cursor_stack and (cursor_stack.is_deconstruction_item or cursor_stack.is_upgrade_item or cursor_stack.is_blueprint or cursor_stack.is_blueprint_book) or false
+    end
+    if show_visualization then
+        clear_visualization_renderings(player_index)
+        local render_id = rendering.draw_sprite {
+            sprite = "utility/construction_radius_visualization",
+            surface = player.surface,
+            target = player.character,
+            x_scale = max_task_range * 3.2, -- i don't really understand why this is the magic number, but it's what got the sprite to be the correct size
+            y_scale = max_task_range * 3.2,
+            render_layer = "radius-visualization",
+            players = { player },
+            only_in_alt_mode = true,
+            tint = { r = 0.45, g = 0.4, b = 0.4, a = 0.5 }, -- by trial and error, this is the closest i could match the vanilla construction radius visualization look
+        }
+        if render_id then
+            global.visualization_render_ids[player_index] = global.visualization_render_ids[player_index] or {}
+            table.insert(global.visualization_render_ids[player_index], render_id)
+        end
+    else
+        clear_visualization_renderings(player_index)
+    end
+end
+
+script.on_event(defines.events.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
