@@ -343,7 +343,13 @@ local function build_ghost(spiderbot_data)
     if item_stack then
         local item_name = item_stack.name
         local item_count = item_stack.count or 1
-        local inventory = player.get_main_inventory()
+        local player_entity = get_player_entity(player)
+        if not (player_entity and player_entity.valid) then
+            abandon_task(spiderbot_id, player_index)
+            return
+        end
+        local entity_type = player_entity.type == "character" and "character" or "vehicle"
+        local inventory = entity_type == "character" and player_entity.get_inventory(defines.inventory.character_main) or player_entity.get_inventory(defines.inventory.character_vehicle)
         if not (inventory and inventory.valid) then
             abandon_task(spiderbot_id, player_index) -- no inventory to get items from
             return
@@ -375,7 +381,13 @@ local function deconstruct_entity(spiderbot_data)
         abandon_task(spiderbot_id, player_index)
         return
     end
-    local inventory = player.get_main_inventory()
+    local player_entity = get_player_entity(player)
+    if not (player_entity and player_entity.valid) then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    local entity_type = player_entity.type == "character" and "character" or "vehicle"
+    local inventory = entity_type == "character" and player_entity.get_inventory(defines.inventory.character_main) or player_entity.get_inventory(defines.inventory.character_vehicle)
     if not (inventory and inventory.valid) then
         abandon_task(spiderbot_id, player_index) -- no inventory to get items from
         return
@@ -433,7 +445,13 @@ local function upgrade_entity(spiderbot_data)
         abandon_task(spiderbot_id, player_index)
         return
     end
-    local inventory = player.get_main_inventory()
+    local player_entity = get_player_entity(player)
+    if not (player_entity and player_entity.valid) then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    local entity_type = player_entity.type == "character" and "character" or "vehicle"
+    local inventory = entity_type == "character" and player_entity.get_inventory(defines.inventory.character_main) or player_entity.get_inventory(defines.inventory.character_vehicle)
     if not (inventory and inventory.valid) then
         abandon_task(spiderbot_id, player_index) -- no inventory to get items from
         return
@@ -493,7 +511,13 @@ local function insert_items(spiderbot_data)
         abandon_task(spiderbot_id, player_index)
         return
     end
-    local inventory = player.get_main_inventory()
+    local player_entity = get_player_entity(player)
+    if not (player_entity and player_entity.valid) then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    local entity_type = player_entity.type == "character" and "character" or "vehicle"
+    local inventory = entity_type == "character" and player_entity.get_inventory(defines.inventory.character_main) or player_entity.get_inventory(defines.inventory.character_vehicle)
     if not (inventory and inventory.valid) then
         abandon_task(spiderbot_id, player_index) -- no inventory to get items from
         return
