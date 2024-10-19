@@ -35,6 +35,28 @@ end
 
 script.on_init(on_init)
 
+local function on_configuration_changed(event)
+    -- spiderbot data
+    global.spiderbots = global.spiderbots or {}
+    global.spiderbots_enabled = global.spiderbots_enabled or {}
+
+    -- pathfinding data
+    global.spider_path_requests = global.spider_path_requests or {}
+    global.spider_path_to_position_requests = global.spider_path_to_position_requests or {}
+    global.path_requested = global.path_requested or {}
+
+    -- player data
+    global.previous_controller = global.previous_controller or {}
+    global.previous_player_entity = global.previous_player_entity or {}
+    global.previous_player_color = global.previous_player_color or {}
+
+    -- misc data
+    global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
+    global.visualization_render_ids = global.visualization_render_ids or {}
+
+end
+
+script.on_configuration_changed(on_configuration_changed)
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
