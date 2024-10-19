@@ -13,19 +13,20 @@
 ---@alias uuid string|integer
 ---@alias player_index string|integer
 
----@class path_request_data
----@field spider LuaEntity
----@field spider_id uuid
----@field entity LuaEntity
----@field entity_id uuid
----@field player LuaPlayer
+-- -@class path_request_data
+-- -@field spider LuaEntity
+-- -@field spider_id uuid
+-- -@field entity LuaEntity
+-- -@field entity_id uuid
+-- -@field player LuaPlayer
+-- -@field task_data task_data
 
----@class position_path_request_data
----@field spider LuaEntity
----@field spider_id uuid
----@field start_position MapPosition
----@field final_position MapPosition
----@field player LuaPlayer
+-- -@class position_path_request_data
+-- -@field spider LuaEntity
+-- -@field spider_id uuid
+-- -@field start_position MapPosition
+-- -@field final_position MapPosition
+-- -@field player LuaPlayer
 
 ---@class spiderbot_data
 ---@field spiderbot LuaEntity
