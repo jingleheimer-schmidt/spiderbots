@@ -106,6 +106,20 @@ local function register_new_spiderbot(spiderbot, player, player_index)
         spiderbot.entity_label = random_backer_name()
     end
 end
+
+---@param event EventData.on_built_entity
+local function on_spiderbot_created(event)
+    local spiderbot = event.created_entity
+    local player_index = event.player_index
+    local player = game.get_player(player_index)
+    if player and player.valid then
+        register_new_spiderbot(spiderbot, player, player_index)
+    end
+end
+
+local filter = { { filter = "name", name = "spiderbot" } }
+script.on_event(defines.events.on_built_entity, on_spiderbot_created, filter)
+
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
