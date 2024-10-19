@@ -10,6 +10,31 @@ end
 local function add_commands()
     commands.add_command("spiderbots-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
 end
+
+local function on_init()
+    -- spiderbot data
+    global.spiderbots = {} --[[@type table<integer, table<uuid, LuaEntity>>]]
+    global.spiderbots_enabled = {} --[[@type table<integer, boolean>]]
+
+    -- pathfinding data
+    global.spider_path_requests = {} --[[@type table<integer, path_request_data>]]
+    global.spider_path_to_position_requests = {} --[[@type table<integer, position_path_request_data>]]
+    global.path_requested = {} --[[@type table<uuid, boolean>]]
+
+    -- player data
+    global.previous_controller = {} --[[@type table<integer, defines.controllers>]]
+    global.previous_player_entity = {} --[[@type table<integer, uuid>]]
+    global.previous_player_color = {} --[[@type table<integer, Color>]]
+
+    -- misc data
+    global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
+    global.visualization_render_ids = {} --[[@type table<integer, table<integer, integer>>]]
+
+    add_commands()
+end
+
+script.on_init(on_init)
+
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
