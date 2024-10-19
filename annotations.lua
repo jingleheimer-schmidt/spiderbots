@@ -34,4 +34,9 @@
 ---@field player_index player_index
 ---@field status string
 ---@field path_request_id integer?
+---@field task task_data?
 
+---@class task_data
+---@field task_type string
+---@field entity LuaEntity
+---@field entity_id uuid
