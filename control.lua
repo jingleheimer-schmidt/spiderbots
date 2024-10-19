@@ -125,6 +125,7 @@ end
 local filter = { { filter = "name", name = "spiderbot" } }
 script.on_event(defines.events.on_built_entity, on_spiderbot_created, filter)
 
+-- register spiderbots when created by script triggers (thrown capsules)
 ---@param event EventData.on_trigger_created_entity
 local function on_trigger_created_entity(event)
     local entity = event.entity
@@ -141,6 +142,44 @@ local function on_trigger_created_entity(event)
 end
 
 script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_entity)
+
+-- create the spiderbot projectile when a player uses a spiderbot capsule
+---@param event EventData.on_player_used_capsule
+local function on_player_used_capsule(event)
+    local position = event.position
+    local player = game.get_player(event.player_index)
+    if not (player and player.valid) then return end
+    -- try to find a valid position for the spiderbot to land. if a non_colliding_position is found then the spiderbot can scramble to it from the original position once spawned
+    local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position, 3.75, 0.5)
+    -- refund the spiderbot item if there is no valid position
+    if not non_colliding_position then
+        local inventory = player.get_main_inventory()
+        if inventory and inventory.valid then
+            local item_stack = { name = "spiderbot-item", count = 1 }
+            local cursor_stack = player.cursor_stack
+            if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == "spiderbot-item" then
+                item_stack.count = item_stack.count + cursor_stack.count
+                player.cursor_stack.set_stack(item_stack)
+            else
+                player.cursor_stack.set_stack(item_stack)
+            end
+        end
+        return
+    end
+    local player_entity = get_player_entity(player)
+    player.surface.create_entity {
+        name = "spiderbot-projectile",
+        position = player.position,
+        force = player.force,
+        player = player,
+        source = player_entity,
+        target = position,
+        speed = 0.33,
+        raise_built = true,
+    }
+end
+
+script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
 
 
 -- toggle the spiderbots on/off for the player
