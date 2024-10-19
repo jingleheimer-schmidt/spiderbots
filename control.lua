@@ -402,6 +402,65 @@ local function deconstruct_entity(spiderbot_data)
     end
 end
 
+---@param spiderbot_data spiderbot_data
+local function upgrade_entity(spiderbot_data)
+    local spiderbot = spiderbot_data.spiderbot
+    local spiderbot_id = spiderbot_data.spiderbot_id
+    local player = spiderbot_data.player
+    local player_index = spiderbot_data.player_index
+    local entity = spiderbot_data.task.entity
+    if not (player and player.valid and entity and entity.valid) then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    local inventory = player.get_main_inventory()
+    if not (inventory and inventory.valid) then
+        abandon_task(spiderbot_id, player_index) -- no inventory to get items from
+        return
+    end
+    if entity.to_be_upgraded() then
+        local upgrade_target = entity.get_upgrade_target()
+        local items = upgrade_target and upgrade_target.items_to_place_this
+        local item_stack = items and items[1]
+        if upgrade_target and item_stack then
+            local item_name = item_stack.name
+            local item_count = item_stack.count or 1
+            if inventory.get_item_count(item_name) >= item_count then
+                local upgrade_direction = entity.get_upgrade_direction()
+                local upgrade_name = upgrade_target.name
+                local type = entity.type
+                local is_ug_belt = (type == "underground-belt")
+                local is_loader = (type == "loader" or type == "loader-1x1")
+                local underground_type = is_ug_belt and entity.belt_to_ground_type
+                local loader_type = is_loader and entity.loader_type
+                local create_entity_type = underground_type or loader_type or nil
+                local upgraded_entity = entity.surface.create_entity {
+                    name = upgrade_name,
+                    position = entity.position,
+                    direction = upgrade_direction,
+                    player = player,
+                    fast_replace = true,
+                    force = entity.force,
+                    spill = true,
+                    type = create_entity_type,
+                    raise_built = true,
+                }
+                if upgraded_entity then
+                    inventory.remove(item_stack)
+                    abandon_task(spiderbot_id, player_index) -- successfully upgraded entity. task complete. reset task data and follow player
+                else
+                    abandon_task(spiderbot_id, player_index) -- failed to upgrade entity
+                end
+            else
+                abandon_task(spiderbot_id, player_index) -- not enough items in inventory
+            end
+        else
+            abandon_task(spiderbot_id, player_index) -- no upgrade_target or item_stack
+        end
+    else
+        abandon_task(spiderbot_id, player_index) -- entity no longer needs to be upgraded
+    end
+end
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
