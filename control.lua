@@ -63,6 +63,25 @@ script.on_configuration_changed(on_configuration_changed)
 local function get_player_entity(player)
     return player.character or player.vehicle or nil
 end
+
+---@return string
+local function random_backer_name()
+    local backer_names = game.backer_names
+    local index = math.random(#backer_names)
+    return backer_names[index]
+end
+
+---@param name string
+---@return boolean
+local function is_backer_name(name)
+    if not global.backer_name_lookup then
+        global.backer_name_lookup = {}
+        for _, backer_name in pairs(game.backer_names) do
+            global.backer_name_lookup[backer_name] = true
+        end
+    end
+    return global.backer_name_lookup[name]
+end
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
