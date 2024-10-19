@@ -202,6 +202,26 @@ end
 
 script.on_event(defines.events.on_entity_destroyed, on_spider_destroyed)
 
+-- abandon the current task, set state to idle, and follow the player
+---@param spiderbot_id uuid
+---@param player_index player_index
+local function abandon_task(spiderbot_id, player_index)
+    local spiderbots = global.spiderbots[player_index] ---@type table<uuid, spiderbot_data>
+    local data = spiderbots[spiderbot_id]
+    if data then
+        data.status = "idle"
+        data.path_request_id = nil
+        local player = data.player
+        local spiderbot = data.spiderbot
+        if player.valid and spiderbot.valid then
+            local target = get_player_entity(player)
+            if target and target.valid then
+                spiderbot.follow_target = target
+            end
+        end
+    end
+end
+
 
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
