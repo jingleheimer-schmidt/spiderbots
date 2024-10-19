@@ -770,7 +770,7 @@ end
 local function on_tick(event)
     for _, player in pairs(game.connected_players) do
         local player_index = player.index
-        local surface_index = player.surface_index
+        global.spiderbots[player_index] = global.spiderbots[player_index] or {}
         local spiderbots = global.spiderbots[player_index]
         if #spiderbots == 0 then goto next_player end
         -- relink spiderbots if the player changes controller type
