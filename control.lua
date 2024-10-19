@@ -133,18 +133,18 @@ local function toggle_spiderbots(event)
     local player_index = event.player_index
     global.spiderbots_enabled = global.spiderbots_enabled or {}
     global.spiderbots_enabled[player_index] = not global.spiderbots_enabled[player_index]
-    if not global.spiderbots_enabled[player_index] then
-        local player = game.get_player(player_index)
-        global.spiderbots = global.spiderbots or {}
-        local player_spiders = global.spiderbots[player_index]
-        if player and player.valid and player_spiders then
-            for spider_id, spider in pairs(player_spiders) do
-                if spider.valid then
-                    abandon_task(spider, player)
-                end
-            end
-        end
-    end
+    -- if not global.spiderbots_enabled[player_index] then
+    --     local player = game.get_player(player_index)
+    --     global.spiderbots = global.spiderbots or {}
+    --     local player_spiders = global.spiderbots[player_index]
+    --     if player and player.valid and player_spiders then
+    --         for spider_id, spider in pairs(player_spiders) do
+    --             if spider.valid then
+    --                 abandon_task(spider, player)
+    --             end
+    --         end
+    --     end
+    -- end
     game.get_player(player_index).set_shortcut_toggled("toggle-spiderbots", global.spiderbots_enabled[player_index])
 end
 
