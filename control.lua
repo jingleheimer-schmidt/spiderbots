@@ -865,6 +865,7 @@ local function on_tick(event)
                     end
                 end
             end
+            if not (status == "idle") then goto next_spiderbot end
             decon_entities = decon_entities or surface.find_entities_filtered {
                 area = area,
                 force = player_force,
