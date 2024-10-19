@@ -678,6 +678,21 @@ local function on_player_cursor_stack_changed(event)
 end
 
 script.on_event(defines.events.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
+
+---@param entity_id uuid
+---@return boolean
+local function is_task_assigned(entity_id)
+    for player_index, spiderbots in pairs(global.spiderbots) do
+        for spider_id, spiderbot_data in pairs(spiderbots) do
+            local task = spiderbot_data.task
+            if task and (task.entity_id == entity_id) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
