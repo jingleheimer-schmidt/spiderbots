@@ -125,6 +125,24 @@ end
 local filter = { { filter = "name", name = "spiderbot" } }
 script.on_event(defines.events.on_built_entity, on_spiderbot_created, filter)
 
+---@param event EventData.on_trigger_created_entity
+local function on_trigger_created_entity(event)
+    local entity = event.entity
+    local source = event.source
+    if entity.name == "spiderbot" then
+        if source and source.valid then
+            local player = source.type == "character" and source.player
+            if player and player.valid then
+                local player_index = player.index
+                register_new_spiderbot(entity, player, player_index)
+            end
+        end
+    end
+end
+
+script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_entity)
+
+
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
