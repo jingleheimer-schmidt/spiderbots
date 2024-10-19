@@ -343,6 +343,65 @@ local function build_ghost(spiderbot_data)
         abandon_task(spiderbot_id, player_index) -- no item to place this
     end
 end
+
+---@param spiderbot_data spiderbot_data
+local function deconstruct_entity(spiderbot_data)
+    local spiderbot = spiderbot_data.spiderbot
+    local spiderbot_id = spiderbot_data.spiderbot_id
+    local player = spiderbot_data.player
+    local player_index = spiderbot_data.player_index
+    local entity = spiderbot_data.task.entity
+    if not (player and player.valid and entity and entity.valid) then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    local inventory = player.get_main_inventory()
+    if not (inventory and inventory.valid) then
+        abandon_task(spiderbot_id, player_index) -- no inventory to get items from
+        return
+    end
+    local entity_position = entity.position
+    if entity.to_be_deconstructed() then
+        local prototype = entity.prototype
+        local products = prototype and prototype.mineable_properties.products
+        local result_when_mined = (entity.type == "item-entity" and entity.stack) or (products and products[1] and products[1].name) or nil
+        local space_in_stack = result_when_mined and inventory.can_insert(result_when_mined)
+        if result_when_mined and space_in_stack then
+            while entity.valid do
+                local count = 0
+                if inventory.can_insert(result_when_mined) then
+                    local result = entity.mine { inventory = inventory, force = false, ignore_minable = false, raise_destroyed = true }
+                    count = count + 1
+                    if not result then break end
+                else
+                    break
+                end
+                if count > 9 then break end
+            end
+            abandon_task(spiderbot_id, player_index) -- successfully deconstructed entity or transferred 10 items to player inventory. task complete. reset task data and follow player
+        elseif (entity.type == "cliff") then
+            if inventory and inventory.get_item_count("cliff-explosives") > 0 then
+                spiderbot.surface.create_entity {
+                    name = "cliff-explosives",
+                    position = spiderbot.position,
+                    target = entity_position,
+                    force = player.force,
+                    raise_built = true,
+                    speed = 0.125,
+                }
+                inventory.remove({ name = "cliff-explosives", count = 1 })
+                abandon_task(spiderbot_id, player_index) -- successfully spawned cliff explosives. task complete. reset task data and follow player
+            else
+                abandon_task(spiderbot_id, player_index) -- no cliff explosives in inventory
+            end
+        else
+            abandon_task(spiderbot_id, player_index) -- no space in inventory
+        end
+    else
+        abandon_task(spiderbot_id, player_index) -- entity no longer needs to be deconstructed
+    end
+end
+
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
