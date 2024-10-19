@@ -263,6 +263,12 @@ local function relink_following_spiderbots(player)
                         end
                     end
                 end
+            else
+                local position_in_radius = random_position_in_radius(player.position, 50)
+                local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
+                local position = non_colliding_position or player.position
+                spiderbot.teleport(position, player.surface, true)
+                abandon_task(spider_id, player_index)
             end
         else
             spiderbots[spider_id] = nil
@@ -282,7 +288,8 @@ local function on_player_changed_surface(event)
         for spider_id, spiderbot_data in pairs(spiderbots) do
             local spiderbot = spiderbot_data.spiderbot
             if spiderbot.valid then
-                local non_colliding_position = surface.find_non_colliding_position("spiderbot-leg-1", player.position, 25, 0.5)
+                local position_in_radius = random_position_in_radius(player.position, 50)
+                local non_colliding_position = surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
                 local position = non_colliding_position or player.position
                 spiderbot.teleport(position, surface, true)
                 abandon_task(spider_id, player_index)
@@ -819,7 +826,8 @@ local function on_tick(event)
             if (counter < 5) and no_speed then
                 if exceeds_range then
                     if status == "idle" then
-                        local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", player.position, 25, 0.5)
+                        local position_in_radius = random_position_in_radius(player_entity.position, 50)
+                        local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
                         local position = non_colliding_position or player.position
                         spiderbot.teleport(position, player.surface, true)
                         counter = counter + 1
