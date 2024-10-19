@@ -307,6 +307,42 @@ local function get_spiderbot_data(spiderbot_id, path_request_id)
     end
 end
 
+---@param spiderbot_data spiderbot_data
+local function build_ghost(spiderbot_data)
+    local spiderbot = spiderbot_data.spiderbot
+    local spiderbot_id = spiderbot_data.spiderbot_id
+    local player = spiderbot_data.player
+    local player_index = spiderbot_data.player_index
+    local entity = spiderbot_data.task.entity
+    if not (player and player.valid and entity and entity.valid) then
+        abandon_task(spiderbot_id, player_index)
+        return
+    end
+    local items = entity.ghost_prototype.items_to_place_this
+    local item_stack = items and items[1]
+    if item_stack then
+        local item_name = item_stack.name
+        local item_count = item_stack.count or 1
+        local inventory = player.get_main_inventory()
+        if not (inventory and inventory.valid) then
+            abandon_task(spiderbot_id, player_index) -- no inventory to get items from
+            return
+        end
+        if inventory.get_item_count(item_name) >= item_count then
+            local dictionary, revived_entity = entity.revive({ return_item_request_proxy = false, raise_revive = true })
+            if revived_entity then
+                inventory.remove(item_stack)
+                abandon_task(spiderbot_id, player_index) -- successfully revived entity, task complete. reset task data and follow player
+            else
+                abandon_task(spiderbot_id, player_index) -- failed to revive entity
+            end
+        else
+            abandon_task(spiderbot_id, player_index) -- not enough items to revive entity
+        end
+    else
+        abandon_task(spiderbot_id, player_index) -- no item to place this
+    end
+end
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
