@@ -206,6 +206,7 @@ local function abandon_task(spiderbot_id, player_index)
     local spiderbots = global.spiderbots[player_index]
     local spiderbot_data = spiderbots[spiderbot_id]
     if spiderbot_data then
+        spiderbot_data.task = nil
         spiderbot_data.status = "idle"
         spiderbot_data.path_request_id = nil
         local player = spiderbot_data.player
@@ -214,6 +215,7 @@ local function abandon_task(spiderbot_id, player_index)
             local target = get_player_entity(player)
             if target and target.valid then
                 spiderbot.follow_target = target
+                spiderbot.color = player.color
             end
         else
             spiderbots[spiderbot_id] = nil
