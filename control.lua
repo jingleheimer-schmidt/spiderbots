@@ -693,6 +693,33 @@ local function is_task_assigned(entity_id)
     return false
 end
 
+---@param spiderbot LuaEntity
+---@param entity LuaEntity
+---@return integer
+local function request_path(spiderbot, entity)
+    local spider_leg_bounding_box = { { -0.01, -0.01 }, { 0.01, 0.01 } }
+    local collision_mask = { "water-tile", "colliding-with-tiles-only", "consider-tile-transitions" }
+    local path_to_entity_flags = { cache = false, low_priority = true }
+    local bounding_box = entity.bounding_box
+    local right_bottom = bounding_box.right_bottom
+    local left_top = bounding_box.left_top
+    local x = (right_bottom.x - left_top.x) / 2
+    local y = (right_bottom.y - left_top.y) / 2
+    local request_parameters = {
+        bounding_box = spider_leg_bounding_box,
+        collision_mask = collision_mask,
+        start = spiderbot.position,
+        goal = entity.position,
+        force = spiderbot.force,
+        radius = math.max(x, y),
+        can_open_gates = true,
+        path_resolution_modifier = -1,
+        pathfind_flags = path_to_entity_flags,
+    }
+    local path_request_id = spiderbot.surface.request_path(request_parameters)
+    return path_request_id
+end
+
 ---@param event EventData.on_tick
 local function on_tick(event)
     for _, player in pairs(game.connected_players) do
