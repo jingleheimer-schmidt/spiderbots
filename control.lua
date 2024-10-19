@@ -82,6 +82,30 @@ local function is_backer_name(name)
     end
     return global.backer_name_lookup[name]
 end
+
+---@param spiderbot LuaEntity
+---@param player LuaPlayer
+---@param player_index player_index
+local function register_new_spiderbot(spiderbot, player, player_index)
+    local uuid = entity_uuid(spiderbot)
+    global.spiderbots[player_index] = global.spiderbots[player_index] or {}
+    global.spiderbots[player_index][uuid] = {
+        spiderbot = spiderbot,
+        spiderbot_id = uuid,
+        player = player,
+        player_index = player_index,
+        status = "idle"
+    }
+    spiderbot.color = player.color
+    local player_entity = get_player_entity(player)
+    if player_entity and player_entity.valid then
+        spiderbot.follow_target = player_entity
+    end
+    local entity_label = spiderbot.entity_label
+    if (not entity_label) or (is_backer_name(entity_label)) then
+        spiderbot.entity_label = random_backer_name()
+    end
+end
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
