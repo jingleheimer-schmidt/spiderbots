@@ -773,6 +773,7 @@ local function on_tick(event)
         global.spiderbots[player_index] = global.spiderbots[player_index] or {}
         local spiderbots = global.spiderbots[player_index]
         if table_size(spiderbots) == 0 then goto next_player end
+        if not global.spiderbots_enabled[player_index] then goto next_player end
         -- relink spiderbots if the player changes controller type
         local controller_type = player.controller_type
         global.previous_controller[player_index] = global.previous_controller[player_index] or controller_type
