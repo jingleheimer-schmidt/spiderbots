@@ -1,4 +1,7 @@
 
+local general_util = require("util/general")
+local entity_uuid = general_util.entity_uuid
+
 local function toggle_debug()
     global.debug = not global.debug
     for _, player in pairs(game.connected_players) do
@@ -11,9 +14,11 @@ local function add_commands()
     commands.add_command("spiderbots-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
 end
 
+script.on_load(add_commands)
+
 local function on_init()
     -- spiderbot data
-    global.spiderbots = {} --[[@type table<integer, table<uuid, LuaEntity>>]]
+    global.spiderbots = {} --[[@type table<integer, table<uuid, spiderbot_data>>]]
     global.spiderbots_enabled = {} --[[@type table<integer, boolean>]]
 
     -- pathfinding data
