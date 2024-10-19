@@ -41,44 +41,64 @@ local function add_commands()
     commands.add_command("spiderbots-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
 end
 
+-- global.spiderbots[player_index][spiderbot_uuid] = {
+--     spiderbot = spiderbot,
+--     status = "idle",
+--     task = {},
+--     render_ids = {},
+--     path_request_id = nil,
+-- }
+
 local function on_init()
-    global.spiders = {} --[[@type table<integer, table<uuid, LuaEntity>>]]
-    global.available_spiders = {} --[[@type table<integer, table<integer, LuaEntity[]>>]]
-    global.tasks = {
-        by_entity = {}, --[[@type table<uuid, entity_task_data>]]
-        by_spider = {}, --[[@type table<uuid, entity_task_data>]]
-        by_tile = {}, --[[@type table<uuid, entity_task_data>]]
-        nudges = {}, --[[@type table<uuid, entity_task_data>]]
-    }
+    -- global.spiders = {} --[[@type table<integer, table<uuid, LuaEntity>>]]
+    -- global.available_spiders = {} --[[@type table<integer, table<integer, LuaEntity[]>>]]
+    -- global.tasks = {
+    --     by_entity = {}, --[[@type table<uuid, entity_task_data>]]
+    --     by_spider = {}, --[[@type table<uuid, entity_task_data>]]
+    --     by_tile = {}, --[[@type table<uuid, entity_task_data>]]
+    --     nudges = {}, --[[@type table<uuid, entity_task_data>]]
+    -- }
+
+    global.spiderbots = {} --[[@type table<integer, table<uuid, spiderbot_data>]]
+
     global.spider_path_requests = {} --[[@type table<integer, path_request_data>]]
     global.spider_path_to_position_requests = {} --[[@type table<integer, position_path_request_data>]]
     global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
-    global.previous_controller = {} --[[@type table<integer, defines.controllers>]]
-    global.previous_player_entity = {} --[[@type table<integer, uuid>]]
-    global.previous_player_color = {} --[[@type table<integer, Color>]]
     global.path_requested = {} --[[@type table<uuid, boolean>]]
     global.spiders_enabled = {} --[[@type table<integer, boolean>]]
     global.visualization_render_ids = {} --[[@type table<integer, table<integer, integer>>]]
+
+    -- player data tracking
+    global.previous_controller = {} --[[@type table<integer, defines.controllers>]]
+    global.previous_player_entity = {} --[[@type table<integer, uuid>]]
+    global.previous_player_color = {} --[[@type table<integer, Color>]]
+
     add_commands()
 end
 
 local function on_configuration_changed(event)
-    global.spiders = global.spiders or {}
-    global.available_spiders = global.available_spiders or {}
-    global.tasks = global.tasks or {}
-    global.tasks.by_entity = global.tasks.by_entity or {}
-    global.tasks.by_spider = global.tasks.by_spider or {}
-    global.tasks.by_tile = global.tasks.by_tile or {}
-    global.tasks.nudges = global.tasks.nudges or {}
+    -- spider data
+    -- global.spiders = global.spiders or {}
+    -- global.available_spiders = global.available_spiders or {}
+    -- global.tasks = global.tasks or {}
+    -- global.tasks.by_entity = global.tasks.by_entity or {}
+    -- global.tasks.by_spider = global.tasks.by_spider or {}
+    -- global.tasks.by_tile = global.tasks.by_tile or {}
+    -- global.tasks.nudges = global.tasks.nudges or {}
+
+    global.spiderbots = global.spiderbots or {}
+
     global.spider_path_requests = global.spider_path_requests or {}
     global.spider_path_to_position_requests = global.spider_path_to_position_requests or {}
     global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
-    global.previous_controller = global.previous_controller or {}
-    global.previous_player_entity = global.previous_player_entity or {}
-    global.previous_player_color = global.previous_player_color or {}
     global.path_requested = global.path_requested or {}
     global.spiders_enabled = global.spiders_enabled or {}
     global.visualization_render_ids = global.visualization_render_ids or {}
+
+    -- player data tracking
+    global.previous_controller = global.previous_controller or {}
+    global.previous_player_entity = global.previous_player_entity or {}
+    global.previous_player_color = global.previous_player_color or {}
 end
 
 script.on_init(on_init)
