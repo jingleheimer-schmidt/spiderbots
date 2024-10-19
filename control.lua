@@ -27,18 +27,18 @@ script.on_load(add_commands)
 
 local function on_init()
     -- spiderbot data
-    global.spiderbots = {} --[[@type table<integer, table<uuid, spiderbot_data>>]]
-    global.spiderbots_enabled = {} --[[@type table<integer, boolean>]]
 
     -- pathfinding data
     global.spider_path_requests = {} --[[@type table<integer, path_request_data>]]
     global.spider_path_to_position_requests = {} --[[@type table<integer, position_path_request_data>]]
     global.path_requested = {} --[[@type table<uuid, boolean>]]
+    global.spiderbots = {} --[[@type table<player_index, table<uuid, spiderbot_data>>]]
+    global.spiderbots_enabled = {} --[[@type table<player_index, boolean>]]
 
     -- player data
-    global.previous_controller = {} --[[@type table<integer, defines.controllers>]]
-    global.previous_player_entity = {} --[[@type table<integer, uuid>]]
-    global.previous_player_color = {} --[[@type table<integer, Color>]]
+    global.previous_controller = {} --[[@type table<player_index, defines.controllers>]]
+    global.previous_player_entity = {} --[[@type table<player_index, uuid>]]
+    global.previous_player_color = {} --[[@type table<player_index, Color>]]
 
     -- misc data
     global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
