@@ -749,11 +749,13 @@ local function request_path(spiderbot, entity)
     local left_top = bounding_box.left_top
     local x = (right_bottom.x - left_top.x) / 2
     local y = (right_bottom.y - left_top.y) / 2
+    local non_colliding_position = spiderbot.surface.find_non_colliding_position("spiderbot-leg-1", entity.position, 25, 0.5)
+    local goal = non_colliding_position or entity.position
     local request_parameters = {
         bounding_box = spider_leg_bounding_box,
         collision_mask = collision_mask,
         start = spiderbot.position,
-        goal = entity.position,
+        goal = goal,
         force = spiderbot.force,
         radius = math.max(x, y),
         can_open_gates = true,
