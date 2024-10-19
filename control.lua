@@ -57,6 +57,12 @@ local function on_configuration_changed(event)
 end
 
 script.on_configuration_changed(on_configuration_changed)
+
+---@param player LuaPlayer
+---@return LuaEntity?
+local function get_player_entity(player)
+    return player.character or player.vehicle or nil
+end
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
