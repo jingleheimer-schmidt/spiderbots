@@ -507,6 +507,22 @@ local function insert_items(spiderbot_data)
         abandon_task(spiderbot_id, player_index) -- no proxy_target
     end
 end
+
+---@param spiderbot_data spiderbot_data
+local function complete_task(spiderbot_data)
+    local type = spiderbot_data.task.task_type
+    if type == "build_ghost" then
+        build_ghost(spiderbot_data)
+    elseif type == "deconstruct_entity" then
+        deconstruct_entity(spiderbot_data)
+    elseif type == "upgrade_entity" then
+        upgrade_entity(spiderbot_data)
+    elseif type == "insert_items" then
+        insert_items(spiderbot_data)
+    elseif type == "repair_entity" then
+    end
+end
+
 -- toggle the spiderbots on/off for the player
 ---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
 local function toggle_spiderbots(event)
