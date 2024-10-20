@@ -11,57 +11,6 @@ local max_task_range = constants.max_task_range
 local color_util = require("util/colors")
 local color = color_util.color
 
-local function toggle_debug()
-    global.debug = not global.debug
-    for _, player in pairs(game.connected_players) do
-        local messaage = global.debug and { "spiderbot-messages.debug-mode-enabled" } or { "spiderbot-messages.debug-mode-disabled" }
-        player.print(messaage)
-    end
-end
-
-local function add_commands()
-    commands.add_command("spiderbots-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
-end
-
-script.on_load(add_commands)
-
-local function on_init()
-    -- spiderbot data
-    global.spiderbots = {} --[[@type table<player_index, table<uuid, spiderbot_data>>]]
-    global.spiderbots_enabled = {} --[[@type table<player_index, boolean>]]
-
-    -- player data
-    global.previous_controller = {} --[[@type table<player_index, defines.controllers>]]
-    global.previous_player_entity = {} --[[@type table<player_index, uuid>]]
-    global.previous_player_color = {} --[[@type table<player_index, Color>]]
-
-    -- misc data
-    global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
-    global.visualization_render_ids = {} --[[@type table<integer, table<integer, integer>>]]
-
-    add_commands()
-end
-
-script.on_init(on_init)
-
-local function on_configuration_changed(event)
-    -- spiderbot data
-    global.spiderbots = global.spiderbots or {}
-    global.spiderbots_enabled = global.spiderbots_enabled or {}
-
-    -- player data
-    global.previous_controller = global.previous_controller or {}
-    global.previous_player_entity = global.previous_player_entity or {}
-    global.previous_player_color = global.previous_player_color or {}
-
-    -- misc data
-    global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
-    global.visualization_render_ids = global.visualization_render_ids or {}
-
-end
-
-script.on_configuration_changed(on_configuration_changed)
-
 ---@param player LuaPlayer
 ---@return LuaEntity?
 local function get_player_entity(player)
@@ -1108,3 +1057,58 @@ end
 
 script.on_event("toggle-spiderbots", toggle_spiderbots)
 script.on_event(defines.events.on_lua_shortcut, toggle_spiderbots)
+
+local function toggle_debug()
+    global.debug = not global.debug
+    for _, player in pairs(game.connected_players) do
+        local messaage = global.debug and { "spiderbot-messages.debug-mode-enabled" } or { "spiderbot-messages.debug-mode-disabled" }
+        player.print(messaage)
+    end
+end
+
+local function add_commands()
+    commands.add_command("spiderbots-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
+end
+
+script.on_load(add_commands)
+
+local function on_init()
+    -- spiderbot data
+    global.spiderbots = {} --[[@type table<player_index, table<uuid, spiderbot_data>>]]
+    global.spiderbots_enabled = {} --[[@type table<player_index, boolean>]]
+
+    -- player data
+    global.previous_controller = {} --[[@type table<player_index, defines.controllers>]]
+    global.previous_player_entity = {} --[[@type table<player_index, uuid>]]
+    global.previous_player_color = {} --[[@type table<player_index, Color>]]
+
+    -- misc data
+    global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
+    global.visualization_render_ids = {} --[[@type table<integer, table<integer, integer>>]]
+
+    add_commands()
+end
+
+script.on_init(on_init)
+
+local function on_configuration_changed(event)
+    -- spiderbot data
+    global.spiderbots = global.spiderbots or {}
+    global.spiderbots_enabled = global.spiderbots_enabled or {}
+
+    -- player data
+    global.previous_controller = global.previous_controller or {}
+    global.previous_player_entity = global.previous_player_entity or {}
+    global.previous_player_color = global.previous_player_color or {}
+
+    -- misc data
+    global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
+    global.visualization_render_ids = global.visualization_render_ids or {}
+
+    for _, player in pairs(game.players) do
+        relink_following_spiderbots(player)
+    end
+
+end
+
+script.on_configuration_changed(on_configuration_changed)
