@@ -62,6 +62,7 @@ data:extend { spiderbot_prototype }
 for i = 1, 8 do
     local leg = data.raw["spider-leg"]["spiderbot-leg-" .. i]
     leg.collision_mask = { "object-layer", "water-tile", "rail-layer", "not-colliding-with-itself" }
+    leg.minimal_step_size = leg.minimal_step_size * 5
 end
 
 local spiderbot_recipe = table.deepcopy(data.raw["recipe"]["spidertron"])
