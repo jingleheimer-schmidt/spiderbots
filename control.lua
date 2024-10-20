@@ -768,7 +768,7 @@ local function on_tick(event)
             global.previous_player_entity[player_index] = player_uuid
             goto next_player
         end
-        -- relink spiderbots if the player changes color
+        -- update spiderbots if the player changes color
         local player_color = player.color
         global.previous_player_color[player_index] = global.previous_player_color[player_index] or player_color
         local previous_color = global.previous_player_color[player_index]
@@ -776,8 +776,7 @@ local function on_tick(event)
             for spider_id, spiderbot_data in pairs(spiderbots) do
                 local spiderbot = spiderbot_data.spiderbot
                 if spiderbot.valid then
-                    local spiderbot_color = spiderbot.color
-                    if spiderbot_color and (spiderbot_color.r == previous_color.r and spiderbot_color.g == previous_color.g and spiderbot_color.b == previous_color.b) then
+                    if not (spiderbot_data.status == "task_assigned") then
                         spiderbot.color = player_color
                     end
                 end
