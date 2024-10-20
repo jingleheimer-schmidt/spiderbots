@@ -59,6 +59,10 @@ local function register_new_spiderbot(spiderbot, player, player_index)
     if (not entity_label) or (is_backer_name(entity_label)) then
         spiderbot.entity_label = random_backer_name()
     end
+    if table_size(global.spiderbots[player_index]) == 1 then
+        global.spiderbots_enabled[player_index] = true
+        player.set_shortcut_toggled("toggle-spiderbots", true)
+    end
 end
 
 -- register spiderbots when created by the player
