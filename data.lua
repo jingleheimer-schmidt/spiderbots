@@ -24,6 +24,10 @@ spiderbot_prototype.chunk_exploration_radius = 1
 spiderbot_prototype.minable.mining_time = spiderbot_prototype.minable.mining_time / 4
 spiderbot_prototype.working_sound.probability = 1 / 4
 spiderbot_prototype.minimap_representation.scale = 0.125
+local lights = spiderbot_prototype.graphics_set.light or {}
+for _, light in pairs(lights) do
+    light.intensity = light.intensity / 2.5
+end
 local legs = spiderbot_prototype.spider_engine.legs
 if legs[1] then
     for _, leg in pairs(legs) do
