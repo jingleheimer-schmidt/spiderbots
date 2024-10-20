@@ -151,6 +151,31 @@ local spiderbot_projectile = {
 }
 data:extend { spiderbot_projectile }
 
+local spiderbot_no_trigger_projectile = {
+    type = "projectile",
+    name = "spiderbot-no-trigger",
+    acceleration = 0.005,
+    -- action = {
+    --     action_delivery = {
+    --         target_effects = {
+    --             {
+    --                 entity_name = "spiderbot",
+    --                 type = "create-entity",
+    --                 show_in_tooltip = true,
+    --                 trigger_created_entity = "true"
+    --             }
+    --         },
+    --         type = "instant"
+    --     },
+    --     type = "direct"
+    -- },
+    animation = data.raw["projectile"]["distractor-capsule"].animation,
+    shadow = data.raw["projectile"]["distractor-capsule"].shadow,
+    flags = { "not-on-map" },
+    enable_drawing_with_mask = true,
+}
+data:extend { spiderbot_no_trigger_projectile }
+
 local toggle_spiderbots_shortcut = {
     type = "shortcut",
     name = "toggle-spiderbots",
