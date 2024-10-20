@@ -719,6 +719,26 @@ local function request_path(spiderbot, entity)
     return path_request_id
 end
 
+---@param spiderbot LuaEntity
+---@param player LuaPlayer
+local function return_spiderbot_to_inventory(spiderbot, player)
+    local spiderbot_id = entity_uuid(spiderbot)
+    local player_index = player.index
+    abandon_task(spiderbot_id, player_index)
+    local player_entity = get_player_entity(player)
+    player.surface.create_entity {
+        name = "spiderbot-no-trigger",
+        position = spiderbot.position,
+        force = player.force,
+        -- player = player,
+        source = spiderbot,
+        target = player_entity,
+        speed = 0.33,
+        -- raise_built = true,
+    }
+    local result = player.mine_entity(spiderbot)
+end
+
 ---@param event EventData.on_tick
 local function on_tick(event)
     for _, player in pairs(game.connected_players) do
@@ -812,6 +832,10 @@ local function on_tick(event)
                         counter = counter + 1
                     end
                 end
+            -- if spiderbots are disabled for the player, go to the next spiderbot
+            if not global.spiderbots_enabled[player_index] then
+                return_spiderbot_to_inventory(spiderbot, player)
+                goto next_spiderbot
             end
             if not (status == "idle") then goto next_spiderbot end
             if counter > max_spiders_dispatched then goto next_player end
@@ -1052,7 +1076,7 @@ local function toggle_spiderbots(event)
         local spiderbots = global.spiderbots[player_index]
         if player and player.valid and spiderbots then
             for spider_id, spiderbot_data in pairs(spiderbots) do
-                abandon_task(spider_id, player_index)
+                return_spiderbot_to_inventory(spiderbot_data.spiderbot, player)
             end
         end
     end
