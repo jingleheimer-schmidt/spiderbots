@@ -11,8 +11,8 @@ local spiderbot_arguments = {
 }
 create_spidertron(spiderbot_arguments)
 local spiderbot_prototype = data.raw["spider-vehicle"]["spiderbot"]
-spiderbot_prototype.minable.result = "spiderbot-item"
-spiderbot_prototype.placeable_by = { item = "spiderbot-item", count = 1 }
+spiderbot_prototype.minable.result = "spiderbot"
+spiderbot_prototype.placeable_by = { item = "spiderbot", count = 1 }
 spiderbot_prototype.guns = nil
 spiderbot_prototype.inventory_size = 0
 spiderbot_prototype.trash_inventory_size = 0
@@ -68,10 +68,10 @@ spiderbot_recipe.ingredients = {
     { "inserter",           8 },
     { "raw-fish",           1 },
 }
-spiderbot_recipe.result = "spiderbot-item"
+spiderbot_recipe.result = "spiderbot"
 spiderbot_recipe.enabled = true
 spiderbot_recipe.subgroup = "logistic-network"
-spiderbot_recipe.order = "a[robot]-a[little-spiderbot]"
+spiderbot_recipe.order = "a[robot]-a[spiderbot]"
 -- spiderbot_recipe.icon_size = spiderbot_recipe.icon_size * 4
 data:extend { spiderbot_recipe }
 
@@ -86,12 +86,12 @@ data:extend { spiderbot_recipe }
 local spidertron_item = table.deepcopy(data.raw["item-with-entity-data"]["spidertron"])
 local spiderbot_item = {
     type = "capsule",
-    name = "spiderbot-item",
+    name = "spiderbot",
     icon = spidertron_item.icon,
     icon_size = spidertron_item.icon_size,
     stack_size = 25,
     subgroup = "logistic-network",
-    order = "a[robot]-a[little-spiderbot]",
+    order = "a[robot]-a[spiderbot]",
     capsule_action = {
         type = "throw",
         attack_parameters = {
@@ -122,7 +122,7 @@ data:extend { spiderbot_item }
 
 local spiderbot_projectile = {
     type = "projectile",
-    name = "spiderbot-projectile",
+    name = "spiderbot-trigger",
     acceleration = 0.005,
     action = {
         action_delivery = {

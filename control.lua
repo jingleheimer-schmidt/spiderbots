@@ -109,9 +109,9 @@ local function on_player_used_capsule(event)
     if not non_colliding_position then
         local inventory = player.get_main_inventory()
         if inventory and inventory.valid then
-            local item_stack = { name = "spiderbot-item", count = 1 }
+            local item_stack = { name = "spiderbot", count = 1 }
             local cursor_stack = player.cursor_stack
-            if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == "spiderbot-item" then
+            if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == "spiderbot" then
                 item_stack.count = item_stack.count + cursor_stack.count
                 player.cursor_stack.set_stack(item_stack)
             else
@@ -122,7 +122,7 @@ local function on_player_used_capsule(event)
     end
     local player_entity = get_player_entity(player)
     player.surface.create_entity {
-        name = "spiderbot-projectile",
+        name = "spiderbot-trigger",
         position = player.position,
         force = player.force,
         player = player,
