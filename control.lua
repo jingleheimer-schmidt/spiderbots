@@ -818,19 +818,19 @@ local function on_tick(event)
             local status = spiderbot_data.status
             local no_speed = (spiderbot.speed == 0)
             local distance_to_player = distance(spiderbot.position, player_entity.position)
-            local exceeds_range = distance_to_player > max_task_range * 2
-            if (counter < 5) and no_speed then
-                if exceeds_range then
-                    if status == "idle" then
-                        local position_in_radius = random_position_in_radius(player_entity.position, 50)
-                        local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
-                        local position = non_colliding_position or player.position
-                        spiderbot.teleport(position, player.surface, true)
-                        counter = counter + 1
-                    else
-                        abandon_task(spiderbot_id, player_index)
-                        counter = counter + 1
-                    end
+            local exceeds_range = distance_to_player > max_task_range * 1
+            local greatly_exceeds_range = distance_to_player > max_task_range * 2
+            if (counter < 2) and ((no_speed and exceeds_range) or greatly_exceeds_range) then
+                if status == "idle" then
+                    local position_in_radius = random_position_in_radius(player_entity.position, 50)
+                    local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
+                    local position = non_colliding_position or player.position
+                    spiderbot.teleport(position, player.surface, true)
+                    spiderbot.follow_target = player_entity
+                    counter = counter + 1
+                else
+                    abandon_task(spiderbot_id, player_index)
+                    counter = counter + 1
                 end
             -- if spiderbots are disabled for the player, go to the next spiderbot
             if not global.spiderbots_enabled[player_index] then
