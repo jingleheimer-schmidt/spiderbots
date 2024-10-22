@@ -87,4 +87,4 @@ global.spiders_enabled = nil
 global.spiderbots_enabled = global.spiderbots_enabled or {}
 global.visualization_render_ids = global.visualization_render_ids or {}
 
-game.print("spiderbots migrated to v2.0")
+game.print({ "spiderbot-messages.2.0-migration" })
