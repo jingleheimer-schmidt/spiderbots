@@ -120,7 +120,7 @@ local function on_player_used_capsule(event)
         end
         return
     end
-    local player_entity = get_player_entity(player)
+    local player_entity = player.character
     player.surface.create_entity {
         name = "spiderbot-trigger",
         position = player.position,
