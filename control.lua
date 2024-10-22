@@ -232,10 +232,9 @@ end
 ---@param event EventData.on_player_changed_surface
 local function on_player_changed_surface(event)
     local player_index = event.player_index
-    local surface_index = event.surface_index
     local player = game.get_player(player_index)
-    local surface = game.get_surface(surface_index)
-    if player and player.valid and surface and surface.valid then
+    if player and player.valid then
+        local surface = player.surface
         local spiderbots = global.spiderbots[player_index]
         if not spiderbots then return end
         for spider_id, spiderbot_data in pairs(spiderbots) do
