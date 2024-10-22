@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
-Date: 03DEC2023
+Date: 21OCT2024
   Changes:
     - Overhauled task management system to improve reliability and performance
     - Spiderbots are now created by throwing them at the ground
