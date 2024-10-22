@@ -63,6 +63,7 @@ local function register_new_spiderbot(spiderbot, player, player_index)
         global.spiderbots_enabled[player_index] = true
         player.set_shortcut_toggled("toggle-spiderbots", true)
     end
+    local registration_number, useful_id, type = script.register_on_object_destroyed(spiderbot)
 end
 
 -- register spiderbots when created by the player
@@ -136,9 +137,9 @@ end
 script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
 
 -- remove the spiderbot data when a spiderbot is destroyed
----@param event EventData.on_entity_destroyed
+---@param event EventData.on_object_destroyed
 local function on_spider_destroyed(event)
-    local unit_number = event.unit_number
+    local unit_number = event.useful_id
     if not unit_number then return end
     for player_index, spiderbot_data in pairs(global.spiderbots) do
         for spider_id, data in pairs(spiderbot_data) do
@@ -150,7 +151,7 @@ local function on_spider_destroyed(event)
     end
 end
 
-script.on_event(defines.events.on_entity_destroyed, on_spider_destroyed)
+script.on_event(defines.events.on_object_destroyed, on_spider_destroyed)
 
 -- abandon the current task, set state to idle, and follow the player
 ---@param spiderbot_id uuid
