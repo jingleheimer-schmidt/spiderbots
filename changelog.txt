@@ -1,4 +1,20 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+Date: 21OCT2024
+  Changes:
+    - Overhauled task management system to improve reliability and performance
+    - Spiderbots are now created by throwing them at the ground
+    - Increased throwing range from 25 to 50 tiles
+    - Spiderbot legs now collide with ghosts
+    - Spiderbots can teleport to the player when they are too far away or stuck
+    - Spiderbots can follow the player when changing surfaces
+    - Spiderbots prioritize using vehicle inventories if the player is in a vehicle
+    - Toggling Spiderbots off recalls the spiderbots to the player inventory
+    - Added migration to update existing spiderbots to the new versions
+  Locale:
+    - Updated mod description
+    - Updated Spiderbot entity and item descriptions
+---------------------------------------------------------------------------------------------------
 Version: 0.1.0
 Date: 26NOV2023
   Changes:
@@ -7,7 +23,7 @@ Date: 26NOV2023
     - Added "Spiderbot", a small spidertron that can be built in the early game with basic construction abilities
     - Spiderbots follow the player who built them, and re-follow players when they and return to a surface
     - Spiderbots process work orders near the player. Deconstruction tasks are prioritized, then construction tasks, then upgrade tasks
-    - Spiderbots cannot mine or place tiles or landfill
+    - Spiderbots cannot mine or place tiles and landfill
     - Spiderbots cannot repair entities using repair packs
     - Work order processing can be toggled with a shortcut and hotkey (default: Alt + S)
     - Spiderbots try to find new paths if they get stuck on the way to a work order or player

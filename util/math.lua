@@ -67,7 +67,7 @@ local function rotate_around_target(target_position, entity_position, degrees, m
     local new_y = target_position.y + distance * math.sin(new_angle)
 
     -- Create a new MapPosition for the entity's new position
-    local new_entity_position = {x = new_x, y = new_y}
+    local new_entity_position = { x = new_x, y = new_y }
 
     return new_entity_position
 end
@@ -76,7 +76,7 @@ local function random_position_on_circumference(center, radius)
     local angle = math.random() * 2 * math.pi
     local x = center.x + radius * math.cos(angle)
     local y = center.y + radius * math.sin(angle)
-    return {x = x, y = y}
+    return { x = x, y = y }
 end
 
 ---@param pos_1 MapPosition | TilePosition

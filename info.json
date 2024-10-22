@@ -1,8 +1,8 @@
 {
 	"name": "spiderbots",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"title": "Spiderbots",
-	"description": "Adds a loyal prototype spidertron that follows you around. It can deconstruct nearby orders, build blueprints, and perform upgrades using your inventory.\nSpiderbots are a basic alternative to early construction mods such as Nanobots and Companion Drones.\nToggle work order processing: Alt + S",
+	"description": "Adds a loyal prototype spidertron that follows you around. They can deconstruct nearby orders, build blueprints, and perform upgrades using your inventory.\nSpiderbots are a basic alternative to early construction mods such as Nanobots and Companion Drones.\nEnable / Recall: Alt + S",
 	"author": "asher_sky",
 	"dependencies": [
 		"base"
