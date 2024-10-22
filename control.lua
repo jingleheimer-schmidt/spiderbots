@@ -14,7 +14,7 @@ local color = color_util.color
 ---@param player LuaPlayer
 ---@return LuaEntity?
 local function get_player_entity(player)
-    return player.character or player.vehicle or nil
+    return player.vehicle or player.character or nil
 end
 
 ---@return string
