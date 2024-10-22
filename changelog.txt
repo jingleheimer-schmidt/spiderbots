@@ -2,10 +2,18 @@
 Version: 0.2.0
 Date: 03DEC2023
   Changes:
-    - Spiderbots are now built by throwing them at the ground
-    - increased throwing range from 25 to 50 tiles
-    - decreased throwing rate from 8.5 to 3 spiderbots per second
-    - spider tasks are now immediately canceled when work order processing is toggled off
+    - Overhauled task management system to improve reliability and performance
+    - Spiderbots are now created by throwing them at the ground
+    - Increased throwing range from 25 to 50 tiles
+    - Spiderbot legs now collide with ghosts
+    - Spiderbots can teleport to the player when they are too far away or stuck
+    - Spiderbots can follow the player when changing surfaces
+    - Spiderbots prioritize using vehicle inventories if the player is in a vehicle
+    - Toggling Spiderbots off recalls the spiderbots to the player inventory
+    - Added migration to update existing spiderbots to the new versions
+  Locale:
+    - Updated mod description
+    - Updated Spiderbot entity and item descriptions
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.0
 Date: 26NOV2023
