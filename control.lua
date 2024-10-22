@@ -432,7 +432,6 @@ local function upgrade_entity(spiderbot_data)
             local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_name) >= item_count
             local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
             if inventory then
-                local upgrade_direction = entity.get_upgrade_direction()
                 local upgrade_name = upgrade_target.name
                 local type = entity.type
                 local is_ug_belt = (type == "underground-belt")
@@ -443,7 +442,7 @@ local function upgrade_entity(spiderbot_data)
                 local upgraded_entity = entity.surface.create_entity {
                     name = upgrade_name,
                     position = entity.position,
-                    direction = upgrade_direction,
+                    direction = entity.direction,
                     player = player,
                     fast_replace = true,
                     force = entity.force,
