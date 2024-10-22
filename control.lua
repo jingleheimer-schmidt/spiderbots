@@ -68,7 +68,7 @@ end
 -- register spiderbots when created by the player
 ---@param event EventData.on_built_entity
 local function on_spiderbot_created(event)
-    local spiderbot = event.created_entity
+    local spiderbot = event.entity
     local player_index = event.player_index
     local player = game.get_player(player_index)
     if player and player.valid then
