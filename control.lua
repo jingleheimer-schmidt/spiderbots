@@ -736,7 +736,13 @@ end
 ---@return integer
 local function request_path(spiderbot, entity)
     local spider_leg_bounding_box = { { -0.01, -0.01 }, { 0.01, 0.01 } }
-    local collision_mask = { "water-tile", "colliding-with-tiles-only", "consider-tile-transitions" }
+    -- local collision_mask = { "water-tile", "colliding-with-tiles-only", "consider-tile-transitions" }
+    local spider_leg_collision_mask = storage.spider_leg_collision_mask
+    if not spider_leg_collision_mask then
+        local spider_leg = prototypes.entity["spiderbot-leg-1"]
+        storage.spider_leg_collision_mask = spider_leg.collision_mask
+        spider_leg_collision_mask = storage.spider_leg_collision_mask
+    end
     local path_to_entity_flags = { cache = false, low_priority = true }
     local bounding_box = entity.bounding_box
     local right_bottom = bounding_box.right_bottom
