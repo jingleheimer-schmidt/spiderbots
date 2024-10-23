@@ -77,7 +77,6 @@ local function register_new_spiderbot(spiderbot, player, player_index)
         storage.spiderbots_enabled[player_index] = true
         player.set_shortcut_toggled("toggle-spiderbots", true)
     end
-    local registration_number, useful_id, type = script.register_on_object_destroyed(spiderbot)
 end
 
 -- register spiderbots when created by the player
