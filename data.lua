@@ -59,22 +59,20 @@ if selection_box then
 end
 data:extend { spiderbot_prototype }
 
-local collision_mask_util = require("collision-mask-util")
-local entity_ghost_collision_layer = collision_mask_util.get_first_unused_layer()
-for name, entity_ghost in pairs(data.raw["entity-ghost"]) do
-    local collision_mask = entity_ghost.collision_mask or {}
-    table.insert(collision_mask, entity_ghost_collision_layer)
-end
--- local spiderbot_collision_mask = spiderbot_prototype.collision_mask or {}
--- table.insert(spiderbot_collision_mask, "object-layer")
--- table.insert(spiderbot_collision_mask, entity_ghost_collision_layer)
--- spiderbot_prototype.collision_mask = spiderbot_collision_mask
-entity_ghost_collision_layer = "ghost-layer"
-
 for i = 1, 8 do
     local leg = data.raw["spider-leg"]["spiderbot-leg-" .. i]
-    leg.collision_mask = { "object-layer", "water-tile", "rail-layer", "not-colliding-with-itself", entity_ghost_collision_layer }
-    -- leg.part_length = leg.part_length * 5
+    leg.collision_mask = {
+        layers = {
+            object = true,
+            water_tile = true,
+            rail = true,
+            ghost = true,
+            cliff = true,
+            empty_space = true,
+            lava_tile = true,
+        },
+        not_colliding_with_itself = true,
+    }
     leg.minimal_step_size = leg.minimal_step_size * 5
 end
 
