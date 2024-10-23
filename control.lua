@@ -753,7 +753,7 @@ local function request_path(spiderbot, entity)
     local goal = non_colliding_position or entity.position
     local request_parameters = {
         bounding_box = spider_leg_bounding_box,
-        collision_mask = collision_mask,
+        collision_mask = spider_leg_collision_mask,
         start = spiderbot.position,
         goal = goal,
         force = spiderbot.force,
