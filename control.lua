@@ -277,6 +277,15 @@ end
 
 script.on_event(defines.events.on_player_driving_changed_state, on_player_driving_changed_state)
 
+---@param event EventData.on_player_controller_changed
+local function on_player_controller_changed(event)
+    local player_index = event.player_index
+    local player = game.get_player(player_index)
+    if not (player and player.valid) then return end
+    relink_following_spiderbots(player)
+end
+
+script.on_event(defines.events.on_player_controller_changed, on_player_controller_changed)
 
 ---@param spiderbot_id uuid?
 ---@param path_request_id integer?
