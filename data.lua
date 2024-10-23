@@ -204,7 +204,6 @@ local toggle_spiderbots_hotkey = {
     type = "custom-input",
     name = "toggle-spiderbots",
     key_sequence = "ALT + S",
-    -- alternative_key_sequence = "COMMAND + S",
     action = "lua",
 }
 data:extend({ toggle_spiderbots_hotkey })
