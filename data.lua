@@ -88,16 +88,7 @@ spiderbot_recipe.results = { { type = "item", name = "spiderbot", amount = 1 } }
 spiderbot_recipe.enabled = true
 spiderbot_recipe.subgroup = "logistic-network"
 spiderbot_recipe.order = "a[robot]-a[spiderbot]"
--- spiderbot_recipe.icon_size = spiderbot_recipe.icon_size * 4
 data:extend { spiderbot_recipe }
-
--- local spiderbot_item = table.deepcopy(data.raw["item-with-entity-data"]["spidertron"])
--- spiderbot_item.name = "spiderbot"
--- spiderbot_item.place_result = "spiderbot"
--- spiderbot_recipe.subgroup = "logistic-network"
--- spiderbot_recipe.order = "a[robot]-a[little-spiderbot]"
--- -- spiderbot_item.icon_size = spiderbot_item.icon_size * 4
--- data:extend{spiderbot_item}
 
 local spidertron_item = table.deepcopy(data.raw["item-with-entity-data"]["spidertron"])
 local spiderbot_item = {
@@ -120,16 +111,7 @@ local spiderbot_item = {
             ammo_type = {
                 category = "capsule",
                 target_type = "position",
-                -- 	action = {
-                -- 		{
-                -- 			type = "direct",
-                -- 			action_delivery = {
-                -- 				type = "projectile",
-                -- 				projectile = "spiderbot-projectile",
-                -- 				starting_speed = 0.33,
-                -- 			}
-                -- 		}
-                -- 	}
+                -- 	no action, since control.lua creates the projectile when a player uses the capsule. the ammo type here is just for the tooltip on the item
             }
         }
     }
@@ -165,20 +147,6 @@ local spiderbot_no_trigger_projectile = {
     type = "projectile",
     name = "spiderbot-no-trigger",
     acceleration = 0.005,
-    -- action = {
-    --     action_delivery = {
-    --         target_effects = {
-    --             {
-    --                 entity_name = "spiderbot",
-    --                 type = "create-entity",
-    --                 show_in_tooltip = true,
-    --                 trigger_created_entity = "true"
-    --             }
-    --         },
-    --         type = "instant"
-    --     },
-    --     type = "direct"
-    -- },
     animation = data.raw["projectile"]["distractor-capsule"].animation,
     shadow = data.raw["projectile"]["distractor-capsule"].shadow,
     flags = { "not-on-map" },
