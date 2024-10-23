@@ -1,10 +1,4 @@
 
-local general_util = require("util/general")
-local entity_uuid = general_util.entity_uuid
-
-local math_util = require("util/math")
-local distance = math_util.distance
-
 local constants = require("util/constants")
 local max_task_range = constants.max_task_range
 
@@ -34,6 +28,26 @@ local function is_backer_name(name)
         end
     end
     return storage.backer_name_lookup[name]
+end
+
+---@param pos_1 MapPosition|TilePosition
+---@param pos_2 MapPosition|TilePosition
+---@return number
+local function distance(pos_1, pos_2)
+    local x = pos_1.x - pos_2.x
+    local y = pos_1.y - pos_2.y
+    return math.sqrt(x * x + y * y)
+end
+
+---@param entity LuaEntity
+---@return string|integer
+local function entity_uuid(entity)
+    local registration_number, useful_id, type = script.register_on_object_destroyed(entity)
+    if useful_id then
+        return useful_id
+    else
+        return registration_number
+    end
 end
 
 -- register a spiderbot. saves spiderbot data to storage. updates the color, label, and follow target
