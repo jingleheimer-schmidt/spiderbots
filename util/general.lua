@@ -70,8 +70,8 @@ end
 
 ---@return integer
 local function new_task_id()
-    global.task_id = (global.task_id or 0) + 1
-    return global.task_id
+    storage.task_id = (storage.task_id or 0) + 1
+    return storage.task_id
 end
 
 return {

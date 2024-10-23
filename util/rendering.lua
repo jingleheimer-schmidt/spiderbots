@@ -6,7 +6,7 @@
 ---@param time_to_live integer?
 ---@return integer?
 local function draw_line(surface, from, to, color, time_to_live)
-    if not global.debug then return end
+    if not storage.debug then return end
     local render_id = rendering.draw_line({
         color = color,
         width = 1.25,
@@ -28,7 +28,7 @@ end
 ---@param dash_offset boolean?
 ---@return integer?
 local function draw_dotted_line(surface, from, to, color, time_to_live, dash_offset)
-    if not global.debug then return end
+    if not storage.debug then return end
     local render_id = rendering.draw_line({
         color = color,
         width = 2,
@@ -52,7 +52,7 @@ end
 ---@param time_to_live integer?
 ---@return integer?
 local function draw_circle(surface, position, color, radius, time_to_live)
-    if not global.debug then return end
+    if not storage.debug then return end
     local render_id = rendering.draw_circle({
         color = color,
         radius = radius,
@@ -72,7 +72,7 @@ end
 ---@param entity LuaEntity
 ---@param color Color?
 local function debug_print(message, player, entity, color)
-    if not global.debug then return end
+    if not storage.debug then return end
     -- color = color or {}
     -- color.r = color.r or 1
     -- color.g = color.g or 1
@@ -89,8 +89,8 @@ end
 
 ---@param spider_id uuid
 local function destroy_associated_renderings(spider_id)
-    if not global.tasks.by_spider[spider_id] then return end
-    for render_id, bool in pairs(global.tasks.by_spider[spider_id].render_ids) do
+    if not storage.tasks.by_spider[spider_id] then return end
+    for render_id, bool in pairs(storage.tasks.by_spider[spider_id].render_ids) do
         if bool then
             rendering.destroy(render_id)
         end

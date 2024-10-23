@@ -30,7 +30,7 @@ local function request_spider_path_to_entity(surface, spider_id, spider, entity_
         pathfind_flags = path_to_entity_flags,
     }
     local path_request_id = surface.request_path(request_parameters)
-    global.spider_path_requests[path_request_id] = {
+    storage.spider_path_requests[path_request_id] = {
         spider = spider,
         spider_id = spider_id,
         entity = entity,
@@ -38,7 +38,7 @@ local function request_spider_path_to_entity(surface, spider_id, spider, entity_
         player = player,
         path_request_id = path_request_id,
     }
-    global.path_requested[spider_id] = true
+    storage.path_requested[spider_id] = true
 end
 
 ---@param surface LuaSurface
@@ -60,7 +60,7 @@ local function request_spider_path_to_position(surface, spider_id, spider, start
         pathfind_flags = path_to_position_flags,
     }
     local path_request_id = surface.request_path(request_parameters)
-    global.spider_path_to_position_requests[path_request_id] = {
+    storage.spider_path_to_position_requests[path_request_id] = {
         spider = spider,
         spider_id = spider_id,
         start_position = starting_position,
@@ -68,7 +68,7 @@ local function request_spider_path_to_position(surface, spider_id, spider, start
         player = player,
         path_request_id = path_request_id,
     }
-    global.path_requested[spider_id] = true
+    storage.path_requested[spider_id] = true
 end
 
 return {
