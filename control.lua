@@ -27,23 +27,23 @@ end
 ---@param name string
 ---@return boolean
 local function is_backer_name(name)
-    if not global.backer_name_lookup then
-        global.backer_name_lookup = {}
+    if not storage.backer_name_lookup then
+        storage.backer_name_lookup = {}
         for _, backer_name in pairs(game.backer_names) do
-            global.backer_name_lookup[backer_name] = true
+            storage.backer_name_lookup[backer_name] = true
         end
     end
-    return global.backer_name_lookup[name]
+    return storage.backer_name_lookup[name]
 end
 
--- register a spiderbot. saves spiderbot data to global. updates the color, label, and follow target
+-- register a spiderbot. saves spiderbot data to storage. updates the color, label, and follow target
 ---@param spiderbot LuaEntity
 ---@param player LuaPlayer
 ---@param player_index player_index
 local function register_new_spiderbot(spiderbot, player, player_index)
     local uuid = entity_uuid(spiderbot)
-    global.spiderbots[player_index] = global.spiderbots[player_index] or {}
-    global.spiderbots[player_index][uuid] = {
+    storage.spiderbots[player_index] = storage.spiderbots[player_index] or {}
+    storage.spiderbots[player_index][uuid] = {
         spiderbot = spiderbot,
         spiderbot_id = uuid,
         player = player,
@@ -59,8 +59,8 @@ local function register_new_spiderbot(spiderbot, player, player_index)
     if (not entity_label) or (is_backer_name(entity_label)) then
         spiderbot.entity_label = random_backer_name()
     end
-    if table_size(global.spiderbots[player_index]) == 1 then
-        global.spiderbots_enabled[player_index] = true
+    if table_size(storage.spiderbots[player_index]) == 1 then
+        storage.spiderbots_enabled[player_index] = true
         player.set_shortcut_toggled("toggle-spiderbots", true)
     end
     local registration_number, useful_id, type = script.register_on_object_destroyed(spiderbot)
@@ -141,10 +141,10 @@ script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
 local function on_spider_destroyed(event)
     local unit_number = event.useful_id
     if not unit_number then return end
-    for player_index, spiderbot_data in pairs(global.spiderbots) do
+    for player_index, spiderbot_data in pairs(storage.spiderbots) do
         for spider_id, data in pairs(spiderbot_data) do
             if data.spiderbot_id == unit_number then
-                global.spiderbots[player_index][spider_id] = nil
+                storage.spiderbots[player_index][spider_id] = nil
                 return
             end
         end
@@ -157,7 +157,7 @@ script.on_event(defines.events.on_object_destroyed, on_spider_destroyed)
 ---@param spiderbot_id uuid
 ---@param player_index player_index
 local function abandon_task(spiderbot_id, player_index)
-    local spiderbots = global.spiderbots[player_index]
+    local spiderbots = storage.spiderbots[player_index]
     local spiderbot_data = spiderbots[spiderbot_id]
     if spiderbot_data then
         spiderbot_data.task = nil
@@ -193,7 +193,7 @@ local function relink_following_spiderbots(player)
     local player_index = player.index
     if not (player and player.valid) then return end
     local player_entity = get_player_entity(player)
-    local spiderbots = global.spiderbots[player_index]
+    local spiderbots = storage.spiderbots[player_index]
     if not spiderbots then return end
     for spider_id, spiderbot_data in pairs(spiderbots) do
         local spiderbot = spiderbot_data.spiderbot
@@ -236,7 +236,7 @@ local function on_player_changed_surface(event)
     local player = game.get_player(player_index)
     if player and player.valid then
         local surface = player.surface
-        local spiderbots = global.spiderbots[player_index]
+        local spiderbots = storage.spiderbots[player_index]
         if not spiderbots then return end
         for spider_id, spiderbot_data in pairs(spiderbots) do
             local spiderbot = spiderbot_data.spiderbot
@@ -269,7 +269,7 @@ script.on_event(defines.events.on_player_driving_changed_state, on_player_drivin
 ---@param path_request_id integer?
 ---@return spiderbot_data?
 local function get_spiderbot_data(spiderbot_id, path_request_id)
-    for player_index, spiderbots in pairs(global.spiderbots) do
+    for player_index, spiderbots in pairs(storage.spiderbots) do
         for spider_id, spiderbot_data in pairs(spiderbots) do
             if spiderbot_id and spiderbot_data.spiderbot_id == spiderbot_id then
                 return spiderbot_data
@@ -611,7 +611,7 @@ local function on_script_path_request_finished(event)
         abandon_task(spiderbot_id, player_index)
         return
     end
-    if not global.spiderbots_enabled[player_index] then
+    if not storage.spiderbots_enabled[player_index] then
         abandon_task(spiderbot_id, player_index)
         return
     end
@@ -647,12 +647,12 @@ script.on_event(defines.events.on_script_path_request_finished, on_script_path_r
 
 ---@param player_index player_index
 local function clear_visualization_renderings(player_index)
-    local render_ids = global.visualization_render_ids[player_index]
+    local render_ids = storage.visualization_render_ids[player_index]
     if not render_ids then return end
     for _, render_id in pairs(render_ids) do
         rendering.destroy(render_id)
     end
-    global.visualization_render_ids[player_index] = nil
+    storage.visualization_render_ids[player_index] = nil
 end
 
 ---@param event EventData.on_player_cursor_stack_changed
@@ -662,7 +662,7 @@ local function on_player_cursor_stack_changed(event)
     if not (player and player.valid) then return end
     local player_entity = get_player_entity(player)
     if not (player_entity and player_entity.valid) then return end
-    if not global.spiderbots_enabled[player_index] then
+    if not storage.spiderbots_enabled[player_index] then
         clear_visualization_renderings(player_index)
         return
     end
@@ -685,8 +685,8 @@ local function on_player_cursor_stack_changed(event)
             tint = { r = 0.45, g = 0.4, b = 0.4, a = 0.5 }, -- by trial and error, this is the closest i could match the vanilla construction radius visualization look
         }
         if render_id then
-            global.visualization_render_ids[player_index] = global.visualization_render_ids[player_index] or {}
-            table.insert(global.visualization_render_ids[player_index], render_id)
+            storage.visualization_render_ids[player_index] = storage.visualization_render_ids[player_index] or {}
+            table.insert(storage.visualization_render_ids[player_index], render_id)
         end
     else
         clear_visualization_renderings(player_index)
@@ -698,7 +698,7 @@ script.on_event(defines.events.on_player_cursor_stack_changed, on_player_cursor_
 ---@param entity_id uuid
 ---@return boolean
 local function is_task_assigned(entity_id)
-    for player_index, spiderbots in pairs(global.spiderbots) do
+    for player_index, spiderbots in pairs(storage.spiderbots) do
         for spider_id, spiderbot_data in pairs(spiderbots) do
             local task = spiderbot_data.task
             if task and (task.entity_id == entity_id) then
@@ -762,15 +762,15 @@ end
 local function on_tick(event)
     for _, player in pairs(game.connected_players) do
         local player_index = player.index
-        global.spiderbots[player_index] = global.spiderbots[player_index] or {}
-        local spiderbots = global.spiderbots[player_index]
+        storage.spiderbots[player_index] = storage.spiderbots[player_index] or {}
+        local spiderbots = storage.spiderbots[player_index]
         if table_size(spiderbots) == 0 then goto next_player end
         -- relink spiderbots if the player changes controller type
         local controller_type = player.controller_type
-        global.previous_controller[player_index] = global.previous_controller[player_index] or controller_type
-        if global.previous_controller[player_index] ~= controller_type then
+        storage.previous_controller[player_index] = storage.previous_controller[player_index] or controller_type
+        if storage.previous_controller[player_index] ~= controller_type then
             relink_following_spiderbots(player)
-            global.previous_controller[player_index] = controller_type
+            storage.previous_controller[player_index] = controller_type
             goto next_player
         end
         -- relink spiderbots if the player changes character
@@ -780,16 +780,16 @@ local function on_tick(event)
             goto next_player
         end
         local player_uuid = entity_uuid(player_entity)
-        global.previous_player_entity[player_index] = global.previous_player_entity[player_index] or player_uuid
-        if global.previous_player_entity[player_index] ~= player_uuid then
+        storage.previous_player_entity[player_index] = storage.previous_player_entity[player_index] or player_uuid
+        if storage.previous_player_entity[player_index] ~= player_uuid then
             relink_following_spiderbots(player)
-            global.previous_player_entity[player_index] = player_uuid
+            storage.previous_player_entity[player_index] = player_uuid
             goto next_player
         end
         -- update spiderbots if the player changes color
         local player_color = player.color
-        global.previous_player_color[player_index] = global.previous_player_color[player_index] or player_color
-        local previous_color = global.previous_player_color[player_index]
+        storage.previous_player_color[player_index] = storage.previous_player_color[player_index] or player_color
+        local previous_color = storage.previous_player_color[player_index]
         if not (previous_color.r == player_color.r and previous_color.g == player_color.g and previous_color.b == player_color.b) then
             for spider_id, spiderbot_data in pairs(spiderbots) do
                 local spiderbot = spiderbot_data.spiderbot
@@ -799,7 +799,7 @@ local function on_tick(event)
                     end
                 end
             end
-            global.previous_player_color[player_index] = player_color
+            storage.previous_player_color[player_index] = player_color
         end
         -- if the player doesn't have an inventory, go to the next player
         local character = player.character
@@ -830,7 +830,7 @@ local function on_tick(event)
         for spiderbot_id, spiderbot_data in pairs(spiderbots) do
             local spiderbot = spiderbot_data.spiderbot
             if not (spiderbot and spiderbot.valid) then
-                global.spiderbots[player_index][spiderbot_id] = nil
+                storage.spiderbots[player_index][spiderbot_id] = nil
                 goto next_spiderbot
             end
             -- if the spider is stuck, try to free it
@@ -853,7 +853,7 @@ local function on_tick(event)
                 end
             end
             -- if spiderbots are disabled for the player, go to the next spiderbot
-            if not global.spiderbots_enabled[player_index] then
+            if not storage.spiderbots_enabled[player_index] then
                 return_spiderbot_to_inventory(spiderbot, player)
                 goto next_spiderbot
             end
@@ -1104,28 +1104,28 @@ local function toggle_spiderbots(event)
     local name = event.prototype_name or event.input_name
     if name ~= "toggle-spiderbots" then return end
     local player_index = event.player_index
-    global.spiderbots_enabled = global.spiderbots_enabled or {}
-    global.spiderbots_enabled[player_index] = not global.spiderbots_enabled[player_index]
-    if not global.spiderbots_enabled[player_index] then
+    storage.spiderbots_enabled = storage.spiderbots_enabled or {}
+    storage.spiderbots_enabled[player_index] = not storage.spiderbots_enabled[player_index]
+    if not storage.spiderbots_enabled[player_index] then
         local player = game.get_player(player_index)
-        global.spiderbots = global.spiderbots or {}
-        local spiderbots = global.spiderbots[player_index]
+        storage.spiderbots = storage.spiderbots or {}
+        local spiderbots = storage.spiderbots[player_index]
         if player and player.valid and spiderbots then
             for spider_id, spiderbot_data in pairs(spiderbots) do
                 return_spiderbot_to_inventory(spiderbot_data.spiderbot, player)
             end
         end
     end
-    game.get_player(player_index).set_shortcut_toggled("toggle-spiderbots", global.spiderbots_enabled[player_index])
+    game.get_player(player_index).set_shortcut_toggled("toggle-spiderbots", storage.spiderbots_enabled[player_index])
 end
 
 script.on_event("toggle-spiderbots", toggle_spiderbots)
 script.on_event(defines.events.on_lua_shortcut, toggle_spiderbots)
 
 local function toggle_debug()
-    global.debug = not global.debug
+    storage.debug = not storage.debug
     for _, player in pairs(game.connected_players) do
-        local messaage = global.debug and { "spiderbot-messages.debug-mode-enabled" } or { "spiderbot-messages.debug-mode-disabled" }
+        local messaage = storage.debug and { "spiderbot-messages.debug-mode-enabled" } or { "spiderbot-messages.debug-mode-disabled" }
         player.print(messaage)
     end
 end
@@ -1138,17 +1138,17 @@ script.on_load(add_commands)
 
 local function on_init()
     -- spiderbot data
-    global.spiderbots = {} --[[@type table<player_index, table<uuid, spiderbot_data>>]]
-    global.spiderbots_enabled = {} --[[@type table<player_index, boolean>]]
+    storage.spiderbots = {} --[[@type table<player_index, table<uuid, spiderbot_data>>]]
+    storage.spiderbots_enabled = {} --[[@type table<player_index, boolean>]]
 
     -- player data
-    global.previous_controller = {} --[[@type table<player_index, defines.controllers>]]
-    global.previous_player_entity = {} --[[@type table<player_index, uuid>]]
-    global.previous_player_color = {} --[[@type table<player_index, Color>]]
+    storage.previous_controller = {} --[[@type table<player_index, defines.controllers>]]
+    storage.previous_player_entity = {} --[[@type table<player_index, uuid>]]
+    storage.previous_player_color = {} --[[@type table<player_index, Color>]]
 
     -- misc data
-    global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
-    global.visualization_render_ids = {} --[[@type table<integer, table<integer, integer>>]]
+    storage.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
+    storage.visualization_render_ids = {} --[[@type table<integer, table<integer, integer>>]]
 
     add_commands()
 end
@@ -1157,17 +1157,17 @@ script.on_init(on_init)
 
 local function on_configuration_changed(event)
     -- spiderbot data
-    global.spiderbots = global.spiderbots or {}
-    global.spiderbots_enabled = global.spiderbots_enabled or {}
+    storage.spiderbots = storage.spiderbots or {}
+    storage.spiderbots_enabled = storage.spiderbots_enabled or {}
 
     -- player data
-    global.previous_controller = global.previous_controller or {}
-    global.previous_player_entity = global.previous_player_entity or {}
-    global.previous_player_color = global.previous_player_color or {}
+    storage.previous_controller = storage.previous_controller or {}
+    storage.previous_player_entity = storage.previous_player_entity or {}
+    storage.previous_player_color = storage.previous_player_color or {}
 
     -- misc data
-    global.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
-    global.visualization_render_ids = global.visualization_render_ids or {}
+    storage.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
+    storage.visualization_render_ids = storage.visualization_render_ids or {}
 
     for _, player in pairs(game.players) do
         relink_following_spiderbots(player)
