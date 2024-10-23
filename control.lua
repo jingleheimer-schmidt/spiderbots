@@ -203,11 +203,11 @@ end
 
 ---@param player LuaPlayer
 local function relink_following_spiderbots(player)
-    local player_index = player.index
     if not (player and player.valid) then return end
-    local player_entity = get_player_entity(player)
+    local player_index = player.index
     local spiderbots = storage.spiderbots[player_index]
     if not spiderbots then return end
+    local player_entity = get_player_entity(player)
     for spider_id, spiderbot_data in pairs(spiderbots) do
         local spiderbot = spiderbot_data.spiderbot
         if spiderbot.valid then
