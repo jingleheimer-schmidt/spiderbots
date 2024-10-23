@@ -81,12 +81,12 @@ end
 local spiderbot_recipe = table.deepcopy(data.raw["recipe"]["spidertron"])
 spiderbot_recipe.name = "spiderbot"
 spiderbot_recipe.ingredients = {
-    { "electronic-circuit", 4 },
-    { "iron-plate",         12 },
-    { "inserter",           8 },
-    { "raw-fish",           1 },
+    { type = "item", name = "electronic-circuit", amount = 4 },
+    { type = "item", name = "iron-plate", amount = 12 },
+    { type = "item", name = "inserter", amount = 8 },
+    { type = "item", name = "raw-fish", amount = 1 },
 }
-spiderbot_recipe.result = "spiderbot"
+spiderbot_recipe.results = { { type = "item", name = "spiderbot", amount = 1 } }
 spiderbot_recipe.enabled = true
 spiderbot_recipe.subgroup = "logistic-network"
 spiderbot_recipe.order = "a[robot]-a[spiderbot]"
