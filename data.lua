@@ -193,9 +193,20 @@ local toggle_spiderbots_shortcut = {
     name = "toggle-spiderbots",
     action = "lua",
     associated_control_input = "toggle-spiderbots",
-    -- icon = {filename = "__spiderbots__/assets/targeted.png", size = 1024},
-    icon = { filename = "__spiderbots__/assets/icons8-spider-67.png", size = 67 },
-    -- disabled_icon = {filename = "__spiderbots__/assets/spider-face-trans.png", size = 1024},
+    icons = {
+        {
+            icon = "__spiderbots__/assets/icons8-spider-67.png",
+            icon_size = 67,
+            scale = 1,
+        },
+    },
+    small_icons = {
+        {
+            icon = "__spiderbots__/assets/icons8-spider-67.png",
+            icon_size = 67,
+            scale = 0.5,
+        },
+    },
     toggleable = true,
 }
 data:extend({ toggle_spiderbots_shortcut })
