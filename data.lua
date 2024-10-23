@@ -149,7 +149,7 @@ local spiderbot_projectile = {
                     entity_name = "spiderbot",
                     type = "create-entity",
                     show_in_tooltip = true,
-                    trigger_created_entity = "true"
+                    trigger_created_entity = true
                 }
             },
             type = "instant"
