@@ -79,19 +79,19 @@ local function register_new_spiderbot(spiderbot, player, player_index)
     end
 end
 
--- register spiderbots when created by the player
----@param event EventData.on_built_entity
-local function on_spiderbot_created(event)
-    local spiderbot = event.entity
-    local player_index = event.player_index
-    local player = game.get_player(player_index)
-    if player and player.valid then
-        register_new_spiderbot(spiderbot, player, player_index)
-    end
-end
+-- -- register spiderbots when created by the player
+-- ---@param event EventData.on_built_entity
+-- local function on_spiderbot_created(event)
+--     local spiderbot = event.entity
+--     local player_index = event.player_index
+--     local player = game.get_player(player_index)
+--     if player and player.valid then
+--         register_new_spiderbot(spiderbot, player, player_index)
+--     end
+-- end
 
-local filter = { { filter = "name", name = "spiderbot" } }
-script.on_event(defines.events.on_built_entity, on_spiderbot_created, filter)
+-- local filter = { { filter = "name", name = "spiderbot" } }
+-- script.on_event(defines.events.on_built_entity, on_spiderbot_created, filter)
 
 -- register spiderbots when created by script triggers (thrown capsules)
 ---@param event EventData.on_trigger_created_entity
