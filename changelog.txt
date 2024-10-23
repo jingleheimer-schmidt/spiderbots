@@ -3,6 +3,8 @@ Version: 0.2.1
 Date: ????
   Changes:
     - Support for Factorio 2.0
+  Bugfixes:
+    - Fixed that spiderbots could briefly teleport to the previous surface when following a player who changed surfaces
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 21OCT2024
