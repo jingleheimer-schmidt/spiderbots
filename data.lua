@@ -86,7 +86,7 @@ for i = 1, 8 do
         not_colliding_with_itself = true,
     }
     leg.minimal_step_size = leg.minimal_step_size * 5
-    leg.movement_based_position_selection_distance = leg.movement_based_position_selection_distance * 5
+    leg.movement_based_position_selection_distance = leg.movement_based_position_selection_distance * 1.5
 end
 
 local spiderbot_recipe = table.deepcopy(data.raw["recipe"]["spidertron"])
