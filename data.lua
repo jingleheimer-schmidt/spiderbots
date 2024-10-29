@@ -59,6 +59,18 @@ if selection_box then
 end
 data:extend { spiderbot_prototype }
 
+-- local collision_mask_util = require("collision-mask-util")
+-- local entity_ghost_collision_layer = collision_mask_util.get_first_unused_layer()
+-- for name, entity_ghost in pairs(data.raw["entity-ghost"]) do
+--     local collision_mask = entity_ghost.collision_mask or {}
+--     table.insert(collision_mask, entity_ghost_collision_layer)
+-- end
+-- local spiderbot_collision_mask = spiderbot_prototype.collision_mask or {}
+-- table.insert(spiderbot_collision_mask, "object-layer")
+-- table.insert(spiderbot_collision_mask, entity_ghost_collision_layer)
+-- spiderbot_prototype.collision_mask = spiderbot_collision_mask
+-- entity_ghost_collision_layer = "ghost-layer"
+
 for i = 1, 8 do
     local leg = data.raw["spider-leg"]["spiderbot-leg-" .. i]
     leg.collision_mask = {
@@ -74,6 +86,7 @@ for i = 1, 8 do
         not_colliding_with_itself = true,
     }
     leg.minimal_step_size = leg.minimal_step_size * 5
+    leg.movement_based_position_selection_distance = leg.movement_based_position_selection_distance * 5
 end
 
 local spiderbot_recipe = table.deepcopy(data.raw["recipe"]["spidertron"])
@@ -84,7 +97,9 @@ spiderbot_recipe.ingredients = {
     { type = "item", name = "inserter", amount = 8 },
     { type = "item", name = "raw-fish", amount = 1 },
 }
-spiderbot_recipe.results = { { type = "item", name = "spiderbot", amount = 1 } }
+spiderbot_recipe.results = {
+    { type = "item", name = "spiderbot", amount = 1 }
+}
 spiderbot_recipe.enabled = true
 spiderbot_recipe.subgroup = "logistic-network"
 spiderbot_recipe.order = "a[robot]-a[spiderbot]"
@@ -154,25 +169,19 @@ local spiderbot_no_trigger_projectile = {
 }
 data:extend { spiderbot_no_trigger_projectile }
 
+---@type data.ShortcutPrototype
 local toggle_spiderbots_shortcut = {
     type = "shortcut",
     name = "toggle-spiderbots",
     action = "lua",
     associated_control_input = "toggle-spiderbots",
-    icons = {
-        {
-            icon = "__spiderbots__/assets/icons8-spider-67.png",
-            icon_size = 67,
-            scale = 1,
-        },
-    },
-    small_icons = {
-        {
-            icon = "__spiderbots__/assets/icons8-spider-67.png",
-            icon_size = 67,
-            scale = 0.5,
-        },
-    },
+    -- icon = {filename = "__spiderbots__/assets/targeted.png", size = 1024},
+    icon = "__spiderbots__/assets/icons8-spider-67.png",
+    icon_size = 67,
+    small_icon = "__spiderbots__/assets/icons8-spider-67.png",
+    small_icon_size = 67,
+    -- icon = { filename = "__spiderbots__/assets/icons8-spider-67.png", size = 67 },
+    -- disabled_icon = {filename = "__spiderbots__/assets/spider-face-trans.png", size = 1024},
     toggleable = true,
 }
 data:extend({ toggle_spiderbots_shortcut })
