@@ -516,7 +516,10 @@ local function insert_items(spiderbot_data)
     local proxy_target = entity.proxy_target
     if proxy_target then
         local items = entity.item_requests
-        local item_name, item_count = next(items)
+        local index, item_count_with_quality = next(items)
+        local item_name = item_count_with_quality.name
+        local item_count = item_count_with_quality.count
+        local item_quality = item_count_with_quality.quality
         local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_name) >= item_count
         local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_name) >= item_count
         local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
@@ -1090,7 +1093,10 @@ local function on_tick(event)
                 local proxy_target = entity.proxy_target
                 if proxy_target then
                     local items = entity.item_requests
-                    local item_name, item_count = next(items)
+                    local index, item_count_with_quality = next(items)
+                    local item_name = item_count_with_quality.name
+                    local item_count = item_count_with_quality.count
+                    local item_quality = item_count_with_quality.quality
                     local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_name) >= item_count
                     local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_name) >= item_count
                     local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
@@ -1175,7 +1181,7 @@ local function on_init()
     storage.previous_player_color = {} --[[@type table<player_index, Color>]]
 
     -- misc data
-    storage.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
+    storage.spider_leg_collision_mask = prototypes.entity["spiderbot-leg-1"].collision_mask
     storage.visualization_render_ids = {} --[[@type table<integer, table<integer, integer>>]]
 
     add_commands()
@@ -1194,7 +1200,7 @@ local function on_configuration_changed(event)
     storage.previous_player_color = storage.previous_player_color or {}
 
     -- misc data
-    storage.spider_leg_collision_mask = game.entity_prototypes["spiderbot-leg-1"].collision_mask
+    storage.spider_leg_collision_mask = prototypes.entity["spiderbot-leg-1"].collision_mask
     storage.visualization_render_ids = storage.visualization_render_ids or {}
 
     for _, player in pairs(game.players) do
