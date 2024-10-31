@@ -63,18 +63,36 @@ for i = 1, 8 do
     local leg = data.raw["spider-leg"]["spiderbot-leg-" .. i]
     leg.collision_mask = {
         layers = {
-            object = true,
+            -- ground_tile = true,
             water_tile = true,
+            -- resource = true,
+            -- doodad = true,
+            -- floor = true,
             rail = true,
+            -- transport_belt = true,
+            -- item = true,
             ghost = true,
-            cliff = true,
+            -- object = true,
+            -- player = true,
+            -- car = true,
+            -- train = true,
+            -- elevated_rail = true,
+            -- elevated_train = true,
             empty_space = true,
             lava_tile = true,
+            -- meltable = true,
+            -- rail_support = true,
+            -- trigger_target = true,
+            cliff = true,
+            -- is_lower_object = true,
+            -- is_object = true
         },
         not_colliding_with_itself = true,
+        consider_tile_transitions = false,
+        colliding_with_tiles_only = false,
     }
-    leg.minimal_step_size = leg.minimal_step_size * 5
-    leg.movement_based_position_selection_distance = leg.movement_based_position_selection_distance * 1.5
+    leg.minimal_step_size = leg.minimal_step_size * 4
+    -- leg.movement_based_position_selection_distance = leg.movement_based_position_selection_distance * 1.5
 end
 
 local spiderbot_recipe = table.deepcopy(data.raw["recipe"]["spidertron"])
