@@ -37,6 +37,7 @@ local function modify_spider_legs(spider_leg_specification)
     end
     local leg_name = spider_leg_specification.leg
     local leg_prototype = data.raw["spider-leg"][leg_name]
+    leg_prototype.localised_name = { "entity-name.spiderbot-leg" }
     leg_prototype.walking_sound_volume_modifier = 0
     leg_prototype.working_sound.probability = sound_probability
     leg_prototype.collision_mask = {
