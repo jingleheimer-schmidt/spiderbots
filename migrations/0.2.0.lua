@@ -19,7 +19,7 @@ storage.previous_player_color = storage.previous_player_color or {}
 
 storage.spiders_enabled = storage.spiders_enabled or {}
 storage.spiderbots_enabled = storage.spiderbots_enabled or {}
-storage.visualization_render_ids = storage.visualization_render_ids or {}
+storage.render_objects = storage.render_objects or {}
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
@@ -85,6 +85,6 @@ end
 
 storage.spiders_enabled = nil
 storage.spiderbots_enabled = storage.spiderbots_enabled or {}
-storage.visualization_render_ids = storage.visualization_render_ids or {}
+storage.render_objects = storage.render_objects or {}
 
 game.print({ "spiderbot-messages.2.0-migration" })

@@ -665,12 +665,12 @@ script.on_event(defines.events.on_script_path_request_finished, on_script_path_r
 
 ---@param player_index player_index
 local function clear_visualization_renderings(player_index)
-    local render_ids = storage.visualization_render_ids[player_index]
-    if not render_ids then return end
-    for _, render_id in pairs(render_ids) do
-        rendering.destroy(render_id)
+    local render_objects = storage.render_objects[player_index]
+    if not render_objects then return end
+    for _, render_object in pairs(render_objects) do
+        render_object.destroy()
     end
-    storage.visualization_render_ids[player_index] = nil
+    storage.render_objects[player_index] = nil
 end
 
 ---@param event EventData.on_player_cursor_stack_changed
@@ -691,7 +691,7 @@ local function on_player_cursor_stack_changed(event)
     end
     if show_visualization then
         clear_visualization_renderings(player_index)
-        local render_id = rendering.draw_sprite {
+        local render_object = rendering.draw_sprite {
             sprite = "utility/construction_radius_visualization",
             surface = player.surface,
             target = player.character,
@@ -702,9 +702,9 @@ local function on_player_cursor_stack_changed(event)
             only_in_alt_mode = true,
             tint = { r = 0.45, g = 0.4, b = 0.4, a = 0.5 }, -- by trial and error, this is the closest i could match the vanilla construction radius visualization look
         }
-        if render_id then
-            storage.visualization_render_ids[player_index] = storage.visualization_render_ids[player_index] or {}
-            table.insert(storage.visualization_render_ids[player_index], render_id)
+        if render_object then
+            storage.render_objects[player_index] = storage.render_objects[player_index] or {}
+            table.insert(storage.render_objects[player_index], render_object)
         end
     else
         clear_visualization_renderings(player_index)
@@ -1175,7 +1175,9 @@ local function on_init()
 
     -- misc data
     storage.spider_leg_collision_mask = prototypes.entity["spiderbot-leg-1"].collision_mask
-    storage.visualization_render_ids = {} --[[@type table<integer, table<integer, integer>>]]
+
+    --[[@type table<player_index, LuaRenderObject[]>]]
+    storage.render_objects = {}
 
     add_commands()
 end
@@ -1194,7 +1196,7 @@ local function on_configuration_changed(event)
 
     -- misc data
     storage.spider_leg_collision_mask = prototypes.entity["spiderbot-leg-1"].collision_mask
-    storage.visualization_render_ids = storage.visualization_render_ids or {}
+    storage.render_objects = storage.render_objects or {}
 
     for _, player in pairs(game.players) do
         relink_following_spiderbots(player)
