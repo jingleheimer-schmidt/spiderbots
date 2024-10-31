@@ -893,7 +893,7 @@ local function on_tick(event)
             local decon_entity_count = #decon_entities
             for i = 1, decon_entity_count do
                 local entity_index = math.random(1, decon_entity_count)
-                local entity = decon_entities[entity_index] ---@type LuaEntity
+                local entity = decon_entities[entity_index] --[[@type LuaEntity]]
                 if not (entity and entity.valid) then
                     table.remove(decon_entities, entity_index)
                     goto next_entity
@@ -971,7 +971,7 @@ local function on_tick(event)
             local revive_entity_count = #revive_entities
             for i = 1, revive_entity_count do
                 local entity_index = math.random(1, revive_entity_count)
-                local entity = revive_entities[entity_index] ---@type LuaEntity
+                local entity = revive_entities[entity_index] --[[@type LuaEntity]]
                 if not (entity and entity.valid) then
                     table.remove(revive_entities, entity_index)
                     goto next_entity
@@ -1027,7 +1027,7 @@ local function on_tick(event)
             local upgrade_entity_count = #upgrade_entities
             for i = 1, upgrade_entity_count do
                 local entity_index = math.random(1, upgrade_entity_count)
-                local entity = upgrade_entities[entity_index] ---@type LuaEntity
+                local entity = upgrade_entities[entity_index] --[[@type LuaEntity]]
                 if not (entity and entity.valid) then
                     table.remove(upgrade_entities, entity_index)
                     goto next_entity
