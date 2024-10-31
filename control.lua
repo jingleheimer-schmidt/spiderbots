@@ -732,24 +732,36 @@ end
 ---@return integer
 local function request_path(spiderbot, entity)
     local spider_leg_bounding_box = { { -0.01, -0.01 }, { 0.01, 0.01 } }
-    -- local collision_mask = { "water-tile", "colliding-with-tiles-only", "consider-tile-transitions" }
-    -- local spider_leg_collision_mask = storage.spider_leg_collision_mask
-    -- if not spider_leg_collision_mask then
-    --     local spider_leg = prototypes.entity["spiderbot-leg-1"]
-    --     storage.spider_leg_collision_mask = spider_leg.collision_mask
-    --     spider_leg_collision_mask = storage.spider_leg_collision_mask
-    -- end
+    -- just use the player collision layer, so the spiderbots can path through anything the player can walk through. even though they can't walk through ghosts, they can still path through them and try to fit their legs around them
     local spider_leg_collision_mask = {
         layers = {
-            object = true,
-            water_tile = true,
+            -- ground_tile = true,
+            -- water_tile = true,
+            -- resource = true,
+            -- doodad = true,
+            -- floor = true,
             -- rail = true,
+            -- transport_belt = true,
+            -- item = true,
             -- ghost = true,
+            -- object = true,
+            player = true,
+            -- car = true,
+            -- train = true,
+            -- elevated_rail = true,
+            -- elevated_train = true,
+            -- empty_space = true,
+            -- lava_tile = true,
+            -- meltable = true,
+            -- rail_support = true,
+            -- trigger_target = true,
             -- cliff = true,
-            empty_space = true,
-            lava_tile = true,
+            -- is_lower_object = true,
+            -- is_object = true
         },
         not_colliding_with_itself = true,
+        consider_tile_transitions = false,
+        colliding_with_tiles_only = false,
     }
     local path_to_entity_flags = { cache = false, low_priority = true }
     local bounding_box = entity.bounding_box
