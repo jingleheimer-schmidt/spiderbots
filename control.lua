@@ -954,7 +954,11 @@ local function on_tick(event)
                         table.remove(decon_entities, entity_index)
                     end
                 else
-                    table.remove(decon_entities, entity_index)
+                    for _, found_entity in pairs(decon_entities) do
+                        if found_entity.name == entity.name then
+                            table.remove(decon_entities, entity_index)
+                        end
+                    end
                 end
                 ::next_entity::
             end
@@ -1003,7 +1007,11 @@ local function on_tick(event)
                             goto next_spiderbot
                         end
                     else
-                        table.remove(revive_entities, entity_index)
+                        for index, found_entity in pairs(revive_entities) do
+                            if found_entity.name == entity.name then
+                                table.remove(revive_entities, index)
+                            end
+                        end
                     end
                 else
                     table.remove(revive_entities, entity_index)
@@ -1056,7 +1064,11 @@ local function on_tick(event)
                             goto next_spiderbot
                         end
                     else
-                        table.remove(upgrade_entities, entity_index)
+                        for index, found_entity in pairs(upgrade_entities) do
+                            if found_entity.name == entity.name then
+                                table.remove(upgrade_entities, index)
+                            end
+                        end
                     end
                 else
                     table.remove(upgrade_entities, entity_index)
