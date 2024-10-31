@@ -39,15 +39,6 @@ local function modify_spider_legs(spider_leg_specification)
     local leg_prototype = data.raw["spider-leg"][leg_name]
     leg_prototype.walking_sound_volume_modifier = 0
     leg_prototype.working_sound.probability = sound_probability
-local selection_box = spiderbot_prototype.selection_box
-if selection_box then
-    selection_box[1][1] = selection_box[1][1] * 2
-    selection_box[1][2] = selection_box[1][2] * 2
-    selection_box[2][1] = selection_box[2][1] * 2
-    selection_box[2][2] = selection_box[2][2] * 2
-end
-data:extend { spiderbot_prototype }
-
     leg_prototype.collision_mask = {
         layers = {
             -- ground_tile = true,
@@ -90,6 +81,15 @@ if legs[1] then
 else
     modify_spider_legs(legs)
 end
+local selection_box = spiderbot_prototype.selection_box
+if selection_box then
+    selection_box[1][1] = selection_box[1][1] * 2
+    selection_box[1][2] = selection_box[1][2] * 2
+    selection_box[2][1] = selection_box[2][1] * 2
+    selection_box[2][2] = selection_box[2][2] * 2
+end
+data:extend { spiderbot_prototype }
+
 local spiderbot_recipe = table.deepcopy(data.raw["recipe"]["spidertron"])
 spiderbot_recipe.name = "spiderbot"
 spiderbot_recipe.ingredients = {
