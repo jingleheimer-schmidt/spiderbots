@@ -1157,7 +1157,23 @@ local function toggle_spiderbots(event)
     local player_index = event.player_index
     storage.spiderbots_enabled = storage.spiderbots_enabled or {}
     storage.spiderbots_enabled[player_index] = not storage.spiderbots_enabled[player_index]
-    if not storage.spiderbots_enabled[player_index] then
+    if storage.spiderbots_enabled[player_index] then
+        local player = game.get_player(player_index)
+        if player and player.valid then
+            local inventory = player.get_inventory(defines.inventory.character_main)
+            if inventory then
+                local count = inventory.get_item_count("spiderbot")
+                if count > 0 then
+                    for i = 1, count do
+                        local position = random_position_in_radius(player.position, 25)
+                        position = player.surface.find_non_colliding_position("spiderbot-leg-1", position, 100, 0.5) or position
+                        create_spiderbot_projectile(position, player)
+                        inventory.remove("spiderbot")
+                    end
+                end
+            end
+        end
+    else
         local player = game.get_player(player_index)
         storage.spiderbots = storage.spiderbots or {}
         local spiderbots = storage.spiderbots[player_index]
