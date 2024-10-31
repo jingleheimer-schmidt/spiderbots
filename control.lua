@@ -97,6 +97,23 @@ end
 
 script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_entity)
 
+-- create a projectile that spawns a spiderbot where it lands
+---@param position MapPosition
+---@param player LuaPlayer
+local function create_spiderbot_projectile(position, player)
+    local player_entity = player.character
+    player.surface.create_entity {
+        name = "spiderbot-trigger",
+        position = player.position,
+        force = player.force,
+        player = player,
+        source = player_entity,
+        target = position,
+        speed = 0.33,
+        raise_built = true,
+    }
+end
+
 -- create the spiderbot projectile when a player uses a spiderbot capsule
 ---@param event EventData.on_player_used_capsule
 local function on_player_used_capsule(event)
@@ -120,17 +137,7 @@ local function on_player_used_capsule(event)
         end
         return
     end
-    local player_entity = player.character
-    player.surface.create_entity {
-        name = "spiderbot-trigger",
-        position = player.position,
-        force = player.force,
-        player = player,
-        source = player_entity,
-        target = position,
-        speed = 0.33,
-        raise_built = true,
-    }
+    create_spiderbot_projectile(position, player) -- use the actual position, because that's what the player wanted, and since a non_colliding position is known to exist that means the spiderbot can scramble around to it
 end
 
 script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
