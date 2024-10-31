@@ -28,28 +28,17 @@ local lights = spiderbot_prototype.graphics_set.light or {}
 for _, light in pairs(lights) do
     light.intensity = light.intensity / 2.5
 end
-local legs = spiderbot_prototype.spider_engine.legs
-if legs[1] then
-    for _, leg in pairs(legs) do
-        for _, trigger in pairs(leg.leg_hit_the_ground_trigger) do
-            trigger.repeat_count = 1
-            trigger.probability = 1 / 32
-        end
-        local leg_name = leg.leg
-        local leg_prototype = data.raw["spider-leg"][leg_name]
-        leg_prototype.walking_sound_volume_modifier = 0
-        leg_prototype.working_sound.probability = sound_probability
-    end
-else
-    for _, trigger in pairs(legs.leg_hit_the_ground_trigger) do
+
+---@param spider_leg_specification data.SpiderLegSpecification
+local function modify_spider_legs(spider_leg_specification)
+    for _, trigger in pairs(spider_leg_specification.leg_hit_the_ground_trigger) do
         trigger.repeat_count = 1
         trigger.probability = 1 / 32
     end
-    local leg_name = legs.leg
+    local leg_name = spider_leg_specification.leg
     local leg_prototype = data.raw["spider-leg"][leg_name]
     leg_prototype.walking_sound_volume_modifier = 0
     leg_prototype.working_sound.probability = sound_probability
-end
 local selection_box = spiderbot_prototype.selection_box
 if selection_box then
     selection_box[1][1] = selection_box[1][1] * 2
@@ -59,9 +48,7 @@ if selection_box then
 end
 data:extend { spiderbot_prototype }
 
-for i = 1, 8 do
-    local leg = data.raw["spider-leg"]["spiderbot-leg-" .. i]
-    leg.collision_mask = {
+    leg_prototype.collision_mask = {
         layers = {
             -- ground_tile = true,
             water_tile = true,
@@ -91,10 +78,18 @@ for i = 1, 8 do
         consider_tile_transitions = false,
         colliding_with_tiles_only = false,
     }
-    leg.minimal_step_size = leg.minimal_step_size * 4
-    -- leg.movement_based_position_selection_distance = leg.movement_based_position_selection_distance * 1.5
+    leg_prototype.minimal_step_size = leg_prototype.minimal_step_size * 4
+    -- leg_prototype.movement_based_position_selection_distance = leg_prototype.movement_based_position_selection_distance * 1.5
 end
 
+local legs = spiderbot_prototype.spider_engine.legs
+if legs[1] then
+    for _, leg in pairs(legs) do
+        modify_spider_legs(leg)
+    end
+else
+    modify_spider_legs(legs)
+end
 local spiderbot_recipe = table.deepcopy(data.raw["recipe"]["spidertron"])
 spiderbot_recipe.name = "spiderbot"
 spiderbot_recipe.ingredients = {
