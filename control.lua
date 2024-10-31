@@ -1165,13 +1165,21 @@ script.on_load(add_commands)
 
 local function on_init()
     -- spiderbot data
-    storage.spiderbots = {} --[[@type table<player_index, table<uuid, spiderbot_data>>]]
-    storage.spiderbots_enabled = {} --[[@type table<player_index, boolean>]]
+    --[[@type table<player_index, table<uuid, spiderbot_data>>]]
+    storage.spiderbots = {}
+
+    --[[@type table<player_index, boolean>]]
+    storage.spiderbots_enabled = {}
 
     -- player data
-    storage.previous_controller = {} --[[@type table<player_index, defines.controllers>]]
-    storage.previous_player_entity = {} --[[@type table<player_index, uuid>]]
-    storage.previous_player_color = {} --[[@type table<player_index, Color>]]
+    --[[@type table<player_index, defines.controllers>]]
+    storage.previous_controller = {}
+
+    --[[@type table<player_index, uuid>]]
+    storage.previous_player_entity = {}
+
+    --[[@type table<player_index, Color>]]
+    storage.previous_player_color = {}
 
     -- misc data
     storage.spider_leg_collision_mask = prototypes.entity["spiderbot-leg-1"].collision_mask
