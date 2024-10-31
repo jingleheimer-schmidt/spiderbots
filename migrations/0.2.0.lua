@@ -87,4 +87,4 @@ storage.spiders_enabled = nil
 storage.spiderbots_enabled = storage.spiderbots_enabled or {}
 storage.render_objects = storage.render_objects or {}
 
-game.print({ "spiderbot-messages.2.0-migration" })
+-- game.print({ "spiderbot-messages.2.0-migration" })
