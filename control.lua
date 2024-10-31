@@ -109,7 +109,7 @@ local function create_spiderbot_projectile(position, player)
         player = player,
         source = player_entity,
         target = position,
-        speed = 0.33,
+        speed = math.random(),
         raise_built = true,
     }
 end
@@ -776,7 +776,7 @@ local function return_spiderbot_to_inventory(spiderbot, player)
         -- player = player,
         source = spiderbot,
         target = player_entity,
-        speed = 0.33,
+        speed = math.random(),
         -- raise_built = true,
     }
     local result = player.mine_entity(spiderbot)
