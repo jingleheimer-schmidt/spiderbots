@@ -1171,6 +1171,7 @@ local function on_tick(event)
                     goto next_entity
                 end
                 local proxy_target = entity.proxy_target
+                -- TODO: be able to process insert_plan AND removal_plan requests
                 if proxy_target then
                     local items = entity.item_requests
                     local index, item_count_with_quality = next(items)
