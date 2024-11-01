@@ -462,9 +462,9 @@ local function upgrade_entity(spiderbot_data)
             if inventory then
                 local upgrade_name = entity_prototype.name
                 local type = entity.type
-                local is_ug_belt = (type == "underground-belt")
+                local is_underground_belt = (type == "underground-belt")
                 local is_loader = (type == "loader" or type == "loader-1x1")
-                local underground_type = is_ug_belt and entity.belt_to_ground_type
+                local underground_type = is_underground_belt and entity.belt_to_ground_type
                 local loader_type = is_loader and entity.loader_type
                 local create_entity_type = underground_type or loader_type or nil
                 local upgraded_entity = entity.surface.create_entity {
