@@ -317,7 +317,6 @@ end
 
 ---@param spiderbot_data spiderbot_data
 local function build_ghost(spiderbot_data)
-    local spiderbot = spiderbot_data.spiderbot
     local spiderbot_id = spiderbot_data.spiderbot_id
     local player = spiderbot_data.player
     local player_index = spiderbot_data.player_index
@@ -431,7 +430,6 @@ end
 
 ---@param spiderbot_data spiderbot_data
 local function upgrade_entity(spiderbot_data)
-    local spiderbot = spiderbot_data.spiderbot
     local spiderbot_id = spiderbot_data.spiderbot_id
     local player = spiderbot_data.player
     local player_index = spiderbot_data.player_index
@@ -498,7 +496,6 @@ end
 
 ---@param spiderbot_data spiderbot_data
 local function insert_items(spiderbot_data)
-    local spiderbot = spiderbot_data.spiderbot
     local spiderbot_id = spiderbot_data.spiderbot_id
     local player = spiderbot_data.player
     local player_index = spiderbot_data.player_index
