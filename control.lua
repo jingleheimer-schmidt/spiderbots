@@ -394,8 +394,8 @@ local function deconstruct_entity(spiderbot_data)
         local item = item_stack or (product and { name = product.name, quality = entity.quality }) or nil
         local inventory = item and inventory_has_space(character_inv, vehicle_inv, item)
         if inventory then
+            local count = 0
             while entity.valid do
-                local count = 0
                 if inventory.can_insert(item) then
                     local result = entity.mine { inventory = inventory, force = false, ignore_minable = false, raise_destroyed = true }
                     count = count + 1
