@@ -917,16 +917,16 @@ local function on_tick(event)
             { character_position_x - half_max_task_range, character_position_y - half_max_task_range },
             { character_position_x + half_max_task_range, character_position_y + half_max_task_range },
         }
-        local decon_entities = nil
-        local revive_entities = nil
-        local upgrade_entities = nil
-        local item_proxy_entities = nil
+        local decon_entities = nil --[[@type LuaEntity[]?]]
+        local revive_entities = nil --[[@type LuaEntity[]?]]
+        local upgrade_entities = nil --[[@type LuaEntity[]?]]
+        local item_proxy_entities = nil --[[@type LuaEntity[]?]]
         local decon_ordered = false
         local revive_ordered = false
         local upgrade_ordered = false
         local item_proxy_ordered = false
         local max_spiders_dispatched = 9
-        local counter = 0
+        local spiders_dispatched = 0
         for spiderbot_id, spiderbot_data in pairs(spiderbots) do
             local spiderbot = spiderbot_data.spiderbot
             if not (spiderbot and spiderbot.valid) then
@@ -939,17 +939,17 @@ local function on_tick(event)
             local distance_to_player = distance(spiderbot.position, player_entity.position)
             local exceeds_range = distance_to_player > max_task_range * 1
             local greatly_exceeds_range = distance_to_player > max_task_range * 2
-            if (counter < 2) and ((no_speed and exceeds_range) or greatly_exceeds_range) then
+            if (spiders_dispatched < 2) and ((no_speed and exceeds_range) or greatly_exceeds_range) then
                 if status == "idle" then
                     local position_in_radius = random_position_in_radius(player_entity.position, 50)
                     local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
                     local position = non_colliding_position or player.position
                     spiderbot.teleport(position, player.surface, true)
                     spiderbot.follow_target = player_entity
-                    counter = counter + 1
+                    spiders_dispatched = spiders_dispatched + 1
                 else
                     abandon_task(spiderbot_id, player_index)
-                    counter = counter + 1
+                    spiders_dispatched = spiders_dispatched + 1
                 end
             end
             -- if spiderbots are disabled for the player, go to the next spiderbot
@@ -960,36 +960,24 @@ local function on_tick(event)
             -- if the spiderbot is not idle, go to the next spiderbot
             if not (status == "idle") then goto next_spiderbot end
             -- if the max number of spiders have been dispatched, go to the next player
-            if counter > max_spiders_dispatched then goto next_player end
+            if spiders_dispatched > max_spiders_dispatched then goto next_player end
             decon_entities = decon_entities or surface.find_entities_filtered {
                 area = area,
                 force = player_force,
                 to_be_deconstructed = true,
             }
-            local decon_entity_count = #decon_entities
-            for i = 1, decon_entity_count do
-                local entity_index = math.random(1, decon_entity_count)
-                local entity = decon_entities[entity_index] --[[@type LuaEntity]]
-                if not (entity and entity.valid) then
-                    table.remove(decon_entities, entity_index)
-                    goto next_entity
-                end
-                if entity.type == "fish" then
-                    table.remove(decon_entities, entity_index)
-                    goto next_entity
-                end
+            while (#decon_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
+                local entity = table.remove(decon_entities, math.random(1, #decon_entities)) --[[@type LuaEntity]]
+                if not (entity and entity.valid) then goto next_entity end
+                if entity.type == "fish" then goto next_entity end
                 local entity_id = entity_uuid(entity)
-                local task_assigned = is_task_assigned(entity_id)
-                if task_assigned then
-                    table.remove(decon_entities, entity_index)
-                    goto next_entity
-                end
+                if is_task_assigned(entity_id) then goto next_entity end
                 local prototype = entity.prototype
-                local products = prototype and prototype.mineable_properties.products
-                local result_when_mined = (entity.type == "item-entity" and entity.stack) or (products and products[1] and products[1].name) or nil
-                local character_inv_has_space = result_when_mined and character_inv and character_inv.valid and character_inv.can_insert(result_when_mined)
-                local vehicle_inv_has_space = result_when_mined and vehicle_inv and vehicle_inv.valid and vehicle_inv.can_insert(result_when_mined)
-                local space_for_result = (character_inv_has_space or vehicle_inv_has_space) or false
+                local products = prototype.mineable_properties.products or {}
+                local product = products[1]
+                local item_stack = entity.type == "item-entity" and entity.stack or nil
+                local item_with_quality = item_stack or (product and { name = product.name, quality = entity.quality }) or nil
+                local space_for_result = item_with_quality and inventory_has_space(character_inv, vehicle_inv, item_with_quality)
                 if space_for_result then
                     local distance_to_task = distance(entity.position, spiderbot.position)
                     if distance_to_task < max_task_range * 2 then
@@ -1000,16 +988,14 @@ local function on_tick(event)
                         }
                         spiderbot_data.status = "path_requested"
                         spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                        counter = counter + 1
+                        spiders_dispatched = spiders_dispatched + 1
                         decon_ordered = true
                         goto next_spiderbot
                     else
                         goto next_spiderbot
                     end
                 elseif (entity.type == "cliff") then
-                    local character_inv_has_cliff_explosives = character_inv and character_inv.valid and character_inv.get_item_count("cliff-explosives") > 0
-                    local vehicle_inv_has_cliff_explosives = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count("cliff-explosives") > 0
-                    local inventory = (vehicle_inv_has_cliff_explosives and vehicle_inv) or (character_inv_has_cliff_explosives and character_inv) or nil
+                    local inventory = inventory_has_item(character_inv, vehicle_inv, "cliff-explosives")
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
                         if distance_to_task < max_task_range * 2 then
@@ -1020,19 +1006,17 @@ local function on_tick(event)
                             }
                             spiderbot_data.status = "path_requested"
                             spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                            counter = counter + 1
+                            spiders_dispatched = spiders_dispatched + 1
                             decon_ordered = true
                             goto next_spiderbot
                         else
                             goto next_spiderbot
                         end
-                    else
-                        table.remove(decon_entities, entity_index)
                     end
-                else
-                    for _, found_entity in pairs(decon_entities) do
+                else -- if player has no space for the result or no cliff explosives, remove all entities of the same name from the table
+                    for index, found_entity in pairs(decon_entities) do
                         if found_entity.name == entity.name then
-                            table.remove(decon_entities, entity_index)
+                            table.remove(decon_entities, index)
                         end
                     end
                 end
@@ -1044,30 +1028,16 @@ local function on_tick(event)
                 force = player_force,
                 type = "entity-ghost",
             }
-            local revive_entity_count = #revive_entities
-            for i = 1, revive_entity_count do
-                local entity_index = math.random(1, revive_entity_count)
-                local entity = revive_entities[entity_index] --[[@type LuaEntity]]
-                if not (entity and entity.valid) then
-                    table.remove(revive_entities, entity_index)
-                    goto next_entity
-                end
+            while (#revive_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
+                local entity = table.remove(revive_entities, math.random(1, #revive_entities)) --[[@type LuaEntity]]
+                if not (entity and entity.valid) then goto next_entity end
                 local entity_id = entity_uuid(entity)
-                local task_assigned = is_task_assigned(entity_id)
-                if task_assigned then
-                    table.remove(revive_entities, entity_index)
-                    goto next_entity
-                end
+                if is_task_assigned(entity_id) then goto next_entity end
                 local items = entity.ghost_prototype.items_to_place_this
                 local item_stack = items and items[1]
                 if item_stack then
-                    local item_name = item_stack.name
-                    local item_count = item_stack.count or 1
-                    local item_quality = entity.quality
-                    local item_with_quality = { name = item_name, quality = item_quality }
-                    local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_with_quality) >= item_count
-                    local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_with_quality) >= item_count
-                    local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
+                    local item_with_quality = { name = item_stack.name, quality = entity.quality }
+                    local inventory = inventory_has_item(character_inv, vehicle_inv, item_with_quality)
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
                         if distance_to_task < max_task_range * 2 then
@@ -1078,7 +1048,7 @@ local function on_tick(event)
                             }
                             spiderbot_data.status = "path_requested"
                             spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                            counter = counter + 1
+                            spiders_dispatched = spiders_dispatched + 1
                             revive_ordered = true
                             goto next_spiderbot
                         else
@@ -1091,8 +1061,11 @@ local function on_tick(event)
                             end
                         end
                     end
-                else
-                    table.remove(revive_entities, entity_index)
+                else for index, found_entity in pairs(revive_entities) do
+                        if found_entity.name == entity.name then
+                            table.remove(revive_entities, index)
+                        end
+                    end
                 end
                 ::next_entity::
             end
@@ -1102,31 +1075,17 @@ local function on_tick(event)
                 force = player_force,
                 to_be_upgraded = true,
             }
-            local upgrade_entity_count = #upgrade_entities
-            for i = 1, upgrade_entity_count do
-                local entity_index = math.random(1, upgrade_entity_count)
-                local entity = upgrade_entities[entity_index] --[[@type LuaEntity]]
-                if not (entity and entity.valid) then
-                    table.remove(upgrade_entities, entity_index)
-                    goto next_entity
-                end
+            while (#upgrade_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
+                local entity = table.remove(upgrade_entities, math.random(1, #upgrade_entities)) --[[@type LuaEntity]]
+                if not (entity and entity.valid) then goto next_entity end
                 local entity_id = entity_uuid(entity)
-                local task_assigned = is_task_assigned(entity_id)
-                if task_assigned then
-                    table.remove(upgrade_entities, entity_index)
-                    goto next_entity
-                end
+                if is_task_assigned(entity_id) then goto next_entity end
                 local upgrade_target = entity.get_upgrade_target()
                 local items = upgrade_target and upgrade_target.items_to_place_this
                 local item_stack = items and items[1]
                 if upgrade_target and item_stack then
-                    local item_name = item_stack.name
-                    local item_count = item_stack.count or 1
-                    local item_quality = item_stack.quality
-                    local item_with_quality = { name = item_name, quality = item_quality }
-                    local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_with_quality) >= item_count
-                    local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_with_quality) >= item_count
-                    local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
+                    local item_with_quality = { name = item_stack.name, quality = item_stack.quality }
+                    local inventory = inventory_has_item(character_inv, vehicle_inv, item_with_quality)
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
                         if distance_to_task < max_task_range * 2 then
@@ -1137,9 +1096,9 @@ local function on_tick(event)
                             }
                             spiderbot_data.status = "path_requested"
                             spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                            counter = counter + 1
+                            spiders_dispatched = spiders_dispatched + 1
                             upgrade_ordered = true
-                        goto next_spiderbot
+                            goto next_spiderbot
                         else
                             goto next_spiderbot
                         end
@@ -1150,8 +1109,6 @@ local function on_tick(event)
                             end
                         end
                     end
-                else
-                    table.remove(upgrade_entities, entity_index)
                 end
                 ::next_entity::
             end
@@ -1161,45 +1118,21 @@ local function on_tick(event)
                 force = player_force,
                 type = "item-request-proxy",
             }
-            local item_proxy_entity_count = #item_proxy_entities
-            for i = 1, item_proxy_entity_count do
-                local entity_index = math.random(1, item_proxy_entity_count)
-                local entity = item_proxy_entities[entity_index] --[[@type LuaEntity]]
-                if not (entity and entity.valid) then
-                    table.remove(item_proxy_entities, entity_index)
-                    goto next_entity
-                end
+            while (#item_proxy_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
+                local entity = table.remove(item_proxy_entities, math.random(1, #item_proxy_entities)) --[[@type LuaEntity]]
+                if not (entity and entity.valid) then goto next_entity end
                 local entity_id = entity_uuid(entity)
-                local task_assigned = is_task_assigned(entity_id)
-                if task_assigned then
-                    table.remove(item_proxy_entities, entity_index)
-                    goto next_entity
-                end
+                if is_task_assigned(entity_id) then goto next_entity end
                 local proxy_target = entity.proxy_target
-                -- TODO: be able to process insert_plan AND removal_plan requests
                 if proxy_target then
                     local insert_plan = entity.insert_plan
                     local removal_plan = entity.removal_plan
                     local plan_type = (insert_plan and "insert") or (removal_plan and "remove") or nil
                     local plans = removal_plan and removal_plan[1] and removal_plan or insert_plan and insert_plan[1] and insert_plan or nil
-                    if not plans then
-                        table.remove(item_proxy_entities, entity_index)
-                        goto next_entity
-                    end
+                    if not plans then goto next_entity end
                     for index, plan in pairs(plans) do
                         local item_quality_pair = (plan and plan.id) or nil
-                        local character_inv_has_item = nil
-                        local vehicle_inv_has_item = nil
-                        local character_inv_has_space = nil
-                        local vehicle_inv_has_space = nil
-                        if plan_type == "insert" then
-                            character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_quality_pair) >= 1
-                            vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_quality_pair) >= 1
-                        elseif plan_type == "remove" then
-                            character_inv_has_space = character_inv and character_inv.valid and character_inv.can_insert(item_quality_pair)
-                            vehicle_inv_has_space = vehicle_inv and vehicle_inv.valid and vehicle_inv.can_insert(item_quality_pair)
-                        end
-                        local inventory = ((vehicle_inv_has_item or vehicle_inv_has_space) and vehicle_inv) or ((character_inv_has_item or character_inv_has_space) and character_inv) or nil
+                        local inventory = plan_type == "insert" and inventory_has_item(character_inv, vehicle_inv, item_quality_pair) or plan_type == "remove" and inventory_has_space(character_inv, vehicle_inv, item_quality_pair) or nil
                         if inventory then
                             local distance_to_task = distance(entity.position, spiderbot.position)
                             if distance_to_task < max_task_range * 2 then
@@ -1210,18 +1143,14 @@ local function on_tick(event)
                                 }
                                 spiderbot_data.status = "path_requested"
                                 spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                                counter = counter + 1
+                                spiders_dispatched = spiders_dispatched + 1
                                 item_proxy_ordered = true
                                 goto next_spiderbot
                             else
                                 goto next_spiderbot
                             end
-                        else
-                            table.remove(item_proxy_entities, entity_index)
                         end
                     end
-                else
-                    table.remove(item_proxy_entities, entity_index)
                 end
                 ::next_entity::
             end
