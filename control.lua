@@ -403,7 +403,7 @@ local function deconstruct_entity(spiderbot_data)
                 else
                     break
                 end
-                if count > 9 then break end
+                if count > 4 then break end
             end
             abandon_task(spiderbot_id, player_index) -- successfully deconstructed entity or transferred 10 items to player inventory. task complete. reset task data and follow player
         elseif (entity.type == "cliff") then
