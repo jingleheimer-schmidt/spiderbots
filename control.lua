@@ -444,8 +444,10 @@ local function upgrade_entity(spiderbot_data)
         if upgrade_target and item_stack then
             local item_name = item_stack.name
             local item_count = item_stack.count or 1
-            local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_name) >= item_count
-            local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_name) >= item_count
+            local quality = item_stack.quality
+            local item_with_quality = { name = item_name, quality = quality }
+            local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_with_quality) >= item_count
+            local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_with_quality) >= item_count
             local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
             if inventory then
                 local upgrade_name = upgrade_target.name
@@ -459,6 +461,7 @@ local function upgrade_entity(spiderbot_data)
                     name = upgrade_name,
                     position = entity.position,
                     direction = entity.direction,
+                    quality = quality,
                     player = player,
                     fast_replace = true,
                     force = entity.force,
@@ -489,8 +492,8 @@ local function insert_items(spiderbot_data)
     local spiderbot_id = spiderbot_data.spiderbot_id
     local player = spiderbot_data.player
     local player_index = spiderbot_data.player_index
-    local entity = spiderbot_data.task.entity
-    if not (player and player.valid and entity and entity.valid) then
+    local proxy = spiderbot_data.task.entity
+    if not (player and player.valid and proxy and proxy.valid) then
         abandon_task(spiderbot_id, player_index)
         return
     end
@@ -506,36 +509,80 @@ local function insert_items(spiderbot_data)
         abandon_task(spiderbot_id, player_index) -- no inventory to get items from
         return
     end
-    local proxy_target = entity.proxy_target
-    if proxy_target then
-        local items = entity.item_requests
-        local index, item_count_with_quality = next(items)
-        local item_name = item_count_with_quality.name
-        local item_count = item_count_with_quality.count
-        local item_quality = item_count_with_quality.quality
-        local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_name) >= item_count
-        local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_name) >= item_count
-        local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
-        if inventory then
-            local item_to_insert = { name = item_name, count = item_count }
-            local request_fulfilled = false
-            if proxy_target.can_insert(item_to_insert) then
-                proxy_target.insert(item_to_insert)
-                inventory.remove(item_to_insert)
-                items[item_name] = nil
-                entity.item_requests = items
-                if not next(items) then
-                    entity.destroy()
+    local entity = proxy.proxy_target
+    if entity then
+        local insert_plan = proxy.insert_plan
+        local removal_plan = proxy.removal_plan
+        if removal_plan and removal_plan[1] then
+            local item_to_remove = removal_plan[1]
+            local item_stack = { name = item_to_remove.id.name, quality = item_to_remove.id.quality }
+            local character_inv_has_space = character_inv and character_inv.valid and character_inv.can_insert(item_stack)
+            local vehicle_inv_has_space = vehicle_inv and vehicle_inv.valid and vehicle_inv.can_insert(item_stack)
+            local player_inventory = (vehicle_inv_has_space and vehicle_inv) or (character_inv_has_space and character_inv) or nil
+            if player_inventory then
+                local removal_inventories = item_to_remove.items.in_inventory
+                local removal_data = removal_inventories and removal_inventories[1]
+                local removal_inventory_id = removal_data and removal_data.inventory
+                local removal_inventory = removal_inventory_id and entity.get_inventory(removal_inventory_id)
+                if removal_data and removal_inventory and removal_inventory.valid then
+                    local stack = removal_inventory[removal_data.stack + 1]
+                    if stack and stack.valid and stack.valid_for_read then
+                        stack.count = stack.count - 1
+                        if stack.count <= 0 then
+                            stack.clear()
+                        end
+                    end
+                    player_inventory.insert(item_stack)
+                    removal_data.count = removal_data.count or 1
+                    removal_data.count = removal_data.count - 1
+                    if removal_data.count <= 0 then
+                        table.remove(removal_inventories, 1)
+                    end
+                    if not (item_to_remove and item_to_remove.items.in_inventory and item_to_remove.items.in_inventory[1]) then
+                        table.remove(removal_plan, 1)
+                    end
+                    request_fulfilled = true
                 end
-                request_fulfilled = true
             end
-            if request_fulfilled then
-                abandon_task(spiderbot_id, player_index) -- successfully inserted items. task complete. reset task data and follow player
-            else
-                abandon_task(spiderbot_id, player_index) -- could not insert items
+            proxy.removal_plan = removal_plan
+        elseif insert_plan and insert_plan[1] then
+            local item_to_insert = insert_plan[1]
+            local item_stack = { name = item_to_insert.id.name, quality = item_to_insert.id.quality }
+            local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_stack) >= 1
+            local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_stack) >= 1
+            local player_inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
+            if player_inventory then
+                local insert_inventories = item_to_insert.items.in_inventory
+                local insert_data = insert_inventories and insert_inventories[1]
+                local insert_inventory_id = insert_data and insert_data.inventory
+                local insert_inventory = insert_inventory_id and entity.get_inventory(insert_inventory_id)
+                if insert_data and insert_inventory and insert_inventory.valid then
+                    local stack = insert_inventory[insert_data.stack + 1]
+                    if stack and stack.valid then
+                        if stack.valid_for_read then
+                            stack.count = stack.count + 1
+                        else
+                            stack.set_stack(item_stack)
+                        end
+                    end
+                    player_inventory.remove(item_stack)
+                    insert_data.count = insert_data.count or 1
+                    insert_data.count = insert_data.count - 1
+                    if insert_data.count <= 0 then
+                        table.remove(insert_inventories, 1)
+                    end
+                    if not (item_to_insert and item_to_insert.items.in_inventory and item_to_insert.items.in_inventory[1]) then
+                        table.remove(insert_plan, 1)
+                    end
+                    request_fulfilled = true
+                end
             end
+            proxy.insert_plan = insert_plan
+        end
+        if request_fulfilled then
+            abandon_task(spiderbot_id, player_index) -- successfully inserted or removed items. task complete. reset task data and follow player
         else
-            abandon_task(spiderbot_id, player_index) -- not enough items in inventory
+            abandon_task(spiderbot_id, player_index) -- failed to insert or remove items
         end
     else
         abandon_task(spiderbot_id, player_index) -- no proxy_target
@@ -1011,8 +1058,10 @@ local function on_tick(event)
                 if item_stack then
                     local item_name = item_stack.name
                     local item_count = item_stack.count or 1
-                    local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_name) >= item_count
-                    local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_name) >= item_count
+                    local item_quality = item_stack.quality
+                    local item_with_quality = { name = item_name, quality = item_quality }
+                    local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_with_quality) >= item_count
+                    local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_with_quality) >= item_count
                     local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
@@ -1068,8 +1117,10 @@ local function on_tick(event)
                 if upgrade_target and item_stack then
                     local item_name = item_stack.name
                     local item_count = item_stack.count or 1
-                    local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_name) >= item_count
-                    local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_name) >= item_count
+                    local item_quality = item_stack.quality
+                    local item_with_quality = { name = item_name, quality = item_quality }
+                    local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_with_quality) >= item_count
+                    local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_with_quality) >= item_count
                     local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
@@ -1108,7 +1159,7 @@ local function on_tick(event)
             local item_proxy_entity_count = #item_proxy_entities
             for i = 1, item_proxy_entity_count do
                 local entity_index = math.random(1, item_proxy_entity_count)
-                local entity = item_proxy_entities[entity_index] ---@type LuaEntity
+                local entity = item_proxy_entities[entity_index] --[[@type LuaEntity]]
                 if not (entity and entity.valid) then
                     table.remove(item_proxy_entities, entity_index)
                     goto next_entity
@@ -1126,8 +1177,9 @@ local function on_tick(event)
                     local item_name = item_count_with_quality.name
                     local item_count = item_count_with_quality.count
                     local item_quality = item_count_with_quality.quality
-                    local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_name) >= item_count
-                    local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_name) >= item_count
+                    local item_with_quality = { name = item_name, quality = item_quality }
+                    local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_with_quality) >= item_count
+                    local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_with_quality) >= item_count
                     local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
