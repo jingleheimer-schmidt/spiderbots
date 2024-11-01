@@ -295,6 +295,26 @@ local function get_spiderbot_data(spiderbot_id, path_request_id)
     end
 end
 
+---@param character_inventory LuaInventory?
+---@param vehicle_inventory LuaInventory?
+---@param item ItemIDAndQualityIDPair|LuaItemStack|string
+---@return LuaInventory?
+local function inventory_has_item(character_inventory, vehicle_inventory, item)
+    local character_has_item = character_inventory and character_inventory.valid and character_inventory.get_item_count(item) >= 1
+    local vehicle_has_item = vehicle_inventory and vehicle_inventory.valid and vehicle_inventory.get_item_count(item) >= 1
+    return vehicle_has_item and vehicle_inventory or character_has_item and character_inventory or nil
+end
+
+---@param character_inventory LuaInventory?
+---@param vehicle_inventory LuaInventory?
+---@param item ItemIDAndQualityIDPair|LuaItemStack|string
+---@return LuaInventory?
+local function inventory_has_space(character_inventory, vehicle_inventory, item)
+    local character_has_space = character_inventory and character_inventory.valid and character_inventory.can_insert(item)
+    local vehicle_has_space = vehicle_inventory and vehicle_inventory.valid and vehicle_inventory.can_insert(item)
+    return vehicle_has_space and vehicle_inventory or character_has_space and character_inventory or nil
+end
+
 ---@param spiderbot_data spiderbot_data
 local function build_ghost(spiderbot_data)
     local spiderbot = spiderbot_data.spiderbot
@@ -309,10 +329,7 @@ local function build_ghost(spiderbot_data)
     local items = entity.ghost_prototype.items_to_place_this
     local item_stack = items and items[1]
     if item_stack then
-        local item_name = item_stack.name
-        local item_quality = entity.quality
-        local item_quality_pair = { name = item_name, quality = item_quality }
-        local item_count = item_stack.count or 1
+        local item_quality_pair = { name = item_stack.name, quality = entity.quality }
         local character = player.character
         local vehicle = player.vehicle
         if not ((character and character.valid) or (vehicle and vehicle.valid)) then
@@ -325,16 +342,7 @@ local function build_ghost(spiderbot_data)
             abandon_task(spiderbot_id, player_index) -- no inventory to get items from
             return
         end
-        if vehicle_inv and vehicle_inv.valid and (vehicle_inv.get_item_count(item_quality_pair) >= item_count) then
-            local dictionary, revived_entity = entity.revive({ return_item_request_proxy = false, raise_revive = true })
-            if revived_entity then
-                vehicle_inv.remove(item_quality_pair)
-                abandon_task(spiderbot_id, player_index) -- successfully revived entity, task complete. reset task data and follow player
-            else
-                abandon_task(spiderbot_id, player_index) -- failed to revive entity
-            end
-        elseif character_inv and character_inv.valid and (character_inv.get_item_count(item_quality_pair) >= item_count) then
-            local dictionary, revived_entity = entity.revive({ return_item_request_proxy = false, raise_revive = true })
+        local inventory = inventory_has_item(character_inv, vehicle_inv, item_quality_pair)
             if revived_entity then
                 character_inv.remove(item_quality_pair)
                 abandon_task(spiderbot_id, player_index) -- successfully revived entity, task complete. reset task data and follow player
@@ -375,15 +383,15 @@ local function deconstruct_entity(spiderbot_data)
     local entity_position = entity.position
     if entity.to_be_deconstructed() then
         local prototype = entity.prototype
-        local products = prototype and prototype.mineable_properties.products
-        local result_when_mined = (entity.type == "item-entity" and entity.stack) or (products and products[1] and products[1].name) or nil
-        local space_in_character_inv = character_inv and character_inv.valid and result_when_mined and character_inv.can_insert(result_when_mined)
-        local space_in_vehicle_inv = vehicle_inv and vehicle_inv.valid and result_when_mined and vehicle_inv.can_insert(result_when_mined)
-        local inventory = (space_in_vehicle_inv and vehicle_inv) or (space_in_character_inv and character_inv) or nil
-        if result_when_mined and inventory then
+        local products = prototype.mineable_properties.products or {}
+        local product = products[1]
+        local item_stack = entity.type == "item-entity" and entity.stack or nil
+        local item = item_stack or (product and { name = product.name, quality = entity.quality }) or nil
+        local inventory = item and inventory_has_space(character_inv, vehicle_inv, item)
+        if inventory then
             while entity.valid do
                 local count = 0
-                if inventory.can_insert(result_when_mined) then
+                if inventory.can_insert(item) then
                     local result = entity.mine { inventory = inventory, force = false, ignore_minable = false, raise_destroyed = true }
                     count = count + 1
                     if not result then break end
@@ -444,12 +452,8 @@ local function upgrade_entity(spiderbot_data)
         local items = entity_prototype and entity_prototype.items_to_place_this
         local item_stack = items and items[1]
         if entity_prototype and item_stack then
-            local item_name = item_stack.name
-            local quality = quality_prototype
-            local item_with_quality = { name = item_name, quality = quality }
-            local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_with_quality) >= 1
-            local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_with_quality) >= 1
-            local inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
+            local item_with_quality = { name = item_stack.name, quality = quality_prototype }
+            local inventory = inventory_has_item(character_inv, vehicle_inv, item_with_quality)
             if inventory then
                 local upgrade_name = entity_prototype.name
                 local type = entity.type
@@ -462,7 +466,7 @@ local function upgrade_entity(spiderbot_data)
                     name = upgrade_name,
                     position = entity.position,
                     direction = entity.direction,
-                    quality = quality,
+                    quality = quality_prototype,
                     player = player,
                     fast_replace = true,
                     force = entity.force,
@@ -517,9 +521,7 @@ local function insert_items(spiderbot_data)
         if removal_plan and removal_plan[1] then
             for index, item_to_remove in pairs(removal_plan) do
                 local item_stack = { name = item_to_remove.id.name, quality = item_to_remove.id.quality }
-                local character_inv_has_space = character_inv and character_inv.valid and character_inv.can_insert(item_stack)
-                local vehicle_inv_has_space = vehicle_inv and vehicle_inv.valid and vehicle_inv.can_insert(item_stack)
-                local player_inventory = (vehicle_inv_has_space and vehicle_inv) or (character_inv_has_space and character_inv) or nil
+                local player_inventory = inventory_has_space(character_inv, vehicle_inv, item_stack)
                 if player_inventory then
                     local removal_inventories = item_to_remove.items.in_inventory
                     local removal_data = removal_inventories and removal_inventories[1]
@@ -551,9 +553,7 @@ local function insert_items(spiderbot_data)
         elseif insert_plan and insert_plan[1] then
             for index, item_to_insert in pairs(insert_plan) do
                 local item_stack = { name = item_to_insert.id.name, quality = item_to_insert.id.quality }
-                local character_inv_has_item = character_inv and character_inv.valid and character_inv.get_item_count(item_stack) >= 1
-                local vehicle_inv_has_item = vehicle_inv and vehicle_inv.valid and vehicle_inv.get_item_count(item_stack) >= 1
-                local player_inventory = (vehicle_inv_has_item and vehicle_inv) or (character_inv_has_item and character_inv) or nil
+                local player_inventory = inventory_has_item(character_inv, vehicle_inv, item_stack)
                 if player_inventory then
                     local insert_inventories = item_to_insert.items.in_inventory
                     local insert_data = insert_inventories and insert_inventories[1]
