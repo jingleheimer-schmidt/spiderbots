@@ -10,8 +10,8 @@
 -- -@field render_ids table<integer, boolean>
 -- -@field path_request_id integer?
 
----@alias uuid string|integer
----@alias player_index string|integer
+---@alias uuid integer
+---@alias player_index integer
 
 -- -@class path_request_data
 -- -@field spider LuaEntity
