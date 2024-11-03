@@ -43,8 +43,12 @@ end
 ---@return string|integer
 local function entity_uuid(entity)
     local registration_number, useful_id, type = script.register_on_object_destroyed(entity)
-    if useful_id then
-        return useful_id
+    if useful_id == 0 then
+        if entity.type == "cliff" then
+            return useful_id
+        else
+            return registration_number
+        end
     else
         return registration_number
     end
@@ -361,6 +365,23 @@ local function build_ghost(spiderbot_data)
     end
 end
 
+---@param character_inventory LuaInventory?
+---@param vehicle_inventory LuaInventory?
+---@return LuaInventory?, LuaQualityPrototype?
+local function inventory_has_cliff_explosives(character_inventory, vehicle_inventory)
+    local quality_prototypes = prototypes.quality
+    for name, quality_prototype in pairs(quality_prototypes) do
+        local item = { name = "cliff-explosives", quality = quality_prototype }
+        local character_has_item = character_inventory and character_inventory.valid and character_inventory.get_item_count(item) >= 1
+        local vehicle_has_item = vehicle_inventory and vehicle_inventory.valid and vehicle_inventory.get_item_count(item) >= 1
+        if vehicle_has_item then
+            return vehicle_inventory, quality_prototype
+        elseif character_has_item then
+            return character_inventory, quality_prototype
+        end
+    end
+end
+
 ---@param spiderbot_data spiderbot_data
 local function deconstruct_entity(spiderbot_data)
     local spiderbot = spiderbot_data.spiderbot
@@ -391,8 +412,10 @@ local function deconstruct_entity(spiderbot_data)
         local product = products[1]
         local item_stack = entity.type == "item-entity" and entity.stack or nil
         local item = item_stack or (product and { name = product.name, quality = entity.quality }) or nil
-        local inventory = item and inventory_has_space(character_inv, vehicle_inv, item)
-        if inventory then
+        local entity_is_cliff = entity.type == "cliff"
+        local inventory, quality = inventory_has_cliff_explosives(character_inv, vehicle_inv)
+        if not inventory then inventory = inventory_has_item(character_inv, vehicle_inv, item) end
+        if item and inventory then
             local count = 0
             while entity.valid do
                 if inventory.can_insert(item) then
@@ -404,24 +427,21 @@ local function deconstruct_entity(spiderbot_data)
                 end
                 if count > 4 then break end
             end
-            abandon_task(spiderbot_id, player_index) -- successfully deconstructed entity or transferred 10 items to player inventory. task complete. reset task data and follow player
-        elseif (entity.type == "cliff") then
-            if inventory and inventory.get_item_count("cliff-explosives") > 0 then
-                spiderbot.surface.create_entity {
-                    name = "cliff-explosives",
-                    position = spiderbot.position,
-                    target = entity_position,
-                    force = player.force,
-                    raise_built = true,
-                    speed = 0.125,
-                }
-                inventory.remove({ name = "cliff-explosives", count = 1 })
-                abandon_task(spiderbot_id, player_index) -- successfully spawned cliff explosives. task complete. reset task data and follow player
-            else
-                abandon_task(spiderbot_id, player_index) -- no cliff explosives in inventory
-            end
+            abandon_task(spiderbot_id, player_index) -- successfully deconstructed entity or transferred items to player inventory
+        elseif entity_is_cliff and inventory then
+            spiderbot.surface.create_entity {
+                name = "cliff-explosives",
+                quality = quality,
+                position = spiderbot.position,
+                target = entity_position,
+                force = player.force,
+                raise_built = true,
+                speed = 0.0125,
+            }
+            inventory.remove({ name = "cliff-explosives", count = 1, quality = quality })
+            abandon_task(spiderbot_id, player_index) -- successfully spawned cliff explosives
         else
-            abandon_task(spiderbot_id, player_index) -- no space in inventory
+            abandon_task(spiderbot_id, player_index) -- not enough inventory
         end
     else
         abandon_task(spiderbot_id, player_index) -- entity no longer needs to be deconstructed
@@ -997,7 +1017,7 @@ local function on_tick(event)
                         goto next_spiderbot
                     end
                 elseif (entity.type == "cliff") then
-                    local inventory = inventory_has_item(character_inv, vehicle_inv, "cliff-explosives")
+                    local inventory, quality = inventory_has_cliff_explosives(character_inv, vehicle_inv)
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
                         if distance_to_task < max_task_range * 2 then
