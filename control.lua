@@ -873,6 +873,32 @@ local function return_spiderbot_to_inventory(spiderbot, player)
     local result = player.mine_entity(spiderbot)
 end
 
+---@param tbl table
+local function shuffle(tbl)
+    for i = #tbl, 2, -1 do
+        local j = math.random(i)
+        tbl[i], tbl[j] = tbl[j], tbl[i]
+    end
+end
+
+---@generic K, V
+---@param tbl table<K, V>
+---@return fun():K, V
+local function random_pairs(tbl)
+    local keys = {}
+    for key in pairs(tbl) do
+        table.insert(keys, key)
+    end
+    shuffle(keys)
+    local i = 0
+    return function()
+        i = i + 1
+        if keys[i] then
+            return keys[i], tbl[keys[i]]
+        end
+    end
+end
+
 ---@param event EventData.on_tick
 local function on_tick(event)
     for _, player in pairs(game.connected_players) do
@@ -942,7 +968,7 @@ local function on_tick(event)
         local item_proxy_ordered = false
         local max_spiders_dispatched = 9
         local spiders_dispatched = 0
-        for spiderbot_id, spiderbot_data in pairs(spiderbots) do
+        for spiderbot_id, spiderbot_data in random_pairs(spiderbots) do
             local spiderbot = spiderbot_data.spiderbot
             if not (spiderbot and spiderbot.valid) then
                 storage.spiderbots[player_index][spiderbot_id] = nil
