@@ -341,18 +341,11 @@ local function build_ghost(spiderbot_data)
         end
         local character_inv = character and character.get_inventory(defines.inventory.character_main)
         local vehicle_inv = vehicle and vehicle.get_inventory(defines.inventory.car_trunk)
-        if not ((character_inv and character_inv.valid) or (vehicle_inv and vehicle_inv.valid)) then
-            abandon_task(spiderbot_id, player_index) -- no inventory to get items from
-            return
-        end
         local inventory = inventory_has_item(character_inv, vehicle_inv, item_quality_pair)
         if inventory then
             local dictionary, revived_entity, request_proxy = entity.revive({ return_item_request_proxy = false, raise_revive = true })
             if revived_entity then
                 inventory.remove(item_quality_pair)
-                if request_proxy then
-                    game.print("request_proxy")
-                end
                 abandon_task(spiderbot_id, player_index) -- successfully revived entity, task complete. reset task data and follow player
             else
                 abandon_task(spiderbot_id, player_index) -- failed to revive entity
