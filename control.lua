@@ -1243,20 +1243,6 @@ end
 script.on_event("toggle-spiderbots", toggle_spiderbots)
 script.on_event(defines.events.on_lua_shortcut, toggle_spiderbots)
 
-local function toggle_debug()
-    storage.debug = not storage.debug
-    for _, player in pairs(game.connected_players) do
-        local messaage = storage.debug and { "spiderbot-messages.debug-mode-enabled" } or { "spiderbot-messages.debug-mode-disabled" }
-        player.print(messaage)
-    end
-end
-
-local function add_commands()
-    commands.add_command("spiderbots-debug", "- toggles debug mode for the spiderbots, showing task targets and path request renderings", toggle_debug)
-end
-
-script.on_load(add_commands)
-
 local function on_init()
     -- spiderbot data
     --[[@type table<player_index, table<uuid, spiderbot_data>>]]
@@ -1281,7 +1267,6 @@ local function on_init()
     --[[@type table<player_index, LuaRenderObject[]>]]
     storage.render_objects = {}
 
-    add_commands()
 end
 
 script.on_init(on_init)
