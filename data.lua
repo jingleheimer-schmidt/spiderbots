@@ -30,6 +30,13 @@ for _, light in pairs(lights) do
     light.intensity = light.intensity / 2.5
 end
 
+---@type data.CollisionLayerPrototype
+local spiderbot_leg_collision_layer = {
+    name = "spiderbot_leg",
+    type = "collision-layer",
+}
+data:extend { spiderbot_leg_collision_layer }
+
 ---@param spider_leg_specification data.SpiderLegSpecification
 local function modify_spider_legs(spider_leg_specification)
     for _, trigger in pairs(spider_leg_specification.leg_hit_the_ground_trigger) do
@@ -66,6 +73,7 @@ local function modify_spider_legs(spider_leg_specification)
             cliff = true,
             -- is_lower_object = true,
             -- is_object = true
+            spiderbot_leg = true,
         },
         not_colliding_with_itself = true,
         consider_tile_transitions = false,
