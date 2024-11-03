@@ -902,6 +902,8 @@ end
 ---@param event EventData.on_tick
 local function on_tick(event)
     for _, player in pairs(game.connected_players) do
+        -- goto next player if player is not in character controller (e.g. remote view, cutscene, etc.)
+        if not (player.controller_type == defines.controllers.character) then goto next_player end
         local player_index = player.index
         storage.spiderbots[player_index] = storage.spiderbots[player_index] or {}
         local spiderbots = storage.spiderbots[player_index]
