@@ -7,7 +7,7 @@ local spiderbot_arguments = {
     leg_scale = 0.82,
     name = "spiderbot",
     leg_thickness = 1.44,
-    leg_movement_speed = 2.5,
+    leg_movement_speed = 1.5,
 }
 create_spidertron(spiderbot_arguments)
 local spiderbot_prototype = data.raw["spider-vehicle"]["spiderbot"]
@@ -20,6 +20,7 @@ spiderbot_prototype.equipment_grid = nil
 spiderbot_prototype.allow_passengers = false
 spiderbot_prototype.is_military_target = false
 spiderbot_prototype.torso_rotation_speed = spiderbot_prototype.torso_rotation_speed * 2
+spiderbot_prototype.torso_bob_speed = 0.8 -- default 1
 spiderbot_prototype.chunk_exploration_radius = 1
 spiderbot_prototype.minable.mining_time = spiderbot_prototype.minable.mining_time / 4
 spiderbot_prototype.working_sound.probability = 1 / 4
