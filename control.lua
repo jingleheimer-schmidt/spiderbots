@@ -40,7 +40,7 @@ local function distance(pos_1, pos_2)
 end
 
 ---@param entity LuaEntity
----@return string|integer
+---@return integer
 local function entity_uuid(entity)
     local registration_number, useful_id, type = script.register_on_object_destroyed(entity)
     if useful_id == 0 then
