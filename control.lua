@@ -553,7 +553,7 @@ local function insert_items(spiderbot_data)
                         player_inventory.insert(item_stack)
                         removal_data.count = removal_data.count or 1
                         removal_data.count = removal_data.count - 1
-                        if removal_data.count <= 0 then
+                        if removal_inventories and removal_data.count <= 0 then
                             table.remove(removal_inventories, 1)
                         end
                         if not (item_to_remove and item_to_remove.items.in_inventory and item_to_remove.items.in_inventory[1]) then
@@ -586,7 +586,7 @@ local function insert_items(spiderbot_data)
                         player_inventory.remove(item_stack)
                         insert_data.count = insert_data.count or 1
                         insert_data.count = insert_data.count - 1
-                        if insert_data.count <= 0 then
+                        if insert_inventories and insert_data.count <= 0 then
                             table.remove(insert_inventories, 1)
                         end
                         if not (item_to_insert and item_to_insert.items.in_inventory and item_to_insert.items.in_inventory[1]) then
