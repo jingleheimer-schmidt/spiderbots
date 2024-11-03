@@ -907,23 +907,26 @@ local function on_tick(event)
         local player_index = player.index
         storage.spiderbots[player_index] = storage.spiderbots[player_index] or {}
         local spiderbots = storage.spiderbots[player_index]
+        -- goto next player if the player has no spiderbots deployed
         if table_size(spiderbots) == 0 then goto next_player end
         local player_entity = get_player_entity(player)
+        -- relink spiderbots if the player changes character
         if not (player_entity and player_entity.valid) then
             relink_following_spiderbots(player)
             goto next_player
         end
         local player_uuid = entity_uuid(player_entity)
         storage.previous_player_entity[player_index] = storage.previous_player_entity[player_index] or player_uuid
+        -- relink spiderbots if the player changes character
         if storage.previous_player_entity[player_index] ~= player_uuid then
             relink_following_spiderbots(player)
             storage.previous_player_entity[player_index] = player_uuid
             goto next_player
         end
-        -- update spiderbots if the player changes color
         local player_color = player.color
         storage.previous_player_color[player_index] = storage.previous_player_color[player_index] or player_color
         local previous_color = storage.previous_player_color[player_index]
+        -- update spiderbots if the player changes color
         if not (previous_color.r == player_color.r and previous_color.g == player_color.g and previous_color.b == player_color.b) then
             for spider_id, spiderbot_data in pairs(spiderbots) do
                 local spiderbot = spiderbot_data.spiderbot
@@ -935,11 +938,11 @@ local function on_tick(event)
             end
             storage.previous_player_color[player_index] = player_color
         end
-        -- if the player doesn't have an inventory, go to the next player
         local character = player.character
         local vehicle = player.vehicle
         local character_inv = character and character.get_inventory(defines.inventory.character_main)
         local vehicle_inv = vehicle and vehicle.get_inventory(defines.inventory.car_trunk)
+        -- if the player doesn't have an inventory, go to the next player
         if not ((character_inv and character_inv.valid) or (vehicle_inv and vehicle_inv.valid)) then goto next_player end
         -- setup local data
         local player_force = { player.force.name, "neutral" }
@@ -967,12 +970,12 @@ local function on_tick(event)
                 storage.spiderbots[player_index][spiderbot_id] = nil
                 goto next_spiderbot
             end
-            -- if the spider is stuck, try to free it
             local status = spiderbot_data.status
             local no_speed = (spiderbot.speed == 0)
             local distance_to_player = distance(spiderbot.position, player_entity.position)
             local exceeds_range = distance_to_player > max_task_range * 1
             local greatly_exceeds_range = distance_to_player > max_task_range * 2
+            -- if the spider is stuck, try to free it
             if (spiders_dispatched < 2) and ((no_speed and exceeds_range) or greatly_exceeds_range) then
                 if status == "idle" then
                     local position_in_radius = random_position_in_radius(player_entity.position, 50)
@@ -1000,6 +1003,7 @@ local function on_tick(event)
                 force = player_force,
                 to_be_deconstructed = true,
             }
+            -- process the deconstruction tasks and assign available spiderbots to them
             while (#decon_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = table.remove(decon_entities, math.random(1, #decon_entities)) --[[@type LuaEntity]]
                 if not (entity and entity.valid) then goto next_entity end
@@ -1062,6 +1066,7 @@ local function on_tick(event)
                 force = player_force,
                 type = "entity-ghost",
             }
+            -- process the revive tasks and assign available spiderbots to them
             while (#revive_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = table.remove(revive_entities, math.random(1, #revive_entities)) --[[@type LuaEntity]]
                 if not (entity and entity.valid) then goto next_entity end
@@ -1109,6 +1114,7 @@ local function on_tick(event)
                 force = player_force,
                 to_be_upgraded = true,
             }
+            -- process the upgrade tasks and assign available spiderbots to them
             while (#upgrade_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = table.remove(upgrade_entities, math.random(1, #upgrade_entities)) --[[@type LuaEntity]]
                 if not (entity and entity.valid) then goto next_entity end
@@ -1152,6 +1158,7 @@ local function on_tick(event)
                 force = player_force,
                 type = "item-request-proxy",
             }
+            -- process the item proxy tasks and assign available spiderbots to them
             while (#item_proxy_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = table.remove(item_proxy_entities, math.random(1, #item_proxy_entities)) --[[@type LuaEntity]]
                 if not (entity and entity.valid) then goto next_entity end
