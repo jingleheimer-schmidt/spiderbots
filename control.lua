@@ -803,7 +803,7 @@ local function request_path(spiderbot, entity)
     local spider_leg_collision_mask = {
         layers = {
             -- ground_tile = true,
-            -- water_tile = true,
+            water_tile = true,
             -- resource = true,
             -- doodad = true,
             -- floor = true,
@@ -811,16 +811,16 @@ local function request_path(spiderbot, entity)
             -- transport_belt = true,
             -- item = true,
             -- ghost = true,
-            -- object = true,
-            player = true,
+            object = true,
+            -- player = true,
             -- car = true,
             -- train = true,
             -- elevated_rail = true,
             -- elevated_train = true,
-            -- empty_space = true,
-            -- lava_tile = true,
+            empty_space = true,
+            lava_tile = true,
             -- meltable = true,
-            -- rail_support = true,
+            rail_support = true,
             -- trigger_target = true,
             -- cliff = true,
             -- is_lower_object = true,
@@ -848,6 +848,7 @@ local function request_path(spiderbot, entity)
         can_open_gates = true,
         path_resolution_modifier = -1,
         pathfind_flags = path_to_entity_flags,
+        max_gap_size = 2,
     }
     local path_request_id = spiderbot.surface.request_path(request_parameters)
     return path_request_id
