@@ -906,15 +906,6 @@ local function on_tick(event)
         storage.spiderbots[player_index] = storage.spiderbots[player_index] or {}
         local spiderbots = storage.spiderbots[player_index]
         if table_size(spiderbots) == 0 then goto next_player end
-        -- relink spiderbots if the player changes controller type
-        local controller_type = player.controller_type
-        storage.previous_controller[player_index] = storage.previous_controller[player_index] or controller_type
-        if storage.previous_controller[player_index] ~= controller_type then
-            relink_following_spiderbots(player)
-            storage.previous_controller[player_index] = controller_type
-            goto next_player
-        end
-        -- relink spiderbots if the player changes character
         local player_entity = get_player_entity(player)
         if not (player_entity and player_entity.valid) then
             relink_following_spiderbots(player)
