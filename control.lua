@@ -931,7 +931,23 @@ local function return_spiderbot_to_inventory(spiderbot, player)
         speed = math.random(),
         -- raise_built = true,
     }
-    local result = player.mine_entity(spiderbot)
+    local character = player.character
+    local vehicle = player.vehicle
+    local character_inv = character and character.get_inventory(defines.inventory.character_main)
+    local vehicle_inv = vehicle and vehicle.get_inventory(defines.inventory.car_trunk)
+    local inventory = inventory_has_space(character_inv, vehicle_inv, "spiderbot")
+    if inventory then
+        inventory.insert { name = "spiderbot", count = 1 }
+    else
+        player.surface.spill_item_stack {
+            position = spiderbot.position,
+            stack = { name = "spiderbot", count = 1 },
+            enable_looted = true,
+            force = player.force,
+            allow_belts = false,
+        }
+    end
+    spiderbot.destroy()
 end
 
 ---@param tbl table
