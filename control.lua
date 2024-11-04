@@ -1,6 +1,8 @@
 
 local constants = require("util/constants")
 local max_task_range = constants.max_task_range
+local half_max_task_range = constants.half_max_task_range
+local double_max_task_range = constants.double_max_task_range
 
 local color_util = require("util/colors")
 local color = color_util.color
@@ -783,7 +785,7 @@ local function on_spider_command_completed(event)
                         local task_position = task_entity.valid and task_entity.position
                         if task_position then
                             local distance_from_task = distance(task_position, player.position)
-                            if distance_from_task > (max_task_range * 2) then
+                            if distance_from_task > (double_max_task_range) then
                                 abandon_task(spiderbot_id, player_index)
                             end
                         end
@@ -1029,7 +1031,6 @@ local function on_tick(event)
         local surface = player_entity.surface
         local character_position_x = player_entity.position.x
         local character_position_y = player_entity.position.y
-        local half_max_task_range = max_task_range / 2
         local area = {
             { character_position_x - half_max_task_range, character_position_y - half_max_task_range },
             { character_position_x + half_max_task_range, character_position_y + half_max_task_range },
@@ -1053,8 +1054,8 @@ local function on_tick(event)
             local status = spiderbot_data.status
             local no_speed = (spiderbot.speed == 0)
             local distance_to_player = distance(spiderbot.position, player_entity.position)
-            local exceeds_range = distance_to_player > max_task_range * 1
-            local greatly_exceeds_range = distance_to_player > max_task_range * 2
+            local exceeds_range = distance_to_player > max_task_range
+            local greatly_exceeds_range = distance_to_player > double_max_task_range
             -- if the spider is stuck, try to free it
             if (spiders_dispatched < max_spiders_dispatched) then
                 -- if the spider is assigned a task but has no speed, abandon the task so a new spider can be dispatched
@@ -1113,7 +1114,7 @@ local function on_tick(event)
                 local space_for_result = item_with_quality and inventory_has_space(character_inv, vehicle_inv, item_with_quality)
                 if space_for_result then
                     local distance_to_task = distance(entity.position, spiderbot.position)
-                    if distance_to_task < max_task_range * 2 then
+                    if distance_to_task < double_max_task_range then
                         spiderbot_data.task = {
                             task_type = "deconstruct_entity",
                             entity_id = entity_id,
@@ -1131,7 +1132,7 @@ local function on_tick(event)
                     local inventory, quality = inventory_has_cliff_explosives(character_inv, vehicle_inv)
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
-                        if distance_to_task < max_task_range * 2 then
+                        if distance_to_task < double_max_task_range then
                             spiderbot_data.task = {
                                 task_type = "deconstruct_entity",
                                 entity_id = entity_id,
@@ -1174,7 +1175,7 @@ local function on_tick(event)
                     local inventory = inventory_has_item(character_inv, vehicle_inv, item_with_quality)
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
-                        if distance_to_task < max_task_range * 2 then
+                        if distance_to_task < double_max_task_range then
                             spiderbot_data.task = {
                                 task_type = "build_ghost",
                                 entity_id = entity_id,
@@ -1223,7 +1224,7 @@ local function on_tick(event)
                     local inventory = inventory_has_item(character_inv, vehicle_inv, item_with_quality)
                     if inventory then
                         local distance_to_task = distance(entity.position, spiderbot.position)
-                        if distance_to_task < max_task_range * 2 then
+                        if distance_to_task < double_max_task_range then
                             spiderbot_data.task = {
                                 task_type = "upgrade_entity",
                                 entity_id = entity_id,
@@ -1271,7 +1272,7 @@ local function on_tick(event)
                         local inventory = plan_type == "insert" and inventory_has_item(character_inv, vehicle_inv, item_quality_pair) or plan_type == "remove" and inventory_has_space(character_inv, vehicle_inv, item_quality_pair) or nil
                         if inventory then
                             local distance_to_task = distance(entity.position, spiderbot.position)
-                            if distance_to_task < max_task_range * 2 then
+                            if distance_to_task < double_max_task_range then
                                 spiderbot_data.task = {
                                     task_type = "insert_items",
                                     entity_id = entity_id,
