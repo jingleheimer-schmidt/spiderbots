@@ -522,7 +522,7 @@ local function deconstruct_entity(spiderbot_data)
         local item = item_stack or (product and { name = product.name, quality = entity.quality }) or nil
         local entity_is_cliff = entity.type == "cliff"
         local inventory, quality = inventory_has_cliff_explosives(character_inv, vehicle_inv)
-        if item then inventory = inventory_has_item(character_inv, vehicle_inv, item) end
+        if item then inventory = inventory_has_space(character_inv, vehicle_inv, item) end
         if item and inventory then
             local count = 0
             local size = entity_size(entity)
