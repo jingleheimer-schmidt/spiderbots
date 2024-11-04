@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.1
-Date: ????
+Date: 03NOV2024
   Changes:
     - Added support for Factorio 2.0 and the Space Age explansions
     - Overhauled the task management system to improve reliability and performance (again)
