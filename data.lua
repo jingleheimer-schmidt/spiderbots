@@ -59,7 +59,7 @@ local function modify_spider_legs(spider_leg_specification)
             -- transport_belt = true,
             -- item = true,
             ghost = true,
-            -- object = true,
+            object = true,
             -- player = true,
             -- car = true,
             -- train = true,
