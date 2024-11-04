@@ -2,14 +2,21 @@
 Version: 0.2.1
 Date: ????
   Changes:
-    - Support for Factorio 2.0
+    - Added support for Factorio 2.0 and the Space Age explansions
+    - Overhauled the task management system to improve reliability and performance (again)
+    - Spiderbots launch themselves towards non-colliding positions instead of teleporting when stuck or left behind
+    - Significantly improved spiderbot pathfinding
+    - Added "smart" cliff destruction to reduce overuse of cliff explosives
+    - Removed migration message
   Bugfixes:
     - Fixed that spiderbots could briefly teleport to the previous surface when following a player who changed surfaces
+  Locale:
+    - Updated mod description
+    - Updated Spiderbot entity and item descriptions
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 21OCT2024
   Changes:
-    - Overhauled task management system to improve reliability and performance
     - Spiderbots are now created by throwing them at the ground
     - Increased throwing range from 25 to 50 tiles
     - Spiderbot legs now collide with ghosts
