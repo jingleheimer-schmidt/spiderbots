@@ -1053,17 +1053,32 @@ local function on_tick(event)
             local exceeds_range = distance_to_player > max_task_range * 1
             local greatly_exceeds_range = distance_to_player > max_task_range * 2
             -- if the spider is stuck, try to free it
-            if (spiders_dispatched < 2) and ((no_speed and exceeds_range) or greatly_exceeds_range) then
-                if status == "idle" then
-                    local position_in_radius = random_position_in_radius(player_entity.position, 50)
-                    local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
-                    local position = non_colliding_position or player.position
-                    spiderbot.teleport(position, player.surface, true)
-                    spiderbot.follow_target = player_entity
-                    spiders_dispatched = spiders_dispatched + 1
-                else
+            if (spiders_dispatched < max_spiders_dispatched) then
+                -- if the spider is assigned a task but has no speed, abandon the task so a new spider can be dispatched
+                if (status ~= "idle") and no_speed then
                     abandon_task(spiderbot_id, player_index)
+                    local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", spiderbot.position, 100, 0.5)
+                    create_spiderbot_projectile(spiderbot.position, non_colliding_position or spiderbot.position, player, 1)
+                    spiderbot.destroy({ raise_destroy = true })
                     spiders_dispatched = spiders_dispatched + 1
+                    goto next_spiderbot
+                end
+                if (status == "idle") and (spiders_dispatched < 2) then
+                    -- if the spider is idle and far away from the player, or is moving but is very far, move it closer
+                    if ((no_speed and exceeds_range) or greatly_exceeds_range) then
+                        local position_in_radius = random_position_in_radius(player_entity.position, 50)
+                        local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 100, 0.5)
+                        if non_colliding_position then
+                            create_spiderbot_projectile(spiderbot.position, non_colliding_position, player, 5)
+                            spiderbot.destroy({ raise_destroy = true })
+                            spiders_dispatched = spiders_dispatched + 1
+                            goto next_spiderbot
+                        end
+                    else
+                        -- abandon_task(spiderbot_id, player_index)
+                        -- spiders_dispatched = spiders_dispatched + 1
+                        -- goto next_spiderbot
+                    end
                 end
             end
             -- if spiderbots are disabled for the player, go to the next spiderbot
