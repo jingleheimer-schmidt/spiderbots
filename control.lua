@@ -123,6 +123,7 @@ end
 -- create the spiderbot projectile when a player uses a spiderbot capsule
 ---@param event EventData.on_player_used_capsule
 local function on_player_used_capsule(event)
+    if event.item.name ~= "spiderbot" then return end
     local position = event.position
     local player = game.get_player(event.player_index)
     if not (player and player.valid) then return end
