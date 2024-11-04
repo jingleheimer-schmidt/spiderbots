@@ -17,6 +17,7 @@ Date: ????
 Version: 0.2.0
 Date: 21OCT2024
   Changes:
+    - Overhauled the task management system to improve reliability and performance
     - Spiderbots are now created by throwing them at the ground
     - Increased throwing range from 25 to 50 tiles
     - Spiderbot legs now collide with ghosts
