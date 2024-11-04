@@ -463,6 +463,27 @@ local function find_nearby_cliff_to_deconstruct(spiderbot_data)
         data.path_request_id = request_path(spiderbot_data.spiderbot, cliff)
     end
 end
+
+---@param entity LuaEntity
+---@return "small"|"medium"|"large"|"huge" string
+local function entity_size(entity)
+    local bounding_box = entity.bounding_box
+    local right_bottom = bounding_box.right_bottom
+    local left_top = bounding_box.left_top
+    local x = math.abs(right_bottom.x - left_top.x)
+    local y = math.abs(right_bottom.y - left_top.y)
+    local size = x * y
+    if size <= 1 then
+        return "small"
+    elseif size <= 4 then
+        return "medium"
+    elseif size <= 9 then
+        return "large"
+    else
+        return "huge"
+    end
+end
+
 ---@param spiderbot_data spiderbot_data
 local function deconstruct_entity(spiderbot_data)
     local spiderbot = spiderbot_data.spiderbot
@@ -504,6 +525,7 @@ local function deconstruct_entity(spiderbot_data)
         if item then inventory = inventory_has_item(character_inv, vehicle_inv, item) end
         if item and inventory then
             local count = 0
+            local size = entity_size(entity)
             while entity.valid do
                 if inventory.can_insert(item) then
                     local result = entity.mine { inventory = inventory, force = false, ignore_minable = false, raise_destroyed = true }
@@ -514,6 +536,10 @@ local function deconstruct_entity(spiderbot_data)
                 end
                 if count > 4 then break end
             end
+            spiderbot.surface.play_sound {
+                path = "utility/deconstruct_" .. size,
+                position = entity_position,
+            }
             abandon_task(spiderbot_id, player_index) -- successfully deconstructed entity or transferred items to player inventory
         elseif entity_is_cliff and inventory then
             spiderbot.surface.create_entity {
