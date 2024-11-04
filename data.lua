@@ -113,7 +113,7 @@ spiderbot_recipe.results = {
 }
 spiderbot_recipe.enabled = true
 spiderbot_recipe.subgroup = "logistic-network"
-spiderbot_recipe.order = "a[robot]-a[spiderbot]"
+spiderbot_recipe.order = "a[robot]-b[spiderbot]"
 data:extend { spiderbot_recipe }
 
 local spidertron_item = table.deepcopy(data.raw["item-with-entity-data"]["spidertron"])
@@ -124,7 +124,7 @@ local spiderbot_item = {
     icon_size = spidertron_item.icon_size,
     stack_size = 25,
     subgroup = "logistic-network",
-    order = "a[robot]-a[spiderbot]",
+    order = "a[robot]-b[spiderbot]",
     capsule_action = {
         type = "throw",
         attack_parameters = {
