@@ -1311,9 +1311,10 @@ local function toggle_spiderbots(event)
                 local count = inventory.get_item_count("spiderbot")
                 if count > 0 then
                     for i = 1, count do
-                        local position = random_position_in_radius(player.position, 25)
-                        position = player.surface.find_non_colliding_position("spiderbot-leg-1", position, 100, 0.5) or position
-                        create_spiderbot_projectile(position, player)
+                        local player_position = player.position
+                        local destination = random_position_in_radius(player_position, 25)
+                        destination = player.surface.find_non_colliding_position("spiderbot-leg-1", destination, 100, 0.5) or destination
+                        create_spiderbot_projectile(player_position, destination, player)
                         inventory.remove("spiderbot")
                     end
                 end
