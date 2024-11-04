@@ -33,10 +33,6 @@ and is recommended with:
 There are currently no known mod compatibility issues. To report a compatibility issue, please make a post on the discussion page.
 
 ---------------------
-# Known Issues
-Spiderbot legs can sometimes get permantly stuck when a blueprint is placed on top of them. While I work on resolving this issue, if this occurs toggle the spiderbots (Alt + S) to reset them.
-
----------------------
 # License
 Spiderbots © 2024 by asher_sky is licensed under Attribution-NonCommercial-ShareAlike 4.0 International.
 To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/
