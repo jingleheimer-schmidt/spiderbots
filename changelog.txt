@@ -2,6 +2,7 @@
 Version: 0.2.3
 Date: ????
   Changes:
+    - Spiderbots can now be deployed and recalled while in remote view
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.2
 Date: 03NOV2024

@@ -107,13 +107,14 @@ script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_ent
 ---@param player LuaPlayer
 ---@param speed_multiplier number?
 local function create_spiderbot_projectile(origin, destination, player, speed_multiplier)
-    local player_entity = player.character
-    player.surface.create_entity {
+    local character = player.character
+    if not (character and character.valid) then return end
+    character.surface.create_entity {
         name = "spiderbot-trigger",
         position = origin,
         force = player.force,
         player = player,
-        source = player_entity,
+        source = character,
         target = destination,
         speed = math.random() * (speed_multiplier or 1),
         raise_built = true,
@@ -922,7 +923,8 @@ local function return_spiderbot_to_inventory(spiderbot, player)
     local player_index = player.index
     abandon_task(spiderbot_id, player_index)
     local player_entity = get_player_entity(player)
-    player.surface.create_entity {
+    if not (player_entity and player_entity.valid) then return end
+    player_entity.surface.create_entity {
         name = "spiderbot-no-trigger",
         position = spiderbot.position,
         force = player.force,
@@ -1307,12 +1309,16 @@ local function toggle_spiderbots(event)
     if storage.spiderbots_enabled[player_index] then
         local player = game.get_player(player_index)
         if player and player.valid then
-            local inventory = player.get_inventory(defines.inventory.character_main)
-            if inventory then
-                local count = inventory.get_item_count("spiderbot")
-                if count > 0 then
+            local character = player.character
+            local vehicle = player.vehicle
+            if (character and character.valid) or (vehicle and vehicle.valid) then
+                local character_inv = character and character.get_inventory(defines.inventory.character_main)
+                local vehicle_inv = vehicle and vehicle.get_inventory(defines.inventory.car_trunk)
+                local inventory = inventory_has_item(character_inv, vehicle_inv, "spiderbot")
+                local count = inventory and inventory.get_item_count("spiderbot") or 0
+                if inventory and (count > 0) then
                     for i = 1, count do
-                        local player_position = player.position
+                        local player_position = vehicle and vehicle.position or character and character.position or player.position
                         local destination = random_position_in_radius(player_position, 25)
                         destination = player.surface.find_non_colliding_position("spiderbot-leg-1", destination, 100, 0.5) or destination
                         create_spiderbot_projectile(player_position, destination, player)
