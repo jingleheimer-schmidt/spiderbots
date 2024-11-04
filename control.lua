@@ -442,6 +442,28 @@ local function inventory_has_cliff_explosives(character_inventory, vehicle_inven
 end
 
 ---@param spiderbot_data spiderbot_data
+local function find_nearby_cliff_to_deconstruct(spiderbot_data)
+    local surface = spiderbot_data.spiderbot.surface
+    local spiderbot_position = spiderbot_data.spiderbot.position
+    local cliff = surface.find_entities_filtered {
+        type = "cliff",
+        position = spiderbot_position,
+        radius = 32,
+        limit = 1,
+        to_be_deconstructed = true,
+    }[1]
+    if cliff then
+        local data = storage.spiderbots[spiderbot_data.player_index][spiderbot_data.spiderbot_id]
+        data.task = {
+            task_type = "deconstruct_entity",
+            entity_id = entity_uuid(cliff),
+            entity = cliff,
+        }
+        data.status = "path_requested"
+        data.path_request_id = request_path(spiderbot_data.spiderbot, cliff)
+    end
+end
+---@param spiderbot_data spiderbot_data
 local function deconstruct_entity(spiderbot_data)
     local spiderbot = spiderbot_data.spiderbot
     local spiderbot_id = spiderbot_data.spiderbot_id
@@ -449,8 +471,14 @@ local function deconstruct_entity(spiderbot_data)
     local player_index = spiderbot_data.player_index
     local entity = spiderbot_data.task.entity
     if not (player and player.valid and entity and entity.valid) then
-        abandon_task(spiderbot_id, player_index)
-        return
+        if player and player.valid and spiderbot_data.task.entity_id == 0 then
+            abandon_task(spiderbot_id, player_index)
+            find_nearby_cliff_to_deconstruct(spiderbot_data)
+            return
+        else
+            abandon_task(spiderbot_id, player_index)
+            return
+        end
     end
     local character = player.character
     local vehicle = player.vehicle
