@@ -3,6 +3,7 @@ local constants = require("util/constants")
 local max_task_range = constants.max_task_range
 local half_max_task_range = constants.half_max_task_range
 local double_max_task_range = constants.double_max_task_range
+local allowed_controllers = constants.allowed_controllers
 
 local color_util = require("util/colors")
 local color = color_util.color
@@ -1018,8 +1019,8 @@ local function on_tick(event)
             end
             storage.previous_player_color[player_index] = player_color
         end
-        -- goto next player if player is not in character controller (e.g. remote view, cutscene, etc.)
-        if not (player.controller_type == defines.controllers.character) then goto next_player end
+        -- goto next player if player is not in an allowed controller type
+        if not allowed_controllers[player.controller_type] then goto next_player end
         local character = player.character
         local vehicle = player.vehicle
         local character_inv = character and character.get_inventory(defines.inventory.character_main)
