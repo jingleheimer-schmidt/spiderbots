@@ -305,6 +305,66 @@ local function get_spiderbot_data(spiderbot_id, path_request_id)
     end
 end
 
+---@param spiderbot LuaEntity
+---@param entity LuaEntity
+---@return integer
+local function request_path(spiderbot, entity)
+    local spider_leg_bounding_box = { { -0.01, -0.01 }, { 0.01, 0.01 } }
+    -- just use the player collision layer, so the spiderbots can path through anything the player can walk through. even though they can't walk through ghosts, they can still path through them and try to fit their legs around them
+    local spider_leg_collision_mask = {
+        layers = {
+            -- ground_tile = true,
+            water_tile = true,
+            -- resource = true,
+            -- doodad = true,
+            -- floor = true,
+            -- rail = true,
+            -- transport_belt = true,
+            -- item = true,
+            -- ghost = true,
+            object = true,
+            -- player = true,
+            -- car = true,
+            -- train = true,
+            -- elevated_rail = true,
+            -- elevated_train = true,
+            empty_space = true,
+            lava_tile = true,
+            -- meltable = true,
+            rail_support = true,
+            -- trigger_target = true,
+            -- cliff = true,
+            -- is_lower_object = true,
+            -- is_object = true
+        },
+        not_colliding_with_itself = true,
+        consider_tile_transitions = false,
+        colliding_with_tiles_only = false,
+    }
+    local path_to_entity_flags = { cache = false, low_priority = true }
+    local bounding_box = entity.bounding_box
+    local right_bottom = bounding_box.right_bottom
+    local left_top = bounding_box.left_top
+    local x = math.abs(right_bottom.x - left_top.x)
+    local y = math.abs(right_bottom.y - left_top.y)
+    local non_colliding_position = spiderbot.surface.find_non_colliding_position("spiderbot-leg-1", entity.position, 25, 0.5)
+    local goal = non_colliding_position or entity.position
+    local request_parameters = {
+        bounding_box = spider_leg_bounding_box,
+        collision_mask = spider_leg_collision_mask,
+        start = spiderbot.position,
+        goal = goal,
+        force = spiderbot.force,
+        radius = math.max(x, y),
+        can_open_gates = true,
+        path_resolution_modifier = -1,
+        pathfind_flags = path_to_entity_flags,
+        max_gap_size = 2,
+    }
+    local path_request_id = spiderbot.surface.request_path(request_parameters)
+    return path_request_id
+end
+
 ---@param character_inventory LuaInventory?
 ---@param vehicle_inventory LuaInventory?
 ---@param item ItemIDAndQualityIDPair|LuaItemStack|string
@@ -798,66 +858,6 @@ local function is_task_assigned(entity_id)
         end
     end
     return false
-end
-
----@param spiderbot LuaEntity
----@param entity LuaEntity
----@return integer
-local function request_path(spiderbot, entity)
-    local spider_leg_bounding_box = { { -0.01, -0.01 }, { 0.01, 0.01 } }
-    -- just use the player collision layer, so the spiderbots can path through anything the player can walk through. even though they can't walk through ghosts, they can still path through them and try to fit their legs around them
-    local spider_leg_collision_mask = {
-        layers = {
-            -- ground_tile = true,
-            water_tile = true,
-            -- resource = true,
-            -- doodad = true,
-            -- floor = true,
-            -- rail = true,
-            -- transport_belt = true,
-            -- item = true,
-            -- ghost = true,
-            object = true,
-            -- player = true,
-            -- car = true,
-            -- train = true,
-            -- elevated_rail = true,
-            -- elevated_train = true,
-            empty_space = true,
-            lava_tile = true,
-            -- meltable = true,
-            rail_support = true,
-            -- trigger_target = true,
-            -- cliff = true,
-            -- is_lower_object = true,
-            -- is_object = true
-        },
-        not_colliding_with_itself = true,
-        consider_tile_transitions = false,
-        colliding_with_tiles_only = false,
-    }
-    local path_to_entity_flags = { cache = false, low_priority = true }
-    local bounding_box = entity.bounding_box
-    local right_bottom = bounding_box.right_bottom
-    local left_top = bounding_box.left_top
-    local x = math.abs(right_bottom.x - left_top.x)
-    local y = math.abs(right_bottom.y - left_top.y)
-    local non_colliding_position = spiderbot.surface.find_non_colliding_position("spiderbot-leg-1", entity.position, 25, 0.5)
-    local goal = non_colliding_position or entity.position
-    local request_parameters = {
-        bounding_box = spider_leg_bounding_box,
-        collision_mask = spider_leg_collision_mask,
-        start = spiderbot.position,
-        goal = goal,
-        force = spiderbot.force,
-        radius = math.max(x, y),
-        can_open_gates = true,
-        path_resolution_modifier = -1,
-        pathfind_flags = path_to_entity_flags,
-        max_gap_size = 2,
-    }
-    local path_request_id = spiderbot.surface.request_path(request_parameters)
-    return path_request_id
 end
 
 ---@param spiderbot LuaEntity
