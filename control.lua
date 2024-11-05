@@ -1239,18 +1239,6 @@ local function toggle_spiderbots(event)
                 end
             end
         end
-    else
-        local player = game.get_player(player_index)
-        storage.spiderbots = storage.spiderbots or {}
-        local spiderbots = storage.spiderbots[player_index]
-        if player and player.valid and spiderbots then
-            for spider_id, spiderbot_data in pairs(spiderbots) do
-                local spiderbot = spiderbot_data.spiderbot
-                if spiderbot and spiderbot.valid then
-                    return_spiderbot_to_inventory(spiderbot_data.spiderbot, player)
-                end
-            end
-        end
     end
     game.get_player(player_index).set_shortcut_toggled("toggle-spiderbots", storage.spiderbots_enabled[player_index])
 end
