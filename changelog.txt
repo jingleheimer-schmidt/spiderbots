@@ -2,7 +2,8 @@
 Version: 0.2.3
 Date: ????
   Changes:
-    - Spiderbots can now be deployed and recalled while in remote view
+    - Spiderbots can now be deployed, recalled, and perform tasks while in the player is in remote view
+    - Improved performance when interacting with inventories
   Bugfixes:
     - Fixed error when spamming the toggle shortcut (accessing invalid entity)
 ---------------------------------------------------------------------------------------------------
