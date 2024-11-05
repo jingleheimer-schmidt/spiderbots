@@ -905,7 +905,7 @@ local function random_pairs(tbl)
     end
 end
 
----@param event EventData.on_tick
+---@param event NthTickEventData
 local function on_tick(event)
     for _, player in pairs(game.connected_players) do
         local player_index = player.index
