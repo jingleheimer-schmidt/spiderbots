@@ -173,7 +173,7 @@ script.on_event(defines.events.on_object_destroyed, on_spider_destroyed)
 -- abandon the current task, set state to idle, and follow the player
 ---@param spiderbot_id uuid
 ---@param player_index player_index
-local function abandon_task(spiderbot_id, player_index)
+local function reset_task_data(spiderbot_id, player_index)
     local spiderbots = storage.spiderbots[player_index]
     local spiderbot_data = spiderbots[spiderbot_id]
     if spiderbot_data then
@@ -226,7 +226,7 @@ local function relink_following_spiderbots(player)
                 elseif spiderbot_data.status == "task_assigned" then
                     local task = spiderbot_data.task
                     if not (task and task.entity.valid) then
-                        abandon_task(spider_id, player_index)
+                        reset_task_data(spider_id, player_index)
                     else
                         local destinations = spiderbot.autopilot_destinations
                         spiderbot.follow_target = player_entity
@@ -242,7 +242,7 @@ local function relink_following_spiderbots(player)
                 local non_colliding_position = player_entity.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
                 local position = non_colliding_position or player_entity.position
                 spiderbot.teleport(position, player_entity.surface, true)
-                abandon_task(spider_id, player_index)
+                reset_task_data(spider_id, player_index)
             end
         else
             spiderbots[spider_id] = nil
@@ -269,7 +269,7 @@ local function on_player_changed_surface(event)
             local non_colliding_position = surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
             local position = non_colliding_position or player_entity.position
             spiderbot.teleport(position, surface, true)
-            abandon_task(spider_id, player_index)
+            reset_task_data(spider_id, player_index)
         end
     end
     relink_following_spiderbots(player)
@@ -424,7 +424,7 @@ local function build_ghost(spiderbot_data)
             end
         end
     end
-    abandon_task(spiderbot_id, player_index)
+    reset_task_data(spiderbot_id, player_index)
 end
 
 ---@param inventory LuaInventory
@@ -548,7 +548,7 @@ local function deconstruct_entity(spiderbot_data)
             return
         end
     end
-    abandon_task(spiderbot_id, player_index)
+    reset_task_data(spiderbot_id, player_index)
 end
 
 ---@param spiderbot_data spiderbot_data
@@ -595,7 +595,7 @@ local function upgrade_entity(spiderbot_data)
             end
         end
     end
-    abandon_task(spiderbot_id, player_index)
+    reset_task_data(spiderbot_id, player_index)
 end
 
 ---@param spiderbot_data spiderbot_data
@@ -677,7 +677,7 @@ local function insert_items(spiderbot_data)
             end
         end
     end
-    abandon_task(spiderbot_id, player_index)
+    reset_task_data(spiderbot_id, player_index)
 end
 
 ---@param spiderbot_data spiderbot_data
@@ -722,7 +722,7 @@ local function on_spider_command_completed(event)
                 if player.valid then
                     -- if the player doesn't have a valid character anymore, reset the task data and attempt to follow the player
                     local player_entity = get_player_entity(player)
-                    if not (player_entity and player_entity.valid) then abandon_task(spiderbot_id, player_index) return end
+                    if not (player_entity and player_entity.valid) then reset_task_data(spiderbot_id, player_index) return end
                     -- if the player is too far away from the task position, abandon the task and follow the player
                     local task = spiderbot_data.task
                     if task and task.entity then
@@ -731,7 +731,7 @@ local function on_spider_command_completed(event)
                         if task_position then
                             local distance_from_task = distance(task_position, player_entity.position)
                             if distance_from_task > (double_max_task_range) then
-                                abandon_task(spiderbot_id, player_index)
+                                reset_task_data(spiderbot_id, player_index)
                             end
                         end
                     end
@@ -753,18 +753,18 @@ local function on_script_path_request_finished(event)
     local spiderbot_id = spiderbot_data.spiderbot_id
     local player = spiderbot_data.player
     local player_index = spiderbot_data.player_index
-    if not path then abandon_task(spiderbot_id, player_index) return end
-    if not (spiderbot and spiderbot.valid) then abandon_task(spiderbot_id, player_index) return end
-    if not (player and player.valid) then abandon_task(spiderbot_id, player_index) return end
-    if not storage.spiderbots_enabled[player_index] then abandon_task(spiderbot_id, player_index) return end
+    if not path then reset_task_data(spiderbot_id, player_index) return end
+    if not (spiderbot and spiderbot.valid) then reset_task_data(spiderbot_id, player_index) return end
+    if not (player and player.valid) then reset_task_data(spiderbot_id, player_index) return end
+    if not storage.spiderbots_enabled[player_index] then reset_task_data(spiderbot_id, player_index) return end
     local status = spiderbot_data.status
     if status == "path_requested" then
         local task = spiderbot_data.task
-        if not (task and task.entity and task.entity.valid) then abandon_task(spiderbot_id, player_index) return end
-        if not task.entity.surface_index == spiderbot.surface_index then abandon_task(spiderbot_id, player_index) return end
+        if not (task and task.entity and task.entity.valid) then reset_task_data(spiderbot_id, player_index) return end
+        if not task.entity.surface_index == spiderbot.surface_index then reset_task_data(spiderbot_id, player_index) return end
         local task_position = task.entity.position
         local distance_from_task = distance(task_position, spiderbot.position)
-        if distance_from_task > max_task_range then abandon_task(spiderbot_id, player_index) return end
+        if distance_from_task > max_task_range then reset_task_data(spiderbot_id, player_index) return end
         spiderbot.autopilot_destination = nil
         local task_type = task.task_type
         local task_color = (task_type == "deconstruct_entity" and color.red) or (task_type == "build_ghost" and color.blue) or (task_type == "upgrade_entity" and color.green) or (task_type == "insert_items" and color.yellow) or color.white
@@ -851,7 +851,7 @@ end
 local function return_spiderbot_to_inventory(spiderbot, player)
     local spiderbot_id = entity_uuid(spiderbot)
     local player_index = player.index
-    abandon_task(spiderbot_id, player_index)
+    reset_task_data(spiderbot_id, player_index)
     local player_entity = get_player_entity(player)
     if not (player_entity and player_entity.valid) then return end
     player_entity.surface.create_entity {
@@ -980,7 +980,7 @@ local function on_tick(event)
             if (spiders_dispatched < max_spiders_dispatched) then
                 -- if the spider is assigned a task but has no speed, abandon the task so a new spider can be dispatched
                 if (status ~= "idle") and no_speed then
-                    abandon_task(spiderbot_id, player_index)
+                    reset_task_data(spiderbot_id, player_index)
                     local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", spiderbot.position, 100, 0.5)
                     create_spiderbot_projectile(spiderbot.position, non_colliding_position or spiderbot.position, player, 1)
                     spiderbot.destroy({ raise_destroy = true })
