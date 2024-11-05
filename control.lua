@@ -50,7 +50,7 @@ end
 ---@param player LuaPlayer
 ---@return LuaEntity?
 local function get_player_entity(player)
-    return player.vehicle or player.character or nil
+    return player.physical_vehicle or player.character or nil
 end
 
 ---@return string
@@ -253,10 +253,11 @@ local function relink_following_spiderbots(player)
     local character_controller = player.controller_type == defines.controllers.character
     if not character_controller then return end
     local player_entity = get_player_entity(player)
+    if not (player_entity and player_entity.valid) then return end
     for spider_id, spiderbot_data in pairs(spiderbots) do
         local spiderbot = spiderbot_data.spiderbot
         if spiderbot.valid then
-            if spiderbot.surface_index == player.surface_index then
+            if spiderbot.surface_index == player_entity.surface_index then
                 if spiderbot_data.status == "idle" then
                     spiderbot.follow_target = player_entity
                 elseif spiderbot_data.status == "path_requested" then
@@ -276,10 +277,10 @@ local function relink_following_spiderbots(player)
                     end
                 end
             else
-                local position_in_radius = random_position_in_radius(player.position, 50)
-                local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
-                local position = non_colliding_position or player.position
-                spiderbot.teleport(position, player.surface, true)
+                local position_in_radius = random_position_in_radius(player_entity.position, 50)
+                local non_colliding_position = player_entity.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
+                local position = non_colliding_position or player_entity.position
+                spiderbot.teleport(position, player_entity.surface, true)
                 abandon_task(spider_id, player_index)
             end
         else
@@ -293,17 +294,18 @@ local function on_player_changed_surface(event)
     local player_index = event.player_index
     local player = game.get_player(player_index)
     if player and player.valid then
-        local surface = player.surface
         local spiderbots = storage.spiderbots[player_index]
         if not spiderbots then return end
-        local character_controller = player.controller_type == defines.controllers.character
-        if not character_controller then return end
+        if not allowed_controllers[player.controller_type] then return end
+        local player_entity = get_player_entity(player)
+        if not (player_entity and player_entity.valid) then return end
+        local surface = player_entity.surface
         for spider_id, spiderbot_data in pairs(spiderbots) do
             local spiderbot = spiderbot_data.spiderbot
             if spiderbot.valid then
-                local position_in_radius = random_position_in_radius(player.position, 50)
+                local position_in_radius = random_position_in_radius(player_entity.position, 50)
                 local non_colliding_position = surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
-                local position = non_colliding_position or player.position
+                local position = non_colliding_position or player_entity.position
                 spiderbot.teleport(position, surface, true)
                 abandon_task(spider_id, player_index)
             end
@@ -444,7 +446,7 @@ local function build_ghost(spiderbot_data)
     if item_stack then
         local item_quality_pair = { name = item_stack.name, quality = entity.quality }
         local character = player.character
-        local vehicle = player.vehicle
+        local vehicle = player.physical_vehicle
         if not ((character and character.valid) or (vehicle and vehicle.valid)) then
             abandon_task(spiderbot_id, player_index)
             return
@@ -546,7 +548,7 @@ local function deconstruct_entity(spiderbot_data)
         end
     end
     local character = player.character
-    local vehicle = player.vehicle
+    local vehicle = player.physical_vehicle
     if not ((character and character.valid) or (vehicle and vehicle.valid)) then
         abandon_task(spiderbot_id, player_index)
         return
@@ -616,7 +618,7 @@ local function upgrade_entity(spiderbot_data)
         return
     end
     local character = player.character
-    local vehicle = player.vehicle
+    local vehicle = player.physical_vehicle
     if not ((character and character.valid) or (vehicle and vehicle.valid)) then
         abandon_task(spiderbot_id, player_index)
         return
@@ -682,7 +684,7 @@ local function insert_items(spiderbot_data)
         return
     end
     local character = player.character
-    local vehicle = player.vehicle
+    local vehicle = player.physical_vehicle
     if not ((character and character.valid) or (vehicle and vehicle.valid)) then
         abandon_task(spiderbot_id, player_index)
         return
@@ -817,6 +819,7 @@ local function on_spider_command_completed(event)
                     local player_entity = get_player_entity(player)
                     if not (player_entity and player_entity.valid) then
                         abandon_task(spiderbot_id, player_index)
+                        return
                     end
                     -- if the player is too far away from the task position, abandon the task and follow the player
                     local task = spiderbot_data.task
@@ -824,7 +827,7 @@ local function on_spider_command_completed(event)
                         local task_entity = task.entity
                         local task_position = task_entity.valid and task_entity.position
                         if task_position then
-                            local distance_from_task = distance(task_position, player.position)
+                            local distance_from_task = distance(task_position, player_entity.position)
                             if distance_from_task > (double_max_task_range) then
                                 abandon_task(spiderbot_id, player_index)
                             end
@@ -868,6 +871,10 @@ local function on_script_path_request_finished(event)
     if status == "path_requested" then
         local task = spiderbot_data.task
         if not (task and task.entity and task.entity.valid) then
+            abandon_task(spiderbot_id, player_index)
+            return
+        end
+        if not task.entity.surface_index == spiderbot.surface_index then
             abandon_task(spiderbot_id, player_index)
             return
         end
@@ -977,18 +984,18 @@ local function return_spiderbot_to_inventory(spiderbot, player)
         -- raise_built = true,
     }
     local character = player.character
-    local vehicle = player.vehicle
+    local vehicle = player.physical_vehicle
     local character_inv = character and character.get_inventory(defines.inventory.character_main)
     local vehicle_inv = vehicle and vehicle.get_inventory(defines.inventory.car_trunk)
     local inventory = inventory_has_space(character_inv, vehicle_inv, "spiderbot")
     if inventory then
         inventory.insert { name = "spiderbot", count = 1 }
     else
-        player.surface.spill_item_stack {
+        player_entity.surface.spill_item_stack {
             position = spiderbot.position,
             stack = { name = "spiderbot", count = 1 },
             enable_looted = true,
-            force = player.force,
+            force = player_entity.force,
             allow_belts = false,
         }
     end
@@ -1061,7 +1068,7 @@ local function on_tick(event)
         -- goto next player if player is not in an allowed controller type
         if not allowed_controllers[player.controller_type] then goto next_player end
         local character = player.character
-        local vehicle = player.vehicle
+        local vehicle = player.physical_vehicle
         local character_inv = character and character.get_inventory(defines.inventory.character_main)
         local vehicle_inv = vehicle and vehicle.get_inventory(defines.inventory.car_trunk)
         -- if the player doesn't have an inventory, go to the next player
@@ -1351,18 +1358,19 @@ local function toggle_spiderbots(event)
         local player = game.get_player(player_index)
         if player and player.valid then
             local character = player.character
-            local vehicle = player.vehicle
-            if (character and character.valid) or (vehicle and vehicle.valid) then
+            local vehicle = player.physical_vehicle
+            local entity = vehicle or character or nil
+            if entity and entity.valid then
                 local character_inv = character and character.get_inventory(defines.inventory.character_main)
                 local vehicle_inv = vehicle and vehicle.get_inventory(defines.inventory.car_trunk)
                 local inventory = inventory_has_item(character_inv, vehicle_inv, "spiderbot")
                 local count = inventory and inventory.get_item_count("spiderbot") or 0
+                local position = entity.position
                 if inventory and (count > 0) then
                     for i = 1, count do
-                        local player_position = vehicle and vehicle.position or character and character.position or player.position
-                        local destination = random_position_in_radius(player_position, 25)
-                        destination = player.surface.find_non_colliding_position("spiderbot-leg-1", destination, 100, 0.5) or destination
-                        create_spiderbot_projectile(player_position, destination, player)
+                        local destination = random_position_in_radius(position, 25)
+                        destination = entity.surface.find_non_colliding_position("spiderbot-leg-1", destination, 100, 0.5) or destination
+                        create_spiderbot_projectile(position, destination, player)
                         inventory.remove("spiderbot")
                     end
                 end
