@@ -1135,11 +1135,11 @@ local function on_tick(event)
                 if not (entity and entity.valid) then goto next_entity end
                 local entity_id = entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
-                local upgrade_target = entity.get_upgrade_target()
+                local upgrade_target, quality_prototype = entity.get_upgrade_target()
                 local items = upgrade_target and upgrade_target.items_to_place_this
                 local item_stack = items and items[1]
                 if upgrade_target and item_stack then
-                    local item_with_quality = { name = item_stack.name, quality = item_stack.quality }
+                    local item_with_quality = { name = item_stack.name, quality = quality_prototype }
                     if inventory_has_item(inventory, item_with_quality) then
                         local distance_to_task = distance(entity.position, spiderbot.position)
                         if distance_to_task < double_max_task_range then
