@@ -1286,52 +1286,38 @@ end
 script.on_event("toggle-spiderbots", toggle_spiderbots)
 script.on_event(defines.events.on_lua_shortcut, toggle_spiderbots)
 
-local function on_init()
+local function setup_storage()
     -- spiderbot data
     --[[@type table<player_index, table<uuid, spiderbot_data>>]]
-    storage.spiderbots = {}
-
+    storage.spiderbots = storage.spiderbots or {}
     --[[@type table<player_index, boolean>]]
-    storage.spiderbots_enabled = {}
+    storage.spiderbots_enabled = storage.spiderbots_enabled or {}
 
     -- player data
     --[[@type table<player_index, defines.controllers>]]
-    storage.previous_controller = {}
-
+    storage.previous_controller = storage.previous_controller or {}
     --[[@type table<player_index, uuid>]]
-    storage.previous_player_entity = {}
-
+    storage.previous_player_entity = storage.previous_player_entity or {}
     --[[@type table<player_index, Color>]]
-    storage.previous_player_color = {}
+    storage.previous_player_color = storage.previous_player_color or {}
 
     -- misc data
     storage.spider_leg_collision_mask = prototypes.entity["spiderbot-leg-1"].collision_mask
-
     --[[@type table<player_index, LuaRenderObject[]>]]
-    storage.render_objects = {}
+    storage.render_objects = storage.render_objects or {}
+end
 
+local function on_init()
+    setup_storage()
 end
 
 script.on_init(on_init)
 
 local function on_configuration_changed(event)
-    -- spiderbot data
-    storage.spiderbots = storage.spiderbots or {}
-    storage.spiderbots_enabled = storage.spiderbots_enabled or {}
-
-    -- player data
-    storage.previous_controller = storage.previous_controller or {}
-    storage.previous_player_entity = storage.previous_player_entity or {}
-    storage.previous_player_color = storage.previous_player_color or {}
-
-    -- misc data
-    storage.spider_leg_collision_mask = prototypes.entity["spiderbot-leg-1"].collision_mask
-    storage.render_objects = storage.render_objects or {}
-
+    setup_storage()
     for _, player in pairs(game.players) do
         relink_following_spiderbots(player)
     end
-
 end
 
 script.on_configuration_changed(on_configuration_changed)
