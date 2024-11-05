@@ -9,6 +9,45 @@ local color_util = require("util/colors")
 local color = color_util.color
 
 ---@param player LuaPlayer
+---@param character LuaEntity?
+---@return LuaEntity?
+local function get_player_vehicle(player, character)
+    character = character or player.character
+    local vehicle = player.vehicle
+    if player.controller_type ~= defines.controllers.character then
+        local vehicles = character and character.valid and character.surface.find_entities_filtered {
+            type = { "car", "artillery-wagon", "cargo-wagon", "fluid-wagon", "locomotive", "spider-vehicle" },
+            position = character.position,
+        } or {}
+        for _, entity in pairs(vehicles) do
+            local driver = entity.get_driver()
+            if driver then
+                if driver.is_player() and (driver.index == player.index) then
+                    return entity
+                elseif (driver.type == "character") and (driver.player.index == player.index) then
+                    return entity
+                end
+            elseif entity.train then
+                local passengers = entity.train.passengers
+                for _, passenger in pairs(passengers) do
+                    if passenger.index == player.index then
+                        return entity
+                    end
+                end
+            elseif (entity.type == "spider-vehicle") or (entity.type == "car") then
+                local passenger = entity.get_passenger()
+                if passenger and passenger.is_player() and (passenger.index == player.index) then
+                    return entity
+                elseif passenger and (passenger.type == "character") and (passenger.player.index == player.index) then
+                    return entity
+                end
+            end
+        end
+    end
+    return vehicle
+end
+
+---@param player LuaPlayer
 ---@return LuaEntity?
 local function get_player_entity(player)
     return player.vehicle or player.character or nil
