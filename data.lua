@@ -144,6 +144,7 @@ local spiderbot_item = {
 }
 data:extend { spiderbot_item }
 
+---@type data.ProjectilePrototype
 local spiderbot_projectile = {
     type = "projectile",
     name = "spiderbot-trigger",
@@ -186,13 +187,10 @@ local toggle_spiderbots_shortcut = {
     name = "toggle-spiderbots",
     action = "lua",
     associated_control_input = "toggle-spiderbots",
-    -- icon = {filename = "__spiderbots__/assets/targeted.png", size = 1024},
     icon = "__spiderbots__/assets/icons8-spider-67.png",
     icon_size = 67,
     small_icon = "__spiderbots__/assets/icons8-spider-67.png",
     small_icon_size = 67,
-    -- icon = { filename = "__spiderbots__/assets/icons8-spider-67.png", size = 67 },
-    -- disabled_icon = {filename = "__spiderbots__/assets/spider-face-trans.png", size = 1024},
     toggleable = true,
 }
 data:extend({ toggle_spiderbots_shortcut })
