@@ -8,7 +8,7 @@ Date: ????
   Bugfixes:
     - Fixed error when spamming the toggle shortcut (accessing invalid entity)
     - Fixed error when drawing the visualization rendering while in remote view
-    - Fixed that spiderbots could be assigned upgrade tasks for quality entities when only the normal quality items to build it were in inventory
+    - Fixed that spiderbots could be assigned upgrade tasks for a quality entity when only the normal version was in inventory
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.2
 Date: 03NOV2024
