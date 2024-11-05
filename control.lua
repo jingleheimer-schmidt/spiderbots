@@ -183,10 +183,10 @@ local function reset_task_data(spiderbot_id, player_index)
         local player = spiderbot_data.player
         local spiderbot = spiderbot_data.spiderbot
         if player.valid and spiderbot.valid then
+            spiderbot.color = player.color
             local target = get_player_entity(player)
             if target and target.valid then
                 spiderbot.follow_target = target
-                spiderbot.color = player.color
             end
         else
             spiderbots[spiderbot_id] = nil
