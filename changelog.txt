@@ -4,6 +4,7 @@ Date: ????
   Changes:
     - Spiderbots can now be deployed, recalled, and perform tasks while in the player is in remote view
     - Improved performance when interacting with inventories
+    - Added build sound when spiderbots upgrade entities
   Bugfixes:
     - Fixed error when spamming the toggle shortcut (accessing invalid entity)
     - Fixed error when drawing the visualization rendering while in remote view

@@ -589,6 +589,10 @@ local function upgrade_entity(spiderbot_data)
                         }
                         if upgraded_entity then
                             inventory.remove(item_with_quality)
+                            upgraded_entity.surface.play_sound {
+                                path = "utility/build_" .. entity_size(upgraded_entity),
+                                position = upgraded_entity.position,
+                            }
                         end
                     end
                 end
