@@ -6,6 +6,7 @@ Date: ????
     - Improved performance when interacting with inventories
   Bugfixes:
     - Fixed error when spamming the toggle shortcut (accessing invalid entity)
+    - Fixed error when drawing the visualization rendering while in remote view
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.2
 Date: 03NOV2024
