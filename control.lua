@@ -1050,12 +1050,8 @@ local function on_tick(event)
                 if entity.type == "fish" then goto next_entity end
                 local entity_id = entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
-                local prototype = entity.prototype
-                local products = prototype.mineable_properties.products or {}
-                local product = products[1]
-                local item_stack = entity.type == "item-entity" and entity.stack or nil
-                local item_with_quality = item_stack or (product and { name = product.name, quality = entity.quality }) or nil
-                if item_with_quality and inventory_has_space(inventory, item_with_quality) then
+                local mining_result = result_when_mined(entity)
+                if mining_result and inventory_has_space(inventory, mining_result) then
                     local distance_to_task = distance(entity.position, spiderbot.position)
                     if distance_to_task < double_max_task_range then
                         spiderbot_data.task = {
