@@ -2,6 +2,7 @@
 Version: 0.2.4
 Date: ????
   Bugfixes:
+    - fixed that upgraded entity results would not return to the character inventory when in remote view
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.3
 Date: 05NOV2024

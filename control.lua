@@ -591,6 +591,7 @@ local function upgrade_entity(spiderbot_data)
                         local underground_type = is_underground_belt and entity.belt_to_ground_type
                         local loader_type = is_loader and entity.loader_type
                         local create_entity_type = underground_type or loader_type or nil
+                        local result_item = result_when_mined(entity)
                         local upgraded_entity = entity.surface.create_entity {
                             name = upgrade_name,
                             position = entity.position,
@@ -605,6 +606,9 @@ local function upgrade_entity(spiderbot_data)
                         }
                         if upgraded_entity then
                             inventory.remove(item_with_quality)
+                            if (player.controller_type ~= defines.controllers.character) and result_item then
+                                inventory.insert(result_item)
+                            end
                             upgraded_entity.surface.play_sound {
                                 path = "utility/build_" .. entity_size(upgraded_entity),
                                 position = upgraded_entity.position,
