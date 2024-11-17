@@ -513,21 +513,17 @@ local function deconstruct_entity(spiderbot_data)
     if player and player.valid then
         if entity and entity.valid then
             if entity.to_be_deconstructed() then
-                local prototype = entity.prototype
-                local products = prototype.mineable_properties.products or {}
-                local product = products[1]
-                local item_stack = entity.type == "item-entity" and entity.stack or nil
-                local item = item_stack or (product and { name = product.name, quality = entity.quality }) or nil
+                local mining_result = result_when_mined(entity)
                 local player_entity = get_player_entity(player)
                 if player_entity and player_entity.valid then
                     local inventory = get_entity_inventory(player_entity)
                     if inventory and inventory.valid then
                         local entity_position = entity.position
-                        if item and inventory_has_space(inventory, item) then
+                        if mining_result and inventory_has_space(inventory, mining_result) then
                             local count = 0
                             local size = entity_size(entity)
                             while entity.valid do
-                                if inventory.can_insert(item) then
+                                if inventory.can_insert(mining_result) then
                                     local result = entity.mine {
                                         inventory = inventory,
                                         force = false,
