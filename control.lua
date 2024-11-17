@@ -380,7 +380,7 @@ local function inventory_has_item(inventory, item)
 end
 
 ---@param inventory LuaInventory
----@param item ItemIDAndQualityIDPair|LuaItemStack|string
+---@param item ItemStackDefinition|LuaItemStack|string
 ---@return boolean
 local function inventory_has_space(inventory, item)
     return inventory.can_insert(item) and true or false
