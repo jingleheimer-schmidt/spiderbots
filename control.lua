@@ -1198,8 +1198,8 @@ local function on_tick(event)
                 if proxy_target then
                     local insert_plan = entity.insert_plan
                     local removal_plan = entity.removal_plan
-                    local plan_type = (insert_plan and "insert") or (removal_plan and "remove") or nil
-                    local plans = removal_plan and removal_plan[1] and removal_plan or insert_plan and insert_plan[1] and insert_plan or nil
+                    local plan_type = (removal_plan[1] and "remove") or (insert_plan[1] and "insert") or nil
+                    local plans = removal_plan[1] and removal_plan or insert_plan[1] and insert_plan or nil
                     if not plans then goto next_entity end
                     for index, plan in pairs(plans) do
                         local item_quality_pair = (plan and plan.id) or nil
