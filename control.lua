@@ -523,6 +523,8 @@ local function deconstruct_entity(spiderbot_data)
                         if mining_result and inventory_has_space(inventory, mining_result) then
                             local count = 0
                             local size = entity_size(entity)
+                            local entity_name = entity.name
+                            local entity_type = entity.type
                             while entity.valid do
                                 if inventory.can_insert(mining_result) then
                                     local result = entity.mine {
@@ -538,10 +540,26 @@ local function deconstruct_entity(spiderbot_data)
                                 end
                                 if count > 4 then break end
                             end
+                            local sound_path = entity_name .. "-mined_sound"
+                            if not helpers.is_valid_sound_path(sound_path) then
+                                sound_path = "utility/deconstruct_" .. size
+                            end
                             spiderbot.surface.play_sound {
-                                path = "utility/deconstruct_" .. size,
+                                path = sound_path,
                                 position = entity_position,
                             }
+                            local mining_sound = entity_name .. "-mining_sound"
+                            if helpers.is_valid_sound_path(mining_sound) then
+                                spiderbot.surface.play_sound {
+                                    path = mining_sound,
+                                    position = entity_position,
+                                }
+                            elseif (entity_type == "tree") and (math.random() < 0.5) then
+                                spiderbot.surface.play_sound {
+                                    path = "utility/mining_wood",
+                                    position = entity_position,
+                                }
+                            end
                         elseif entity.type == "cliff" then
                             local has_cliff_explosives, quality = inventory_has_cliff_explosives(inventory)
                             if has_cliff_explosives then
@@ -610,8 +628,12 @@ local function upgrade_entity(spiderbot_data)
                             if (player.controller_type ~= defines.controllers.character) and result_item then
                                 inventory.insert(result_item)
                             end
+                            local sound_path = upgrade_name .. "-build_sound"
+                            if not helpers.is_valid_sound_path(sound_path) then
+                                sound_path = "utility/build_" .. entity_size(upgraded_entity)
+                            end
                             upgraded_entity.surface.play_sound {
-                                path = "utility/build_" .. entity_size(upgraded_entity),
+                                path = sound_path,
                                 position = upgraded_entity.position,
                             }
                         end
@@ -662,6 +684,13 @@ local function insert_items(spiderbot_data)
                                 if not (item_to_remove and item_to_remove.items.in_inventory and item_to_remove.items.in_inventory[1]) then
                                     table.remove(removal_plan, index)
                                 end
+                                local sound_path = item_to_remove.id.name .. "-inventory_move_sound"
+                                if helpers.is_valid_sound_path(sound_path) then
+                                    target_entity.surface.play_sound {
+                                        path = sound_path,
+                                        position = target_entity.position,
+                                    }
+                                end
                                 break
                             end
                         end
@@ -692,6 +721,13 @@ local function insert_items(spiderbot_data)
                                 end
                                 if not (item_to_insert and item_to_insert.items.in_inventory and item_to_insert.items.in_inventory[1]) then
                                     table.remove(insert_plan, index)
+                                end
+                                local sound_path = item_to_insert.id.name .. "-inventory_move_sound"
+                                if helpers.is_valid_sound_path(sound_path) then
+                                    target_entity.surface.play_sound {
+                                        path = sound_path,
+                                        position = target_entity.position,
+                                    }
                                 end
                                 break
                             end

@@ -1,6 +1,9 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.4
 Date: ????
+    - added inventory move sounds when spiderbots insert or remove items from entity inventories
+    - added mining and mined sounds when spiderbots deconstruct entities
+    - added support for per-prototype build, mining, mined, and inventory move sounds
   Bugfixes:
     - fixed that upgraded entity results would not return to the character inventory when in remote view
     - fixed that spiderbots would sometimes refuse to remove modules from entities
