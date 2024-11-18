@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.4
-Date: ????
+Date: 18NOV2024
   Changes:
     - added inventory move sounds when spiderbots insert or remove items from entity inventories
     - added mining and mined sounds when spiderbots deconstruct entities
