@@ -4,6 +4,7 @@ Date: ????
   Bugfixes:
     - fixed that upgraded entity results would not return to the character inventory when in remote view
     - fixed that spiderbots would sometimes refuse to remove modules from entities
+    - fixed that thrown spiderbots did not have consistent speeds
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.3
 Date: 05NOV2024

@@ -109,7 +109,8 @@ script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_ent
 ---@param destination MapPosition
 ---@param player LuaPlayer
 ---@param speed_multiplier number?
-local function create_spiderbot_projectile(origin, destination, player, speed_multiplier)
+---@param speed_override number?
+local function create_spiderbot_projectile(origin, destination, player, speed_multiplier, speed_override)
     local character = player.character
     if not (character and character.valid) then return end
     character.surface.create_entity {
@@ -119,7 +120,7 @@ local function create_spiderbot_projectile(origin, destination, player, speed_mu
         player = player,
         source = character,
         target = destination,
-        speed = math.random() * (speed_multiplier or 1),
+        speed = speed_override or math.random() * (speed_multiplier or 1),
         raise_built = true,
     }
 end
@@ -148,7 +149,7 @@ local function on_player_used_capsule(event)
         end
         return
     end
-    create_spiderbot_projectile(player.position, position, player) -- use the actual position, because that's what the player wanted, and since a non_colliding position is known to exist that means the spiderbot can scramble around to it
+    create_spiderbot_projectile(player.position, position, player, 1, 0.25) -- use the actual position, because that's what the player wanted, and since a non_colliding position is known to exist that means the spiderbot can scramble around to it
 end
 
 script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
