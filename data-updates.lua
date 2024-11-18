@@ -44,45 +44,19 @@ local function create_sound(prototype, sound_type)
     end
 end
 
-local function create_build_sound(entity)
-    if entity.build_sound then
-        if entity.build_sound.filename or entity.build_sound.variations or entity.build_sound[1] then
-            create_sound(entity, "build_sound")
+local function create_prototype_sound(prototype, sound_type)
+    if prototype[sound_type] then
+        if prototype[sound_type].filename or prototype[sound_type].variations or prototype[sound_type][1] then
+            create_sound(prototype, sound_type)
         end
     end
 end
 
-local function create_mining_sound(entity)
-    if entity.mining_sound then
-        if entity.mining_sound.filename or entity.mining_sound.variations or entity.mining_sound[1] then
-            create_sound(entity, "mining_sound")
+for _, prototypes in pairs(data.raw) do
+    for _, prototype in pairs(prototypes) do
+        for _, sound_type in pairs { "mined_sound", "mining_sound", "inventory_move_sound", "build_sound" } do
+            create_prototype_sound(prototype, sound_type)
         end
-    end
-end
-
-local function create_mined_sound(entity)
-    if entity.mined_sound then
-        if entity.mined_sound.filename or entity.mined_sound.variations or entity.mined_sound[1] then
-            create_sound(entity, "mined_sound")
-        end
-    end
-end
-
----@param item data.ItemPrototype
-local function create_inventory_move_sound(item)
-    if item.inventory_move_sound then
-        if item.inventory_move_sound.filename or item.inventory_move_sound.variations or item.inventory_move_sound[1] then
-            create_sound(item, "inventory_move_sound")
-        end
-    end
-end
-
-for type_name, prototypes in pairs(data.raw) do
-    for prototype_name, prototype in pairs(prototypes) do
-        create_inventory_move_sound(prototype)
-        create_mined_sound(prototype)
-        create_mining_sound(prototype)
-        create_build_sound(prototype)
     end
 end
 
