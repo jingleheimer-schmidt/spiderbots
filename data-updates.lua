@@ -18,24 +18,26 @@ local function create_sound(prototype, sound_type)
     else
         ---@type data.SoundPrototype
         local sound = {
-            name = prototype.name .. "-" .. sound_type,
             type = "sound",
-            filename = prototype[sound_type].filename,
+            name = prototype.name .. "-" .. sound_type,
+            category = prototype[sound_type].category,
+            priority = prototype[sound_type].priority,
+            aggregation = prototype[sound_type].aggregation,
+            allow_random_repeat = prototype[sound_type].allow_random_repeat,
+            audible_distance_modifier = prototype[sound_type].audible_distance_modifier,
+            game_controller_vibration_data = prototype[sound_type].game_controller_vibration_data,
+            advanced_volume_control = prototype[sound_type].advanced_volume_control,
+            speed_smoothing_window_size = prototype[sound_type].speed_smoothing_window_size,
             variations = prototype[sound_type].variations,
+            filename = prototype[sound_type].filename,
             volume = prototype[sound_type].volume,
-            max_volume = prototype[sound_type].max_volume,
             min_volume = prototype[sound_type].min_volume,
+            max_volume = prototype[sound_type].max_volume,
+            preload = prototype[sound_type].preload,
             speed = prototype[sound_type].speed,
             min_speed = prototype[sound_type].min_speed,
             max_speed = prototype[sound_type].max_speed,
-            preload = prototype[sound_type].preload,
             modifiers = prototype[sound_type].modifiers,
-            audible_distance_modifier = prototype[sound_type].audible_distance_modifier,
-            game_controller_vibration_data = prototype[sound_type].game_controller_vibration_data,
-            priority = prototype[sound_type].priority,
-            aggregation = prototype[sound_type].aggregation,
-            advanced_volume_controls = prototype[sound_type].advanced_volume_controls,
-            allow_random_repeat = prototype[sound_type].allow_random_repeat,
         }
         data:extend { sound }
         counts[sound_type] = counts[sound_type] + 1
