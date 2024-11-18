@@ -1079,8 +1079,9 @@ local function on_tick(event)
                 -- if the spider is assigned a task but has no speed, abandon the task so a new spider can be dispatched
                 if (status ~= "idle") and no_speed then
                     reset_task_data(spiderbot_id, player_index)
-                    local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", spiderbot.position, 100, 0.5)
-                    create_spiderbot_projectile(spiderbot.position, non_colliding_position or spiderbot.position, player, 1)
+                    local position_in_radius = random_position_in_radius(player_entity.position, 25)
+                    local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 100, 0.5)
+                    create_spiderbot_projectile(spiderbot.position, non_colliding_position or position_in_radius, player, 1)
                     spiderbot.destroy({ raise_destroy = true })
                     spiders_dispatched = spiders_dispatched + 1
                     goto next_spiderbot
