@@ -402,6 +402,40 @@ local function get_entity_inventory(entity)
     end
 end
 
+---@param entity LuaEntity
+local function free_stuck_spierbots(entity)
+    if not (entity and entity.valid) then return end
+    local colliding_spider_legs = entity.surface.find_entities_filtered {
+        type = "spider-leg",
+        area = entity.bounding_box
+    }
+    for _, colliding_leg in pairs(colliding_spider_legs) do
+        if colliding_leg.valid then
+            for _, player_data in pairs(storage.spiderbots) do
+                for _, spiderbot_data in pairs(player_data) do
+                    local spiderbot = spiderbot_data.spiderbot
+                    if spiderbot.valid then
+                        local legs = spiderbot.get_spider_legs()
+                        for _, leg in pairs(legs) do
+                            if leg.valid and colliding_leg.valid and (leg.unit_number == colliding_leg.unit_number) then
+                                reset_task_data(spiderbot_data.spiderbot_id, spiderbot_data.player_index)
+                                local random_position = random_position_in_radius(spiderbot.position, 25)
+                                local player = spiderbot_data.player
+                                local surface = spiderbot.surface
+                                local position = surface.find_non_colliding_position("spiderbot-leg-1", random_position, 100, 0.5)
+                                create_spiderbot_projectile(spiderbot.position, position or random_position, player, 1)
+                                spiderbot.destroy({ raise_destroy = true })
+                                goto next_leg
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        ::next_leg::
+    end
+end
+
 ---@param spiderbot_data spiderbot_data
 local function build_ghost(spiderbot_data)
     local spiderbot_id = spiderbot_data.spiderbot_id
@@ -420,6 +454,9 @@ local function build_ghost(spiderbot_data)
                     local dictionary, revived_entity, request_proxy = entity.revive({ return_item_request_proxy = false, raise_revive = true })
                     if revived_entity then
                         inventory.remove(item_quality_pair)
+                        free_stuck_spierbots(revived_entity)
+                    else
+                        free_stuck_spierbots(entity)
                     end
                 end
             end
