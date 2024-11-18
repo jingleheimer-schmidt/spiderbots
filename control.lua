@@ -109,7 +109,8 @@ script.on_event(defines.events.on_trigger_created_entity, on_trigger_created_ent
 ---@param destination MapPosition
 ---@param player LuaPlayer
 ---@param speed_multiplier number?
-local function create_spiderbot_projectile(origin, destination, player, speed_multiplier)
+---@param speed_override number?
+local function create_spiderbot_projectile(origin, destination, player, speed_multiplier, speed_override)
     local character = player.character
     if not (character and character.valid) then return end
     character.surface.create_entity {
@@ -119,7 +120,7 @@ local function create_spiderbot_projectile(origin, destination, player, speed_mu
         player = player,
         source = character,
         target = destination,
-        speed = math.random() * (speed_multiplier or 1),
+        speed = speed_override or math.random() * (speed_multiplier or 1),
         raise_built = true,
     }
 end
@@ -148,7 +149,7 @@ local function on_player_used_capsule(event)
         end
         return
     end
-    create_spiderbot_projectile(player.position, position, player) -- use the actual position, because that's what the player wanted, and since a non_colliding position is known to exist that means the spiderbot can scramble around to it
+    create_spiderbot_projectile(player.position, position, player, 1, 0.25) -- use the actual position, because that's what the player wanted, and since a non_colliding position is known to exist that means the spiderbot can scramble around to it
 end
 
 script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
@@ -366,7 +367,7 @@ local function request_path(spiderbot, entity)
         can_open_gates = true,
         path_resolution_modifier = -1,
         pathfind_flags = path_to_entity_flags,
-        max_gap_size = 2,
+        max_gap_size = 1,
     }
     local path_request_id = spiderbot.surface.request_path(request_parameters)
     return path_request_id
@@ -380,7 +381,7 @@ local function inventory_has_item(inventory, item)
 end
 
 ---@param inventory LuaInventory
----@param item ItemIDAndQualityIDPair|LuaItemStack|string
+---@param item ItemStackDefinition|LuaItemStack|string
 ---@return boolean
 local function inventory_has_space(inventory, item)
     return inventory.can_insert(item) and true or false
@@ -398,6 +399,40 @@ local function get_entity_inventory(entity)
         return entity.get_inventory(defines.inventory.spider_trunk)
     elseif entity_type == "cargo-wagon" then
         return entity.get_inventory(defines.inventory.cargo_wagon)
+    end
+end
+
+---@param entity LuaEntity
+local function free_stuck_spierbots(entity)
+    if not (entity and entity.valid) then return end
+    local colliding_spider_legs = entity.surface.find_entities_filtered {
+        type = "spider-leg",
+        area = entity.bounding_box
+    }
+    for _, colliding_leg in pairs(colliding_spider_legs) do
+        if colliding_leg.valid then
+            for _, player_data in pairs(storage.spiderbots) do
+                for _, spiderbot_data in pairs(player_data) do
+                    local spiderbot = spiderbot_data.spiderbot
+                    if spiderbot.valid then
+                        local legs = spiderbot.get_spider_legs()
+                        for _, leg in pairs(legs) do
+                            if leg.valid and colliding_leg.valid and (leg.unit_number == colliding_leg.unit_number) then
+                                reset_task_data(spiderbot_data.spiderbot_id, spiderbot_data.player_index)
+                                local random_position = random_position_in_radius(spiderbot.position, 25)
+                                local player = spiderbot_data.player
+                                local surface = spiderbot.surface
+                                local position = surface.find_non_colliding_position("spiderbot-leg-1", random_position, 100, 0.5)
+                                create_spiderbot_projectile(spiderbot.position, position or random_position, player, 1)
+                                spiderbot.destroy({ raise_destroy = true })
+                                goto next_leg
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        ::next_leg::
     end
 end
 
@@ -419,6 +454,9 @@ local function build_ghost(spiderbot_data)
                     local dictionary, revived_entity, request_proxy = entity.revive({ return_item_request_proxy = false, raise_revive = true })
                     if revived_entity then
                         inventory.remove(item_quality_pair)
+                        free_stuck_spierbots(revived_entity)
+                    else
+                        free_stuck_spierbots(entity)
                     end
                 end
             end
@@ -483,6 +521,26 @@ local function entity_size(entity)
     end
 end
 
+---@param entity LuaEntity
+---@return ItemStackDefinition|LuaItemStack?
+local function result_when_mined(entity)
+    if entity.type == "item-entity" then
+        return entity.stack
+    end
+    local prototype = entity.prototype
+    local products = prototype.mineable_properties.products
+    if not products then return end
+    for _, product in pairs(products) do
+        if product.type == "item" then
+            local amount = product.amount
+            if not amount then
+                amount = math.random(product.amount_min, product.amount_max)
+            end
+            return { name = product.name, count = amount, quality = entity.quality }
+        end
+    end
+end
+
 ---@param spiderbot_data spiderbot_data
 local function deconstruct_entity(spiderbot_data)
     local spiderbot = spiderbot_data.spiderbot
@@ -493,21 +551,19 @@ local function deconstruct_entity(spiderbot_data)
     if player and player.valid then
         if entity and entity.valid then
             if entity.to_be_deconstructed() then
-                local prototype = entity.prototype
-                local products = prototype.mineable_properties.products or {}
-                local product = products[1]
-                local item_stack = entity.type == "item-entity" and entity.stack or nil
-                local item = item_stack or (product and { name = product.name, quality = entity.quality }) or nil
+                local mining_result = result_when_mined(entity)
                 local player_entity = get_player_entity(player)
                 if player_entity and player_entity.valid then
                     local inventory = get_entity_inventory(player_entity)
                     if inventory and inventory.valid then
                         local entity_position = entity.position
-                        if item and inventory_has_space(inventory, item) then
+                        if mining_result and inventory_has_space(inventory, mining_result) then
                             local count = 0
                             local size = entity_size(entity)
+                            local entity_name = entity.name
+                            local entity_type = entity.type
                             while entity.valid do
-                                if inventory.can_insert(item) then
+                                if inventory.can_insert(mining_result) then
                                     local result = entity.mine {
                                         inventory = inventory,
                                         force = false,
@@ -521,10 +577,26 @@ local function deconstruct_entity(spiderbot_data)
                                 end
                                 if count > 4 then break end
                             end
+                            local sound_path = entity_name .. "-mined_sound"
+                            if not helpers.is_valid_sound_path(sound_path) then
+                                sound_path = "utility/deconstruct_" .. size
+                            end
                             spiderbot.surface.play_sound {
-                                path = "utility/deconstruct_" .. size,
+                                path = sound_path,
                                 position = entity_position,
                             }
+                            local mining_sound = entity_name .. "-mining_sound"
+                            if helpers.is_valid_sound_path(mining_sound) then
+                                spiderbot.surface.play_sound {
+                                    path = mining_sound,
+                                    position = entity_position,
+                                }
+                            elseif (entity_type == "tree") and (math.random() < 0.5) then
+                                spiderbot.surface.play_sound {
+                                    path = "utility/mining_wood",
+                                    position = entity_position,
+                                }
+                            end
                         elseif entity.type == "cliff" then
                             local has_cliff_explosives, quality = inventory_has_cliff_explosives(inventory)
                             if has_cliff_explosives then
@@ -575,6 +647,7 @@ local function upgrade_entity(spiderbot_data)
                         local underground_type = is_underground_belt and entity.belt_to_ground_type
                         local loader_type = is_loader and entity.loader_type
                         local create_entity_type = underground_type or loader_type or nil
+                        local result_item = result_when_mined(entity)
                         local upgraded_entity = entity.surface.create_entity {
                             name = upgrade_name,
                             position = entity.position,
@@ -589,8 +662,15 @@ local function upgrade_entity(spiderbot_data)
                         }
                         if upgraded_entity then
                             inventory.remove(item_with_quality)
+                            if (player.controller_type ~= defines.controllers.character) and result_item then
+                                inventory.insert(result_item)
+                            end
+                            local sound_path = upgrade_name .. "-build_sound"
+                            if not helpers.is_valid_sound_path(sound_path) then
+                                sound_path = "utility/build_" .. entity_size(upgraded_entity)
+                            end
                             upgraded_entity.surface.play_sound {
-                                path = "utility/build_" .. entity_size(upgraded_entity),
+                                path = sound_path,
                                 position = upgraded_entity.position,
                             }
                         end
@@ -641,6 +721,13 @@ local function insert_items(spiderbot_data)
                                 if not (item_to_remove and item_to_remove.items.in_inventory and item_to_remove.items.in_inventory[1]) then
                                     table.remove(removal_plan, index)
                                 end
+                                local sound_path = item_to_remove.id.name .. "-inventory_move_sound"
+                                if helpers.is_valid_sound_path(sound_path) then
+                                    target_entity.surface.play_sound {
+                                        path = sound_path,
+                                        position = target_entity.position,
+                                    }
+                                end
                                 break
                             end
                         end
@@ -671,6 +758,13 @@ local function insert_items(spiderbot_data)
                                 end
                                 if not (item_to_insert and item_to_insert.items.in_inventory and item_to_insert.items.in_inventory[1]) then
                                     table.remove(insert_plan, index)
+                                end
+                                local sound_path = item_to_insert.id.name .. "-inventory_move_sound"
+                                if helpers.is_valid_sound_path(sound_path) then
+                                    target_entity.surface.play_sound {
+                                        path = sound_path,
+                                        position = target_entity.position,
+                                    }
                                 end
                                 break
                             end
@@ -985,8 +1079,9 @@ local function on_tick(event)
                 -- if the spider is assigned a task but has no speed, abandon the task so a new spider can be dispatched
                 if (status ~= "idle") and no_speed then
                     reset_task_data(spiderbot_id, player_index)
-                    local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", spiderbot.position, 100, 0.5)
-                    create_spiderbot_projectile(spiderbot.position, non_colliding_position or spiderbot.position, player, 1)
+                    local position_in_radius = random_position_in_radius(player_entity.position, 25)
+                    local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 100, 0.5)
+                    create_spiderbot_projectile(spiderbot.position, non_colliding_position or position_in_radius, player, 1)
                     spiderbot.destroy({ raise_destroy = true })
                     spiders_dispatched = spiders_dispatched + 1
                     goto next_spiderbot
@@ -1030,12 +1125,8 @@ local function on_tick(event)
                 if entity.type == "fish" then goto next_entity end
                 local entity_id = entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
-                local prototype = entity.prototype
-                local products = prototype.mineable_properties.products or {}
-                local product = products[1]
-                local item_stack = entity.type == "item-entity" and entity.stack or nil
-                local item_with_quality = item_stack or (product and { name = product.name, quality = entity.quality }) or nil
-                if item_with_quality and inventory_has_space(inventory, item_with_quality) then
+                local mining_result = result_when_mined(entity)
+                if mining_result and inventory_has_space(inventory, mining_result) then
                     local distance_to_task = distance(entity.position, spiderbot.position)
                     if distance_to_task < double_max_task_range then
                         spiderbot_data.task = {
@@ -1182,8 +1273,8 @@ local function on_tick(event)
                 if proxy_target then
                     local insert_plan = entity.insert_plan
                     local removal_plan = entity.removal_plan
-                    local plan_type = (insert_plan and "insert") or (removal_plan and "remove") or nil
-                    local plans = removal_plan and removal_plan[1] and removal_plan or insert_plan and insert_plan[1] and insert_plan or nil
+                    local plan_type = (removal_plan[1] and "remove") or (insert_plan[1] and "insert") or nil
+                    local plans = removal_plan[1] and removal_plan or insert_plan[1] and insert_plan or nil
                     if not plans then goto next_entity end
                     for index, plan in pairs(plans) do
                         local item_quality_pair = (plan and plan.id) or nil
