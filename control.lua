@@ -367,7 +367,7 @@ local function request_path(spiderbot, entity)
         can_open_gates = true,
         path_resolution_modifier = -1,
         pathfind_flags = path_to_entity_flags,
-        max_gap_size = 2,
+        max_gap_size = 1,
     }
     local path_request_id = spiderbot.surface.request_path(request_parameters)
     return path_request_id
