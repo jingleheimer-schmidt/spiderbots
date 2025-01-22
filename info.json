@@ -7,5 +7,9 @@
 	"dependencies": [
 		"base"
 	],
-	"factorio_version": "2.0"
+	"factorio_version": "2.0",
+	"package": {
+		"readme": "README.md",
+		"sync_portal_details": true
+	}
 }
