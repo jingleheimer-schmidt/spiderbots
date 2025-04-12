@@ -409,9 +409,11 @@ local function oriented_spiderbot_jump(spiderbot, player)
     local orientation = (0.25 - spiderbot.torso_orientation) * 2 * math.pi -- convert to radians, account for factorio RealOrientation 0 = North (sin/cos assume 0 = East)
     local spiderbot_position = spiderbot.position
     local target_position = spiderbot.position
+    local cos_orientation = math.cos(orientation)
+    local sin_orientation = math.sin(orientation)
     for step_distance = 2, 50 do
-        local x = target_position.x + step_distance * math.cos(orientation)
-        local y = target_position.y - step_distance * math.sin(orientation)
+        local x = target_position.x + step_distance * cos_orientation
+        local y = target_position.y - step_distance * sin_orientation
         local jump_position = surface.find_non_colliding_position("spiderbot-leg-1", { x = x, y = y }, 0.5, 0.1)
         if jump_position then
             target_position = jump_position
