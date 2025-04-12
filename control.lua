@@ -404,7 +404,7 @@ end
 
 ---@param spiderbot LuaEntity
 ---@param player LuaPlayer
-local function directional_spiderbot_jump(spiderbot, player)
+local function oriented_spiderbot_jump(spiderbot, player)
     local surface = spiderbot.surface
     local orientation = spiderbot.orientation * 2 * math.pi -- convert to radians
     local jump_distance = 10
@@ -436,7 +436,7 @@ local function free_stuck_spierbots(entity)
                         for _, leg in pairs(legs) do
                             if leg.valid and colliding_leg.valid and (leg.unit_number == colliding_leg.unit_number) then
                                 reset_task_data(spiderbot_data.spiderbot_id, spiderbot_data.player_index)
-                                directional_spiderbot_jump(spiderbot, spiderbot_data.player)
+                                oriented_spiderbot_jump(spiderbot, spiderbot_data.player)
                                 goto next_leg
                             end
                         end
@@ -1091,7 +1091,7 @@ local function on_tick(event)
                 -- if the spider is assigned a task but has no speed, abandon the task so a new spider can be dispatched
                 if (status ~= "idle") and no_speed then
                     reset_task_data(spiderbot_id, player_index)
-                    directional_spiderbot_jump(spiderbot, player)
+                    oriented_spiderbot_jump(spiderbot, player)
                     spiders_dispatched = spiders_dispatched + 1
                     goto next_spiderbot
                 end
