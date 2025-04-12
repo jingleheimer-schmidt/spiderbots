@@ -299,6 +299,31 @@ local function on_script_raised_teleport(event)
 end
 
 script.on_event(defines.events.script_raised_teleported, on_script_raised_teleport)
+
+---@param event EventData.on_player_changed_position
+local function on_player_changed_position(event)
+    local player_index = event.player_index
+    local player = game.get_player(player_index)
+    if not (player and player.valid) then return end
+    local character = get_player_entity(player)
+    if not (character and character.valid) then return end
+    local position = character.position
+    local surface_index = character.surface_index
+    storage.previous_player_position = storage.previous_player_position or {}
+    local previous_position = storage.previous_player_position[player_index] or position
+    storage.previous_player_surface_index = storage.previous_player_surface_index or {}
+    local previous_surface_index = storage.previous_player_surface_index[player_index] or surface_index
+    local same_surface = previous_surface_index == surface_index
+    local distance_moved = distance(previous_position, position)
+    if same_surface and (distance_moved > 50) then
+        redeploy_active_spiderbots(player, player_index, character)
+    end
+    storage.previous_player_position[player_index] = position
+    storage.previous_player_surface_index[player_index] = surface_index
+end
+
+script.on_event(defines.events.on_player_changed_position, on_player_changed_position)
+
 ---@param event EventData.on_player_driving_changed_state
 local function on_player_driving_changed_state(event)
     local player_index = event.player_index
