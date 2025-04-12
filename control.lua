@@ -402,6 +402,23 @@ local function get_entity_inventory(entity)
     end
 end
 
+---@param spiderbot LuaEntity
+---@param player LuaPlayer
+local function directional_spiderbot_jump(spiderbot, player)
+    local surface = spiderbot.surface
+    local orientation = spiderbot.orientation * 2 * math.pi -- convert to radians
+    local jump_distance = 10
+    local spiderbot_position = spiderbot.position
+    local target_position = {
+        x = spiderbot_position.x + jump_distance * math.cos(orientation),
+        y = spiderbot_position.y + jump_distance * math.sin(orientation)
+    }
+    local jump_position = surface.find_non_colliding_position("spiderbot-leg-1", target_position, 100, 0.5)
+    if not jump_position then jump_position = random_position_in_radius(spiderbot_position, 25) end
+    create_spiderbot_projectile(spiderbot_position, jump_position, player, 1)
+    spiderbot.destroy({ raise_destroy = true })
+end
+
 ---@param entity LuaEntity
 local function free_stuck_spierbots(entity)
     if not (entity and entity.valid) then return end
@@ -419,19 +436,7 @@ local function free_stuck_spierbots(entity)
                         for _, leg in pairs(legs) do
                             if leg.valid and colliding_leg.valid and (leg.unit_number == colliding_leg.unit_number) then
                                 reset_task_data(spiderbot_data.spiderbot_id, spiderbot_data.player_index)
-                                local player = spiderbot_data.player
-                                local surface = spiderbot.surface
-                                local orientation = spiderbot.orientation * 2 * math.pi -- convert to radians
-                                local jump_distance = 10
-                                local spiderbot_position = spiderbot.position
-                                local target_position = {
-                                    x = spiderbot_position.x + jump_distance * math.cos(orientation),
-                                    y = spiderbot_position.y + jump_distance * math.sin(orientation)
-                                }
-                                local jump_position = surface.find_non_colliding_position("spiderbot-leg-1", target_position, 100, 0.5)
-                                if not jump_position then jump_position = random_position_in_radius(spiderbot_position, 25) end
-                                create_spiderbot_projectile(spiderbot_position, jump_position, player, 1)
-                                spiderbot.destroy({ raise_destroy = true })
+                                directional_spiderbot_jump(spiderbot, spiderbot_data.player)
                                 goto next_leg
                             end
                         end
@@ -1086,10 +1091,7 @@ local function on_tick(event)
                 -- if the spider is assigned a task but has no speed, abandon the task so a new spider can be dispatched
                 if (status ~= "idle") and no_speed then
                     reset_task_data(spiderbot_id, player_index)
-                    local position_in_radius = random_position_in_radius(player_entity.position, 25)
-                    local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 100, 0.5)
-                    create_spiderbot_projectile(spiderbot.position, non_colliding_position or position_in_radius, player, 1)
-                    spiderbot.destroy({ raise_destroy = true })
+                    directional_spiderbot_jump(spiderbot, player)
                     spiders_dispatched = spiders_dispatched + 1
                     goto next_spiderbot
                 end
