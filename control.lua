@@ -419,11 +419,18 @@ local function free_stuck_spierbots(entity)
                         for _, leg in pairs(legs) do
                             if leg.valid and colliding_leg.valid and (leg.unit_number == colliding_leg.unit_number) then
                                 reset_task_data(spiderbot_data.spiderbot_id, spiderbot_data.player_index)
-                                local random_position = random_position_in_radius(spiderbot.position, 25)
                                 local player = spiderbot_data.player
                                 local surface = spiderbot.surface
-                                local position = surface.find_non_colliding_position("spiderbot-leg-1", random_position, 100, 0.5)
-                                create_spiderbot_projectile(spiderbot.position, position or random_position, player, 1)
+                                local orientation = spiderbot.orientation * 2 * math.pi -- convert to radians
+                                local jump_distance = 10
+                                local spiderbot_position = spiderbot.position
+                                local target_position = {
+                                    x = spiderbot_position.x + jump_distance * math.cos(orientation),
+                                    y = spiderbot_position.y + jump_distance * math.sin(orientation)
+                                }
+                                local jump_position = surface.find_non_colliding_position("spiderbot-leg-1", target_position, 100, 0.5)
+                                if not jump_position then jump_position = random_position_in_radius(spiderbot_position, 25) end
+                                create_spiderbot_projectile(spiderbot_position, jump_position, player, 1)
                                 spiderbot.destroy({ raise_destroy = true })
                                 goto next_leg
                             end
