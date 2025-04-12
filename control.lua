@@ -286,6 +286,19 @@ end
 
 script.on_event(defines.events.on_player_changed_surface, on_player_changed_surface)
 
+---@param event EventData.script_raised_teleported
+local function on_script_raised_teleport(event)
+    local entity = event.entity
+    if entity.type ~= "character" then return end
+    local player = entity.player
+    if not (player and player.valid) then return end
+    local spiderbots = storage.spiderbots[player.index]
+    if not spiderbots then return end
+    if not allowed_controllers[player.controller_type] then return end
+    redeploy_active_spiderbots(player, player.index, entity)
+end
+
+script.on_event(defines.events.script_raised_teleported, on_script_raised_teleport)
 ---@param event EventData.on_player_driving_changed_state
 local function on_player_driving_changed_state(event)
     local player_index = event.player_index
