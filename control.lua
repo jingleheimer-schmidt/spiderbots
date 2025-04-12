@@ -251,29 +251,37 @@ local function relink_following_spiderbots(player)
     end
 end
 
+---@param player LuaPlayer
+---@param player_index player_index
+---@param player_entity LuaEntity
+local function redeploy_active_spiderbots(player, player_index, player_entity)
+    local spiderbots = storage.spiderbots[player_index]
+    if not spiderbots then return end
+    local surface = player_entity.surface
+    local surface_index = player_entity.surface_index
+    for spider_id, spiderbot_data in pairs(spiderbots) do
+        local spiderbot = spiderbot_data.spiderbot
+        if spiderbot.valid then
+            local position_in_radius = random_position_in_radius(player_entity.position, 15)
+            local non_colliding_position = surface.find_non_colliding_position("character", position_in_radius, 50, 0.5)
+            local position = non_colliding_position or player_entity.position
+            spiderbot.destroy({ raise_destroy = true })
+            reset_task_data(spider_id, player_index)
+            create_spiderbot_projectile(player_entity.position, position, player, 1, 0.25)
+        end
+    end
+    relink_following_spiderbots(player)
+end
+
 ---@param event EventData.on_player_changed_surface
 local function on_player_changed_surface(event)
     local player_index = event.player_index
     local player = game.get_player(player_index)
     if not (player and player.valid) then return end
-    local spiderbots = storage.spiderbots[player_index]
-    if not spiderbots then return end
     if not allowed_controllers[player.controller_type] then return end
     local player_entity = get_player_entity(player)
     if not (player_entity and player_entity.valid) then return end
-    local surface = player_entity.surface
-    local surface_index = player_entity.surface_index
-    for spider_id, spiderbot_data in pairs(spiderbots) do
-        local spiderbot = spiderbot_data.spiderbot
-        if spiderbot.valid and (spiderbot.surface_index ~= surface_index) then
-            local position_in_radius = random_position_in_radius(player_entity.position, 50)
-            local non_colliding_position = surface.find_non_colliding_position("spiderbot-leg-1", position_in_radius, 50, 0.5)
-            local position = non_colliding_position or player_entity.position
-            spiderbot.teleport(position, surface, true)
-            reset_task_data(spider_id, player_index)
-        end
-    end
-    relink_following_spiderbots(player)
+    redeploy_active_spiderbots(player, player_index, player_entity)
 end
 
 script.on_event(defines.events.on_player_changed_surface, on_player_changed_surface)
