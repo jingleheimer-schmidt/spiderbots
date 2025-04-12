@@ -281,6 +281,8 @@ local function on_player_changed_surface(event)
     if not allowed_controllers[player.controller_type] then return end
     local player_entity = get_player_entity(player)
     if not (player_entity and player_entity.valid) then return end
+    local planet = player.surface.planet
+    if planet and planet.valid and planet.name == "factory-travel-surface" then return end
     redeploy_active_spiderbots(player, player_index, player_entity)
 end
 
@@ -307,6 +309,8 @@ local function on_player_changed_position(event)
     if not (player and player.valid) then return end
     local character = get_player_entity(player)
     if not (character and character.valid) then return end
+    local planet = player.surface.planet
+    if planet and planet.valid and planet.name == "factory-travel-surface" then return end
     local position = character.position
     local surface_index = character.surface_index
     storage.previous_player_position = storage.previous_player_position or {}
