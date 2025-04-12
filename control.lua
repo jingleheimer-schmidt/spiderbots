@@ -406,13 +406,18 @@ end
 ---@param player LuaPlayer
 local function oriented_spiderbot_jump(spiderbot, player)
     local surface = spiderbot.surface
-    local orientation = spiderbot.orientation * 2 * math.pi -- convert to radians
-    local jump_distance = 10
+    local orientation = (0.25 - spiderbot.torso_orientation) * 2 * math.pi -- convert to radians, account for factorio RealOrientation 0 = North (sin/cos assume 0 = East)
     local spiderbot_position = spiderbot.position
-    local target_position = {
-        x = spiderbot_position.x + jump_distance * math.cos(orientation),
-        y = spiderbot_position.y + jump_distance * math.sin(orientation)
-    }
+    local target_position = spiderbot.position
+    for step_distance = 2, 50 do
+        local x = target_position.x + step_distance * math.cos(orientation)
+        local y = target_position.y - step_distance * math.sin(orientation)
+        local jump_position = surface.find_non_colliding_position("spiderbot-leg-1", { x = x, y = y }, 0.5, 0.1)
+        if jump_position then
+            target_position = jump_position
+            break
+        end
+    end
     local jump_position = surface.find_non_colliding_position("spiderbot-leg-1", target_position, 100, 0.5)
     if not jump_position then jump_position = random_position_in_radius(spiderbot_position, 25) end
     create_spiderbot_projectile(spiderbot_position, jump_position, player, 1)
