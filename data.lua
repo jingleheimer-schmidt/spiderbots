@@ -203,26 +203,60 @@ local toggle_spiderbots_hotkey = {
 }
 data:extend({ toggle_spiderbots_hotkey })
 
-local function create_spiderbot_follower_technology(level, automation, logistic, military, chemical, production, utility, space)
-    local technology = {
+---Creates a spiderbot follower technology based on the level.
+---@param level integer
+local function create_spiderbot_follower_technology(level)
+    local is_infinite = level >= 7
+    local ten = 10
+    local effect_key = is_infinite and "bonus-description.maximum-following-spiderbots-7" or "bonus-description.maximum-following-spiderbots"
+
+    local science_packs_by_level = {
+        "automation-science-pack",
+        "logistic-science-pack",
+        "military-science-pack",
+        "chemical-science-pack",
+        "production-science-pack",
+        "utility-science-pack",
+        "space-science-pack"
+    }
+
+    local packs = {}
+    local prerequisites = {}
+
+    for i = 1, math.min(level, #science_packs_by_level) do
+        local pack = science_packs_by_level[i]
+        table.insert(packs, { pack, 1 })
+        table.insert(prerequisites, pack)
+    end
+
+    if level > 1 then
+        table.insert(prerequisites, "spiderbot-follower-count-" .. (level - 1))
+    end
+
+    ---@type data.TechnologyPrototype
+    local tech = {
         type = "technology",
         name = "spiderbot-follower-count-" .. level,
         icons = util.technology_icon_constant_followers("__spiderbots__/assets/spiderbot_technology.png"),
-        upgrade = false,
+        upgrade = level > 6,
         enabled = true,
         essential = false,
         visible_when_disabled = false,
         allows_productivity = true,
         unit = {
-            count = 75,
             time = 30,
-            ingredients = {}
+            ingredients = packs,
+            count_formula = "75 * L"
         },
+        max_level = is_infinite and "infinite" or nil,
+        show_levels_info = is_infinite or nil,
+        prerequisites = prerequisites,
         effects = {
             {
                 type = "nothing",
                 use_icon_overlay_constant = true,
-                effect_description = { "bonus-description.maximum-following-spiderbots", "10", tostring((level - 1) * 10 + 10), tostring(level * 10 + 10) },
+                effect_description = is_infinite and { effect_key, tostring(ten) } or
+                    { effect_key, tostring(ten), tostring((level - 1) * ten + ten), tostring(level * ten + ten) },
                 icons = {
                     {
                         icon = "__base__/graphics/technology/spidertron.png",
@@ -235,99 +269,14 @@ local function create_spiderbot_follower_technology(level, automation, logistic,
                         shift = { 10, 10 },
                         floating = true
                     }
-                },
-                hidden = false,
+                }
             }
         }
     }
-    technology.prerequisites = {}
-    if level > 1 then
-        technology.prerequisites = { "spiderbot-follower-count-" .. (level - 1) }
-    end
-    if automation then
-        table.insert(technology.unit.ingredients, { "automation-science-pack", 1 })
-        table.insert(technology.prerequisites, "automation-science-pack")
-    end
-    if logistic then
-        table.insert(technology.unit.ingredients, { "logistic-science-pack", 1 })
-        table.insert(technology.prerequisites, "logistic-science-pack")
-    end
-    if chemical then
-        table.insert(technology.unit.ingredients, { "chemical-science-pack", 1 })
-        table.insert(technology.prerequisites, "chemical-science-pack")
-    end
-    if military then
-        table.insert(technology.unit.ingredients, { "military-science-pack", 1 })
-        table.insert(technology.prerequisites, "military-science-pack")
-    end
-    if utility then
-        table.insert(technology.unit.ingredients, { "utility-science-pack", 1 })
-        table.insert(technology.prerequisites, "utility-science-pack")
-    end
-    if production then
-        table.insert(technology.unit.ingredients, { "production-science-pack", 1 })
-        table.insert(technology.prerequisites, "production-science-pack")
-    end
-    if space then
-        table.insert(technology.unit.ingredients, { "space-science-pack", 1 })
-        table.insert(technology.prerequisites, "space-science-pack")
-    end
-    data:extend({ technology })
+
+    data:extend({ tech })
 end
 
-create_spiderbot_follower_technology(1, true, false, false, false, false, false, false)
-create_spiderbot_follower_technology(2, true, true, false, false, false, false, false)
-create_spiderbot_follower_technology(3, true, true, true, false, false, false, false)
-create_spiderbot_follower_technology(4, true, true, true, true, false, false, false)
-create_spiderbot_follower_technology(5, true, true, true, true, true, false, false)
-create_spiderbot_follower_technology(6, true, true, true, true, true, true, false)
-
----@type data.TechnologyPrototype
-local spiderbot_follower_count_technology = {
-    type = "technology",
-    name = "spiderbot-follower-count-7",
-    icons = util.technology_icon_constant_followers("__spiderbots__/assets/spiderbot_technology.png"),
-    upgrade = true,
-    enabled = true,
-    essential = false,
-    visible_when_disabled = false,
-    allows_productivity = true,
-    unit = {
-        count_formula = "75 * (L - 6)",
-        time = 30,
-        ingredients = {
-            { "automation-science-pack", 1 },
-            { "logistic-science-pack", 1 },
-            { "chemical-science-pack", 1 },
-            { "military-science-pack", 1 },
-            { "utility-science-pack", 1 },
-            { "production-science-pack", 1 },
-            { "space-science-pack", 1 },
-        }
-    },
-    max_level = "infinite",
-    show_levels_info = true,
-    effects = {
-        {
-            type = "nothing",
-            use_icon_overlay_constant = true,
-            effect_description = { "bonus-description.maximum-following-spiderbots-7", "5" },
-            icons = {
-                {
-                    icon = "__base__/graphics/technology/spidertron.png",
-                    icon_size = 256,
-                },
-                {
-                    icon = "__core__/graphics/icons/technology/constants/constant-count.png",
-                    icon_size = 128,
-                    scale = 0.25,
-                    shift = { 10, 10 },
-                    floating = true
-                }
-            },
-            hidden = false,
-        }
-    },
-    prerequisites = { "spiderbot-follower-count-6", "space-science-pack" },
-}
-data:extend({ spiderbot_follower_count_technology })
+for level = 1, 7 do
+    create_spiderbot_follower_technology(level)
+end
