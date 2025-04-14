@@ -3,8 +3,8 @@ Version: 0.2.5
 Date: ????
   Changes:
     - Stuck spiderbots jump in the direction they're facing instead of picking a random position
-    - Added spiderbot follower count research
     - Added technology to unlock spiderbot recipe
+    - Added spiderbot follower count technology
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.4
 Date: 18NOV2024
