@@ -220,13 +220,13 @@ local function get_follower_technology_icons()
     }
 end
 
----Creates a spiderbot follower technology based on the level.
----@param level integer
-local function create_spiderbot_follower_technology(level)
-    local is_infinite = level >= 7
-    local ten = 10
-    local effect_key = is_infinite and "bonus-description.maximum-following-spiderbots-7" or "bonus-description.maximum-following-spiderbots"
+local spiderbot_technology_icon_path = "__spiderbots__/assets/spiderbot_technology.png"
 
+---@param level integer
+---@return { [1]: string, [2]: integer }[], string[]
+local function get_ingredients_and_prerequisites(level)
+    local ingredients = {}
+    local prerequisites = { "spiderbots" }
     local science_packs_by_level = {
         "automation-science-pack",
         "logistic-science-pack",
@@ -236,33 +236,37 @@ local function create_spiderbot_follower_technology(level)
         "utility-science-pack",
         "space-science-pack"
     }
-
-    local packs = {}
-    local prerequisites = { "spiderbots" }
-
     for i = 1, math.min(level, #science_packs_by_level) do
         local pack = science_packs_by_level[i]
-        table.insert(packs, { pack, 1 })
+        table.insert(ingredients, { pack, 1 })
         table.insert(prerequisites, pack)
     end
-
     if level > 1 then
         table.insert(prerequisites, "spiderbot-follower-count-" .. (level - 1))
     end
+    return ingredients, prerequisites
+end
+
+---Creates a spiderbot follower technology based on the level.
+---@param level integer
+local function create_spiderbot_follower_technology(level)
+    local is_infinite = level >= 7
+    local ten = 10
+    local effect_key = is_infinite and "bonus-description.maximum-following-spiderbots-7" or "bonus-description.maximum-following-spiderbots"
+    local ingredients, prerequisites = get_ingredients_and_prerequisites(level)
 
     ---@type data.TechnologyPrototype
     local tech = {
         type = "technology",
         name = "spiderbot-follower-count-" .. level,
-        icons = util.technology_icon_constant_followers("__spiderbots__/assets/spiderbot_technology.png"),
+        icons = util.technology_icon_constant_followers(spiderbot_technology_icon_path),
         upgrade = level > 6,
         enabled = true,
         essential = false,
-        visible_when_disabled = false,
         allows_productivity = true,
         unit = {
             time = 30,
-            ingredients = packs,
+            ingredients = ingredients,
             count_formula = "75 * L"
         },
         max_level = is_infinite and "infinite" or nil,
@@ -289,7 +293,7 @@ end
 local spiderbot_technology = {
     type = "technology",
     name = "spiderbots",
-    icon = "__spiderbots__/assets/spiderbot_technology.png",
+    icon = spiderbot_technology_icon_path,
     icon_size = 256,
     effects = {
         {
@@ -302,13 +306,10 @@ local spiderbot_technology = {
             icons = get_follower_technology_icons()
         }
     },
-    prerequisites = { "electronics", "automation-science-pack" },
-    unit = {
-        time = 30,
-        ingredients = {
-            { "automation-science-pack", 1 },
-        },
-        count = 25
-    },
+    prerequisites = { "electronics" },
+    research_trigger = {
+        type = "mine-entity",
+        entity = "fish",
+    }
 }
 data:extend({ spiderbot_technology })
