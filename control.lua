@@ -135,7 +135,11 @@ local function on_player_used_capsule(event)
     -- try to find a valid position for the spiderbot to land. if a non_colliding_position is found then the spiderbot can scramble to it from the original position once spawned
     local non_colliding_position = player.surface.find_non_colliding_position("spiderbot-leg-1", position, 3.75, 0.5)
     -- refund the spiderbot item if there is no valid position
-    if not non_colliding_position then
+    local max_followers = storage.spiderbot_follower_count[player.force.name]
+    local follower_count = storage.spiderbots[player.index] and table_size(storage.spiderbots[player.index]) or 0
+    if non_colliding_position and (follower_count < max_followers) then
+        create_spiderbot_projectile(player.position, position, player, 1, 0.25) -- use the actual position, because that's what the player wanted, and since a non_colliding position is known to exist that means the spiderbot can scramble around to it
+    else
         local inventory = player.get_main_inventory()
         if inventory and inventory.valid then
             local item_stack = { name = "spiderbot", count = 1 }
@@ -147,9 +151,7 @@ local function on_player_used_capsule(event)
                 player.cursor_stack.set_stack(item_stack)
             end
         end
-        return
     end
-    create_spiderbot_projectile(player.position, position, player, 1, 0.25) -- use the actual position, because that's what the player wanted, and since a non_colliding position is known to exist that means the spiderbot can scramble around to it
 end
 
 script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
@@ -1391,11 +1393,12 @@ local function toggle_spiderbots(event)
                 local count = inventory and inventory.get_item_count("spiderbot") or 0
                 local position = entity.position
                 if inventory and (count > 0) then
-                    for i = 1, count do
+                    local max_followers = storage.spiderbot_follower_count[player.force.name] or 10
+                    for i = 1, math.min(count, max_followers) do
                         local destination = random_position_in_radius(position, 25)
                         destination = entity.surface.find_non_colliding_position("spiderbot-leg-1", destination, 100, 0.5) or destination
                         create_spiderbot_projectile(position, destination, player)
-                        inventory.remove("spiderbot")
+                        inventory.remove({ name = "spiderbot", count = 1 })
                     end
                 end
             end
@@ -1407,12 +1410,28 @@ end
 script.on_event("toggle-spiderbots", toggle_spiderbots)
 script.on_event(defines.events.on_lua_shortcut, toggle_spiderbots)
 
+---@param event EventData.on_research_finished
+local function on_research_finished(event)
+    local research = event.research
+    local name = research.name
+    if string.find(name, "spiderbot-follower-count", 1, true) then
+        local level = tonumber(string.match(name, "%d+$"))
+        local force = research.force.name
+        storage.spiderbot_follower_count = storage.spiderbot_follower_count or {}
+        storage.spiderbot_follower_count[force] = level * 10 + 10
+    end
+end
+
+script.on_event(defines.events.on_research_finished, on_research_finished)
+
 local function setup_storage()
     -- spiderbot data
     --[[@type table<player_index, table<uuid, spiderbot_data>>]]
     storage.spiderbots = storage.spiderbots or {}
     --[[@type table<player_index, boolean>]]
     storage.spiderbots_enabled = storage.spiderbots_enabled or {}
+    --[[@type table<string, integer>]]
+    storage.spiderbot_follower_count = storage.spiderbot_follower_count or {}
 
     -- player data
     --[[@type table<player_index, defines.controllers>]]
@@ -1428,14 +1447,33 @@ local function setup_storage()
     storage.render_objects = storage.render_objects or {}
 end
 
+local function reset_follower_count()
+    for _, force in pairs(game.forces) do
+        storage.spiderbot_follower_count = storage.spiderbot_follower_count or {}
+        storage.spiderbot_follower_count[force.name] = 10
+        for _, technology in pairs(force.technologies) do
+            if string.find(technology.name, "spiderbot-follower-count") then
+                local level = tonumber(string.match(technology.name, "%d+$"))
+                local count = level * 10 + 10
+                local previous_count = storage.spiderbot_follower_count[force.name] or 0
+                if count > previous_count then
+                    storage.spiderbot_follower_count[force.name] = count
+                end
+            end
+        end
+    end
+end
+
 local function on_init()
     setup_storage()
+    reset_follower_count()
 end
 
 script.on_init(on_init)
 
 local function on_configuration_changed(event)
     setup_storage()
+    reset_follower_count()
     for _, player in pairs(game.players) do
         relink_following_spiderbots(player)
     end

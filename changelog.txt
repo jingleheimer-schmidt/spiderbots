@@ -3,6 +3,8 @@ Version: 0.2.5
 Date: ????
   Changes:
     - Stuck spiderbots jump in the direction they're facing instead of picking a random position
+    - Set maximum spiderbot follower count of 10
+    - Added spiderbot follower count research
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.4
 Date: 18NOV2024
