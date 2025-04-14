@@ -111,7 +111,7 @@ spiderbot_recipe.ingredients = {
 spiderbot_recipe.results = {
     { type = "item", name = "spiderbot", amount = 1 }
 }
-spiderbot_recipe.enabled = true
+spiderbot_recipe.enabled = false
 spiderbot_recipe.subgroup = "logistic-network"
 spiderbot_recipe.order = "a[robot]-b[spiderbot]"
 data:extend { spiderbot_recipe }
@@ -221,7 +221,7 @@ local function create_spiderbot_follower_technology(level)
     }
 
     local packs = {}
-    local prerequisites = {}
+    local prerequisites = { "spiderbots" }
 
     for i = 1, math.min(level, #science_packs_by_level) do
         local pack = science_packs_by_level[i]
@@ -280,3 +280,43 @@ end
 for level = 1, 7 do
     create_spiderbot_follower_technology(level)
 end
+
+---@type data.TechnologyPrototype
+local spiderbot_technology = {
+    type = "technology",
+    name = "spiderbots",
+    icon = "__spiderbots__/assets/spiderbot_technology.png",
+    icon_size = 256,
+    effects = {
+        {
+            type = "unlock-recipe",
+            recipe = "spiderbot"
+        },
+        {
+            type = "nothing",
+            effect_description = { "bonus-description.maximum-following-spiderbots", "10", "0", "10" },
+            icons = {
+                {
+                    icon = "__base__/graphics/technology/spidertron.png",
+                    icon_size = 256,
+                },
+                {
+                    icon = "__core__/graphics/icons/technology/constants/constant-count.png",
+                    icon_size = 128,
+                    scale = 0.25,
+                    shift = { 10, 10 },
+                    floating = true
+                }
+            }
+        }
+    },
+    prerequisites = { "electronics", "automation-science-pack" },
+    unit = {
+        time = 30,
+        ingredients = {
+            { "automation-science-pack", 1 },
+        },
+        count = 25
+    },
+}
+data:extend({ spiderbot_technology })
