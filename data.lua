@@ -203,6 +203,23 @@ local toggle_spiderbots_hotkey = {
 }
 data:extend({ toggle_spiderbots_hotkey })
 
+---@return data.IconData[]
+local function get_follower_technology_icons()
+    return {
+        {
+            icon = "__base__/graphics/technology/spidertron.png",
+            icon_size = 256,
+        },
+        {
+            icon = "__core__/graphics/icons/technology/constants/constant-count.png",
+            icon_size = 128,
+            scale = 0.25,
+            shift = { 10, 10 },
+            floating = true
+        }
+    }
+end
+
 ---Creates a spiderbot follower technology based on the level.
 ---@param level integer
 local function create_spiderbot_follower_technology(level)
@@ -254,22 +271,9 @@ local function create_spiderbot_follower_technology(level)
         effects = {
             {
                 type = "nothing",
-                use_icon_overlay_constant = true,
                 effect_description = is_infinite and { effect_key, tostring(ten) } or
                     { effect_key, tostring(ten), tostring((level - 1) * ten + ten), tostring(level * ten + ten) },
-                icons = {
-                    {
-                        icon = "__base__/graphics/technology/spidertron.png",
-                        icon_size = 256,
-                    },
-                    {
-                        icon = "__core__/graphics/icons/technology/constants/constant-count.png",
-                        icon_size = 128,
-                        scale = 0.25,
-                        shift = { 10, 10 },
-                        floating = true
-                    }
-                }
+                icons = get_follower_technology_icons()
             }
         }
     }
@@ -295,19 +299,7 @@ local spiderbot_technology = {
         {
             type = "nothing",
             effect_description = { "bonus-description.maximum-following-spiderbots", "10", "0", "10" },
-            icons = {
-                {
-                    icon = "__base__/graphics/technology/spidertron.png",
-                    icon_size = 256,
-                },
-                {
-                    icon = "__core__/graphics/icons/technology/constants/constant-count.png",
-                    icon_size = 128,
-                    scale = 0.25,
-                    shift = { 10, 10 },
-                    floating = true
-                }
-            }
+            icons = get_follower_technology_icons()
         }
     },
     prerequisites = { "electronics", "automation-science-pack" },
