@@ -207,7 +207,7 @@ local function create_spiderbot_follower_technology(level, automation, logistic,
     local technology = {
         type = "technology",
         name = "spiderbot-follower-count-" .. level,
-        icons = util.technology_icon_constant_followers("__base__/graphics/technology/spidertron.png"),
+        icons = util.technology_icon_constant_followers("__spiderbots__/assets/spiderbot_technology.png"),
         upgrade = false,
         enabled = true,
         essential = false,
@@ -286,7 +286,7 @@ create_spiderbot_follower_technology(6, true, true, true, true, true, true, fals
 local spiderbot_follower_count_technology = {
     type = "technology",
     name = "spiderbot-follower-count-7",
-    icons = util.technology_icon_constant_followers("__base__/graphics/technology/spidertron.png"),
+    icons = util.technology_icon_constant_followers("__spiderbots__/assets/spiderbot_technology.png"),
     upgrade = true,
     enabled = true,
     essential = false,
