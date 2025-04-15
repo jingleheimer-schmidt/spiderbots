@@ -507,6 +507,25 @@ local function free_stuck_spierbots(entity)
     end
 end
 
+---@param origin MapPosition|LuaEntity
+---@param destination MapPosition|LuaEntity
+---@param item string
+---@param player LuaPlayer
+local function create_item_projectile(origin, destination, item, player)
+    local origin_position = origin.position or origin
+    local destination_position = destination.position or destination
+    local dist = distance(origin_position, destination_position)
+    local max_time = 20
+    local min_speed = 0.3
+    player.surface.create_entity {
+        name = item .. "-spiderbot-projectile",
+        position = origin_position,
+        target = destination,
+        force = player.force,
+        speed = math.max(min_speed, (dist / max_time)),
+    }
+end
+
 ---@param spiderbot_data spiderbot_data
 local function build_ghost(spiderbot_data)
     local spiderbot_id = spiderbot_data.spiderbot_id
@@ -525,6 +544,8 @@ local function build_ghost(spiderbot_data)
                     local dictionary, revived_entity, request_proxy = entity.revive({ return_item_request_proxy = false, raise_revive = true })
                     if revived_entity then
                         inventory.remove(item_quality_pair)
+                        local spiderbot = spiderbot_data.spiderbot
+                        create_item_projectile(player_entity, spiderbot, item_stack.name, player)
                         free_stuck_spierbots(revived_entity)
                     else
                         free_stuck_spierbots(entity)
@@ -647,6 +668,7 @@ local function deconstruct_entity(spiderbot_data)
                                     break
                                 end
                                 if count > 4 then break end
+                                create_item_projectile(spiderbot, player_entity, mining_result.name, player)
                             end
                             local sound_path = entity_name .. "-mined_sound"
                             if not helpers.is_valid_sound_path(sound_path) then
@@ -681,6 +703,7 @@ local function deconstruct_entity(spiderbot_data)
                                     speed = 0.0125,
                                 }
                                 inventory.remove({ name = "cliff-explosives", count = 1, quality = quality })
+                                create_item_projectile(player_entity, spiderbot, "cliff-explosives", player)
                             end
                         end
                     end
@@ -736,6 +759,9 @@ local function upgrade_entity(spiderbot_data)
                             if (player.controller_type ~= defines.controllers.character) and result_item then
                                 inventory.insert(result_item)
                             end
+                            local spiderbot = spiderbot_data.spiderbot
+                            create_item_projectile(player_entity, spiderbot, item_with_quality.name, player)
+                            create_item_projectile(spiderbot, player_entity, result_item.name, player)
                             local sound_path = upgrade_name .. "-build_sound"
                             if not helpers.is_valid_sound_path(sound_path) then
                                 sound_path = "utility/build_" .. entity_size(upgraded_entity)
@@ -799,6 +825,8 @@ local function insert_items(spiderbot_data)
                                         position = target_entity.position,
                                     }
                                 end
+                                local spiderbot = spiderbot_data.spiderbot
+                                create_item_projectile(spiderbot, player_entity, item_stack.name, player)
                                 break
                             end
                         end
@@ -837,6 +865,8 @@ local function insert_items(spiderbot_data)
                                         position = target_entity.position,
                                     }
                                 end
+                                local spiderbot = spiderbot_data.spiderbot
+                                create_item_projectile(player_entity, spiderbot, item_stack.name, player)
                                 break
                             end
                         end

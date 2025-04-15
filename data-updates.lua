@@ -62,3 +62,71 @@ end
 
 log("added sound prototypes:")
 log(serpent.block(counts))
+
+---@param item data.ItemPrototype
+---@return string[]
+local function get_item_icon_filenames(item)
+    local filenames = {}
+    if item.icons then
+        for _, icon in pairs(item.icons) do
+            if icon.icon then
+                table.insert(filenames, icon.icon)
+            end
+        end
+    elseif item.icon then
+        table.insert(filenames, item.icon)
+    end
+    return filenames
+end
+
+---@param item data.ItemPrototype
+---@return integer
+local function get_item_icon_size(item)
+    local size = 32
+    if item.icons then
+        for _, icon in pairs(item.icons) do
+            if icon.icon_size then
+                size = icon.icon_size
+            end
+        end
+    elseif item.icon_size then
+        size = item.icon_size
+    end
+    return size or 32
+end
+
+local projectile_items = {
+    "item",
+    "module",
+    "tool",
+    "armor",
+    "capsule",
+    "ammo",
+}
+
+for _, item_type in pairs(projectile_items) do
+    for _, item in pairs(data.raw[item_type]) do
+        ---@type data.ProjectilePrototype
+        local projectile = {
+            name = item.name .. "-spiderbot-projectile",
+            type = "projectile",
+            acceleration = 0.001,
+            animation = {
+                direction_count = 1,
+                filenames = get_item_icon_filenames(item),
+                lines_per_file = 1,
+                line_length = 1,
+                frame_count = 1,
+                size = get_item_icon_size(item),
+            },
+            turn_speed = 5,
+            rotatable = true,
+            shadow = data.raw["projectile"]["distractor-capsule"].shadow,
+            enable_drawing_with_mask = true,
+            hidden = true,
+        }
+        projectile.animation.scale = 0.4
+        projectile.shadow.scale = 0.4
+        data:extend { projectile }
+    end
+end

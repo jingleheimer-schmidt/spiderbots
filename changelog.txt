@@ -5,6 +5,7 @@ Date: ????
     - Stuck spiderbots jump in the direction they're facing instead of picking a random position
     - Added technology to unlock spiderbot recipe
     - Added spiderbot follower count technology
+    - Spiderbots throw items back and forth with the player while building
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.4
 Date: 18NOV2024
