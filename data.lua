@@ -167,6 +167,7 @@ local spiderbot_projectile = {
     shadow = data.raw["projectile"]["distractor-capsule"].shadow,
     flags = { "not-on-map" },
     enable_drawing_with_mask = true,
+    hidden = true,
 }
 data:extend { spiderbot_projectile }
 
@@ -178,6 +179,7 @@ local spiderbot_no_trigger_projectile = {
     shadow = data.raw["projectile"]["distractor-capsule"].shadow,
     flags = { "not-on-map" },
     enable_drawing_with_mask = true,
+    hidden = true,
 }
 data:extend { spiderbot_no_trigger_projectile }
 
