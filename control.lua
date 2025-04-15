@@ -1482,7 +1482,7 @@ local function reset_follower_count()
         storage.spiderbot_follower_count = storage.spiderbot_follower_count or {}
         storage.spiderbot_follower_count[force.name] = 10
         for _, technology in pairs(force.technologies) do
-            if string.find(technology.name, "spiderbot-follower-count") then
+            if string.find(technology.name, "spiderbot-follower-count", 1, true) then
                 local level = tonumber(string.match(technology.name, "%d+$"))
                 local count = level * 10 + 10
                 local previous_count = storage.spiderbot_follower_count[force.name] or 0
@@ -1493,6 +1493,8 @@ local function reset_follower_count()
         end
     end
 end
+
+script.on_event(defines.events.on_technology_effects_reset, reset_follower_count)
 
 local function on_init()
     setup_storage()
