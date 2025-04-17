@@ -208,6 +208,16 @@ local function random_position_in_radius(position, radius)
     return { x = x, y = y }
 end
 
+---@param position MapPosition
+---@return MapPosition
+local function random_position_on_tile(position)
+    local radius = math.sqrt(math.random())
+    local angle = math.random() * 2 * math.pi
+    local x = position.x + radius * math.cos(angle)
+    local y = position.y + radius * math.sin(angle)
+    return { x = x, y = y }
+end
+
 ---@param player LuaPlayer
 local function relink_following_spiderbots(player)
     if not (player and player.valid) then return end
@@ -520,7 +530,7 @@ local function create_item_projectile(origin, destination, item, player, speed_m
     local min_speed = 0.3
     player.surface.create_entity {
         name = item .. "-spiderbot-projectile",
-        position = origin_position,
+        position = random_position_on_tile(origin_position),
         target = destination,
         force = player.force,
         speed = math.max(min_speed, (dist / max_time)) / (speed_modifier or 1),
