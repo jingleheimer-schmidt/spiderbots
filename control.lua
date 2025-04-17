@@ -674,10 +674,7 @@ local function result_when_mined(entity)
     if not products then return end
     for _, product in pairs(products) do
         if product.type == "item" then
-            local amount = product.amount
-            if not amount then
-                amount = math.random(product.amount_min, product.amount_max)
-            end
+            local amount = product.amount or product.amount_max
             return { name = product.name, count = amount, quality = entity.quality }
         end
     end
