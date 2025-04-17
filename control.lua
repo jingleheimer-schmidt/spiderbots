@@ -1274,7 +1274,16 @@ local function on_tick(event)
                 local entity_id = entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
                 local mining_result = result_when_mined(entity)
-                if mining_result and inventory_has_space(inventory, mining_result) then
+                local inventory_contents = get_inventory_contents(entity)
+                local inventory_has_space_for_all_contents = mining_result and inventory_has_space(inventory, mining_result)
+                for item_name, item_count in pairs(inventory_contents) do
+                    local item_stack = { name = item_name, count = item_count }
+                    if not inventory_has_space(inventory, item_stack) then
+                        inventory_has_space_for_all_contents = false
+                        break
+                    end
+                end
+                if inventory_has_space_for_all_contents then
                     local distance_to_task = distance(entity.position, spiderbot.position)
                     if distance_to_task < double_max_task_range then
                         spiderbot_data.task = {
