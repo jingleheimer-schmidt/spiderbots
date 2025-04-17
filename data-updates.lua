@@ -97,14 +97,30 @@ end
 
 local projectile_items = {
     "item",
+    "ammo",
+    "capsule",
+    "gun",
+    "item-with-entity-data",
+    "item-with-label",
+    "item-with-inventory",
+    "blueprint-book",
+    "item-with-tags",
+    "selection-tool",
+    "blueprint",
+    "copy-paste-tool",
+    "deconstruction-planner",
+    "spidertron-remote",
+    "upgrade-item",
     "module",
+    "rail-planner",
+    "space-platform-starter-pack",
     "tool",
     "armor",
-    "capsule",
-    "ammo",
+    "repair-tool",
 }
 
 for _, item_type in pairs(projectile_items) do
+    if not data.raw[item_type] then goto next end
     for _, item in pairs(data.raw[item_type]) do
         ---@type data.ProjectilePrototype
         local projectile = {
@@ -129,4 +145,5 @@ for _, item_type in pairs(projectile_items) do
         projectile.shadow.scale = 0.4
         data:extend { projectile }
     end
+    ::next::
 end
