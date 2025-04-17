@@ -202,7 +202,7 @@ end
 ---@return MapPosition
 local function random_position_in_radius(position, radius)
     local angle = math.random() * 2 * math.pi
-    local length = radius - math.random(radius / 2)
+    local length = radius * math.random() ^ 0.25
     local x = position.x + length * math.cos(angle)
     local y = position.y + length * math.sin(angle)
     return { x = x, y = y }
