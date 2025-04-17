@@ -704,6 +704,8 @@ local function deconstruct_entity(spiderbot_data)
                             local size = entity_size(entity)
                             local entity_name = entity.name
                             local entity_type = entity.type
+                            local mining_result_name = mining_result.name
+                            local entity_inventory_contents = get_inventory_contents(entity)
                             while entity.valid do
                                 if inventory.can_insert(mining_result) then
                                     local result = entity.mine {
@@ -718,7 +720,12 @@ local function deconstruct_entity(spiderbot_data)
                                     break
                                 end
                                 if count > 4 then break end
-                                create_item_projectile(spiderbot, player_entity, mining_result.name, player)
+                                create_item_projectile(spiderbot, player_entity, mining_result_name, player)
+                                for item_name, item_count in pairs(entity_inventory_contents) do
+                                    for i = 1, math.max(math.ceil(item_count * 0.75), 1) do
+                                        create_item_projectile(spiderbot, player_entity, item_name, player, math.random(5, 10) / 5)
+                                    end
+                                end
                             end
                             local sound_path = entity_name .. "-mined_sound"
                             if not helpers.is_valid_sound_path(sound_path) then
