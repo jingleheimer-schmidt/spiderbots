@@ -686,6 +686,17 @@ local function get_result_when_mined(entity)
     end
 end
 
+---@param path SoundPath
+---@param fallback SoundPath
+---@return SoundPath
+local function get_valid_sound_path(path, fallback)
+    if helpers.is_valid_sound_path(path) then
+        return path
+    else
+        return fallback
+    end
+end
+
 ---@param spiderbot_data spiderbot_data
 local function deconstruct_entity(spiderbot_data)
     local spiderbot = spiderbot_data.spiderbot
@@ -730,23 +741,21 @@ local function deconstruct_entity(spiderbot_data)
                                     end
                                 end
                             end
-                            local sound_path = entity_name .. "-mined_sound"
-                            if not helpers.is_valid_sound_path(sound_path) then
-                                sound_path = "utility/deconstruct_" .. size
-                            end
+                            local mined_sound_path = get_valid_sound_path(entity_name .. "-mined_sound", "utility/deconstruct_" .. size)
                             spiderbot.surface.play_sound {
-                                path = sound_path,
+                                path = mined_sound_path,
                                 position = entity_position,
                             }
-                            local mining_sound = entity_name .. "-mining_sound"
-                            if helpers.is_valid_sound_path(mining_sound) then
-                                spiderbot.surface.play_sound {
-                                    path = mining_sound,
-                                    position = entity_position,
-                                }
-                            elseif (entity_type == "tree") and (math.random() < 0.5) then
-                                spiderbot.surface.play_sound {
-                                    path = "utility/mining_wood",
+                            local mining_sound_path = get_valid_sound_path(entity_name .. "-mining_sound", "utility/mining_wood")
+                            if entity_type == "tree" then
+                                if math.random() < 0.5 then
+                                    spiderbot.surface.play_sound {
+                                        path = mining_sound_path,
+                                        position = entity_position,
+                                    }
+                                end
+                            else spiderbot.surface.play_sound {
+                                    path = mining_sound_path,
                                     position = entity_position,
                                 }
                             end
@@ -822,12 +831,9 @@ local function upgrade_entity(spiderbot_data)
                             local spiderbot = spiderbot_data.spiderbot
                             create_item_projectile(player_entity, spiderbot, item_with_quality.name, player)
                             create_item_projectile(spiderbot, player_entity, result_item.name, player)
-                            local sound_path = upgrade_name .. "-build_sound"
-                            if not helpers.is_valid_sound_path(sound_path) then
-                                sound_path = "utility/build_" .. get_entity_size_category(upgraded_entity)
-                            end
+                            local build_sound_path = get_valid_sound_path(upgrade_name .. "-build_sound", "utility/build_" .. get_entity_size_category(upgraded_entity))
                             upgraded_entity.surface.play_sound {
-                                path = sound_path,
+                                path = build_sound_path,
                                 position = upgraded_entity.position,
                             }
                         end
