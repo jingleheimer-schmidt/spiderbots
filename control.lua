@@ -511,7 +511,8 @@ end
 ---@param destination MapPosition|LuaEntity
 ---@param item string
 ---@param player LuaPlayer
-local function create_item_projectile(origin, destination, item, player)
+---@param speed_modifier number?
+local function create_item_projectile(origin, destination, item, player, speed_modifier)
     local origin_position = origin.position or origin
     local destination_position = destination.position or destination
     local dist = distance(origin_position, destination_position)
@@ -522,7 +523,7 @@ local function create_item_projectile(origin, destination, item, player)
         position = origin_position,
         target = destination,
         force = player.force,
-        speed = math.max(min_speed, (dist / max_time)),
+        speed = math.max(min_speed, (dist / max_time)) / (speed_modifier or 1),
     }
 end
 
