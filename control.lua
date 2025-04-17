@@ -489,7 +489,7 @@ local function oriented_spiderbot_jump(spiderbot, player)
 end
 
 ---@param entity LuaEntity
-local function free_stuck_spierbots(entity)
+local function free_stuck_spiderbots(entity)
     if not (entity and entity.valid) then return end
     local colliding_spider_legs = entity.surface.find_entities_filtered {
         type = "spider-leg",
@@ -557,9 +557,9 @@ local function build_ghost(spiderbot_data)
                         inventory.remove(item_quality_pair)
                         local spiderbot = spiderbot_data.spiderbot
                         create_item_projectile(player_entity, spiderbot, item_stack.name, player)
-                        free_stuck_spierbots(revived_entity)
+                        free_stuck_spiderbots(revived_entity)
                     else
-                        free_stuck_spierbots(entity)
+                        free_stuck_spiderbots(entity)
                     end
                 end
             end
@@ -606,7 +606,7 @@ end
 
 ---@param entity LuaEntity
 ---@return "small"|"medium"|"large"|"huge" string
-local function entity_size(entity)
+local function get_entity_size_category(entity)
     local bounding_box = entity.bounding_box
     local right_bottom = bounding_box.right_bottom
     local left_top = bounding_box.left_top
@@ -665,7 +665,7 @@ end
 
 ---@param entity LuaEntity
 ---@return ItemStackDefinition|LuaItemStack?
-local function result_when_mined(entity)
+local function get_result_when_mined(entity)
     if entity.type == "item-entity" then
         return entity.stack
     end
@@ -675,7 +675,13 @@ local function result_when_mined(entity)
     for _, product in pairs(products) do
         if product.type == "item" then
             local amount = product.amount or product.amount_max
-            return { name = product.name, count = amount, quality = entity.quality }
+            ---@type ItemStackDefinition
+            local result = {
+                name = product.name,
+                count = amount,
+                quality = entity.quality.name,
+            }
+            return result
         end
     end
 end
@@ -690,7 +696,7 @@ local function deconstruct_entity(spiderbot_data)
     if player and player.valid then
         if entity and entity.valid then
             if entity.to_be_deconstructed() then
-                local mining_result = result_when_mined(entity)
+                local mining_result = get_result_when_mined(entity)
                 local player_entity = get_player_entity(player)
                 if player_entity and player_entity.valid then
                     local inventory = get_entity_inventory(player_entity)
@@ -698,7 +704,7 @@ local function deconstruct_entity(spiderbot_data)
                         local entity_position = entity.position
                         if mining_result and inventory_has_space(inventory, mining_result) then
                             local count = 0
-                            local size = entity_size(entity)
+                            local size = get_entity_size_category(entity)
                             local entity_name = entity.name
                             local entity_type = entity.type
                             local mining_result_name = mining_result.name
@@ -795,7 +801,7 @@ local function upgrade_entity(spiderbot_data)
                         local underground_type = is_underground_belt and entity.belt_to_ground_type
                         local loader_type = is_loader and entity.loader_type
                         local create_entity_type = underground_type or loader_type or nil
-                        local result_item = result_when_mined(entity)
+                        local result_item = get_result_when_mined(entity)
                         local upgraded_entity = entity.surface.create_entity {
                             name = upgrade_name,
                             position = entity.position,
@@ -818,7 +824,7 @@ local function upgrade_entity(spiderbot_data)
                             create_item_projectile(spiderbot, player_entity, result_item.name, player)
                             local sound_path = upgrade_name .. "-build_sound"
                             if not helpers.is_valid_sound_path(sound_path) then
-                                sound_path = "utility/build_" .. entity_size(upgraded_entity)
+                                sound_path = "utility/build_" .. get_entity_size_category(upgraded_entity)
                             end
                             upgraded_entity.surface.play_sound {
                                 path = sound_path,
@@ -1277,7 +1283,7 @@ local function on_tick(event)
                 if entity.type == "fish" then goto next_entity end
                 local entity_id = entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
-                local mining_result = result_when_mined(entity)
+                local mining_result = get_result_when_mined(entity)
                 local inventory_contents = get_inventory_contents(entity)
                 local inventory_has_space_for_all_contents = mining_result and inventory_has_space(inventory, mining_result)
                 for item_name, item_count in pairs(inventory_contents) do
