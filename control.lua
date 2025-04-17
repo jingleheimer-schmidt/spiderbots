@@ -1031,9 +1031,14 @@ local function on_script_path_request_finished(event)
         local distance_from_task = distance(task_position, spiderbot.position)
         if distance_from_task > max_task_range then reset_task_data(spiderbot_id, player_index) return end
         spiderbot.autopilot_destination = nil
-        local task_type = task.task_type
-        local task_color = (task_type == "deconstruct_entity" and color.red) or (task_type == "build_ghost" and color.blue) or (task_type == "upgrade_entity" and color.green) or (task_type == "insert_items" and color.yellow) or color.white
-        spiderbot.color = task_color
+        local task_colors = {
+            deconstruct_entity = color.red,
+            build_ghost = color.blue,
+            upgrade_entity = color.green,
+            insert_items = color.yellow,
+            repair_entity = color.white,
+        }
+        spiderbot.color = task_colors[task.task_type] or color.white
         -- local previous_position = spiderbot.position
         for _, waypoint in pairs(path) do
             local waypoint_position = waypoint.position
