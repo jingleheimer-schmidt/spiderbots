@@ -625,6 +625,45 @@ local function entity_size(entity)
 end
 
 ---@param entity LuaEntity
+---@return table<string, integer>
+local function get_inventory_contents(entity)
+    local entity_inventory_contents = {}
+    for i = 1, 11 do
+        local inventory_contents = entity.get_inventory(i)
+        if inventory_contents and inventory_contents.valid then
+            for _, item in pairs(inventory_contents.get_contents()) do
+                local item_name = item.name
+                local item_count = item.count
+                entity_inventory_contents[item_name] = (entity_inventory_contents[item_name] or 0) + item_count
+            end
+        end
+    end
+    local belt_types = {
+        ["lane-splitter"] = true,
+        ["linked-belt"] = true,
+        ["loader-1x1"] = true,
+        ["loader"] = true,
+        ["splitter"] = true,
+        ["transport-belt"] = true,
+        ["underground-belt"] = true
+    }
+    if belt_types[entity.type] then
+        for i = 1, entity.get_max_transport_line_index() do
+            local transport_line = entity.get_transport_line(i)
+            if transport_line and transport_line.valid then
+                local transport_line_contents = transport_line.get_contents()
+                for _, item in pairs(transport_line_contents) do
+                    local item_name = item.name
+                    local item_count = item.count
+                    entity_inventory_contents[item_name] = (entity_inventory_contents[item_name] or 0) + item_count
+                end
+            end
+        end
+    end
+    return entity_inventory_contents
+end
+
+---@param entity LuaEntity
 ---@return ItemStackDefinition|LuaItemStack?
 local function result_when_mined(entity)
     if entity.type == "item-entity" then
