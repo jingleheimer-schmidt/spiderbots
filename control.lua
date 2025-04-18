@@ -1577,11 +1577,13 @@ local function reset_follower_count()
         storage.spiderbot_follower_count[force.name] = 10
         for _, technology in pairs(force.technologies) do
             if string.find(technology.name, "spiderbot-follower-count", 1, true) then
-                local level = tonumber(string.match(technology.name, "%d+$"))
-                local count = level * 10 + 10
-                local previous_count = storage.spiderbot_follower_count[force.name] or 0
-                if count > previous_count then
-                    storage.spiderbot_follower_count[force.name] = count
+                if technology.researched then
+                    local level = tonumber(string.match(technology.name, "%d+$"))
+                    local count = level * 10 + 10
+                    local previous_count = storage.spiderbot_follower_count[force.name] or 0
+                    if count > previous_count then
+                        storage.spiderbot_follower_count[force.name] = count
+                    end
                 end
             end
         end
