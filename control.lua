@@ -839,7 +839,9 @@ local function upgrade_entity(spiderbot_data)
                             end
                             local spiderbot = spiderbot_data.spiderbot
                             create_item_projectile(player_entity, spiderbot, item_with_quality.name, player)
-                            create_item_projectile(spiderbot, player_entity, result_item.name, player)
+                            if result_item then
+                                create_item_projectile(spiderbot, player_entity, result_item.name, player)
+                            end
                             local build_sound_path = get_valid_sound_path(upgrade_name .. "-build_sound", "utility/build_" .. get_entity_size_category(upgraded_entity))
                             upgraded_entity.surface.play_sound {
                                 path = build_sound_path,
