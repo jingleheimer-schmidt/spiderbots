@@ -262,7 +262,7 @@ local function create_spiderbot_follower_technology(level)
         type = "technology",
         name = "spiderbot-follower-count-" .. level,
         icons = util.technology_icon_constant_followers(spiderbot_technology_icon_path),
-        upgrade = level > 6,
+        upgrade = level > 1,
         enabled = true,
         essential = false,
         allows_productivity = true,
