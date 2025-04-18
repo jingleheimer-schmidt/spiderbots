@@ -211,7 +211,7 @@ end
 ---@param position MapPosition
 ---@return MapPosition
 local function get_random_position_on_tile(position)
-    local radius = math.sqrt(math.random())
+    local radius = math.sqrt(math.random()) * 0.5
     local angle = math.random() * 2 * math.pi
     local x = position.x + radius * math.cos(angle)
     local y = position.y + radius * math.sin(angle)
