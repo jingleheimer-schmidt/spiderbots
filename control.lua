@@ -1240,6 +1240,8 @@ local function on_tick(event)
         local revive_entities = nil --[[@type LuaEntity[]?]]
         local upgrade_entities = nil --[[@type LuaEntity[]?]]
         local item_proxy_entities = nil --[[@type LuaEntity[]?]]
+        local decon_tiles = nil --[[@type LuaTile[]?]]
+        local revive_tiles = nil --[[@type LuaTile[]?]]
         local decon_ordered = false
         local revive_ordered = false
         local upgrade_ordered = false
@@ -1489,6 +1491,7 @@ local function on_tick(event)
                 end
                 ::next_entity::
             end
+            if item_proxy_ordered then goto next_spiderbot end
             ::next_spiderbot::
         end
         ::next_player::
