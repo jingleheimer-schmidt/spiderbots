@@ -1,11 +1,12 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.5
 Date: ????
-  Changes:
+  Features:
     - Added technology to unlock spiderbot recipe
     - Added technology to increase spiderbot follower count
-    - Stuck spiderbots jump in the direction they're facing instead of picking a random position
     - Spiderbots throw items back and forth with the player while building and deconstructing
+  Changes:
+    - Stuck spiderbots jump in the direction they're facing instead of picking a random position
   Bugfixes:
     - Fixed that spiderbots could be assigned to deconstruct entities that contained items that would not fit in the player inventory
     - Hid spiderbot projectiles from Factoriopedia
