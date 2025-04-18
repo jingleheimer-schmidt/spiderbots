@@ -537,6 +537,15 @@ local function create_item_projectile(origin, destination, item, player, speed_m
     }
 end
 
+---@param item ItemIDAndQualityIDPair|LuaItemStack
+---@return ItemStackDefinition
+local function get_item_stack_definition(item)
+    local item_name = type(item.name) == "string" and item.name or item.name.name --[[@as string]]
+    local quality_name = type(item.quality) == "string" and item.quality or item.quality and item.quality.name or "normal" --[[@as string]]
+    local item_stack = { name = item_name, quality = quality_name }
+    return item_stack
+end
+
 ---@param spiderbot_data spiderbot_data
 local function build_ghost(spiderbot_data)
     local spiderbot_id = spiderbot_data.spiderbot_id
@@ -554,7 +563,7 @@ local function build_ghost(spiderbot_data)
                 if inventory and inventory.valid and inventory_has_item(inventory, item_quality_pair) then
                     local dictionary, revived_entity, request_proxy = entity.revive({ return_item_request_proxy = false, raise_revive = true })
                     if revived_entity then
-                        inventory.remove(item_quality_pair)
+                        inventory.remove(item_stack)
                         local spiderbot = spiderbot_data.spiderbot
                         create_item_projectile(player_entity, spiderbot, item_stack.name, player)
                         free_stuck_spiderbots(revived_entity)
@@ -824,7 +833,7 @@ local function upgrade_entity(spiderbot_data)
                             raise_built = true,
                         }
                         if upgraded_entity then
-                            inventory.remove(item_with_quality)
+                            inventory.remove(item_stack)
                             if (player.controller_type ~= defines.controllers.character) and result_item then
                                 inventory.insert(result_item)
                             end
@@ -861,7 +870,7 @@ local function insert_items(spiderbot_data)
                 local removal_plan = proxy.removal_plan
                 if removal_plan and removal_plan[1] then
                     for index, item_to_remove in pairs(removal_plan) do
-                        local item_stack = { name = item_to_remove.id.name, quality = item_to_remove.id.quality }
+                        local item_stack = get_item_stack_definition(item_to_remove.id)
                         if inventory_has_space(player_inventory, item_stack) then
                             local removal_inventories = item_to_remove.items.in_inventory
                             local removal_data = removal_inventories and removal_inventories[1]
@@ -900,7 +909,7 @@ local function insert_items(spiderbot_data)
                     proxy.removal_plan = removal_plan
                 elseif insert_plan and insert_plan[1] then
                     for index, item_to_insert in pairs(insert_plan) do
-                        local item_stack = { name = item_to_insert.id.name, quality = item_to_insert.id.quality }
+                        local item_stack = get_item_stack_definition(item_to_insert.id)
                         if inventory_has_item(player_inventory, item_stack) then
                             local insert_inventories = item_to_insert.items.in_inventory
                             local insert_data = insert_inventories and insert_inventories[1]
