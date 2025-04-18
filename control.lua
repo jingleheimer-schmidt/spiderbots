@@ -1037,7 +1037,7 @@ local function on_script_path_request_finished(event)
     if status == "path_requested" then
         local task = spiderbot_data.task
         if not (task and task.entity and task.entity.valid) then reset_task_data(spiderbot_id, player_index) return end
-        if not task.entity.surface_index == spiderbot.surface_index then reset_task_data(spiderbot_id, player_index) return end
+        if not (task.entity.surface_index == spiderbot.surface_index) then reset_task_data(spiderbot_id, player_index) return end
         local task_position = task.entity.position
         local distance_from_task = get_distance(task_position, spiderbot.position)
         if distance_from_task > max_task_range then reset_task_data(spiderbot_id, player_index) return end
