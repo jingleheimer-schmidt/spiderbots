@@ -137,7 +137,7 @@ for _, item_type in pairs(projectile_items) do
             },
             turn_speed = 5,
             rotatable = true,
-            shadow = data.raw["projectile"]["distractor-capsule"].shadow,
+            shadow = table.deepcopy(data.raw["projectile"]["distractor-capsule"].shadow),
             enable_drawing_with_mask = true,
             hidden = true,
         }
