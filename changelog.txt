@@ -1,19 +1,28 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.5
 Date: ????
+  Features:
+    - Added technology to unlock spiderbot recipe
+    - Added technology to increase spiderbot follower count
+    - Spiderbots throw items back and forth with the player while building and deconstructing
   Changes:
+    - Stuck spiderbots jump in the direction they're facing instead of picking a random position
+  Bugfixes:
+    - Fixed that spiderbots could be assigned to deconstruct entities that contained items that would not fit in the player inventory
+    - Hid spiderbot projectiles from Factoriopedia
+    - Fixed that spiderbots could get stuck in the walls of factorissimo buildings
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.4
 Date: 18NOV2024
   Changes:
-    - added inventory move sounds when spiderbots insert or remove items from entity inventories
-    - added mining and mined sounds when spiderbots deconstruct entities
-    - added support for per-prototype build, mining, mined, and inventory move sounds
-    - spiderbots can free themselves when trapped by buildings or ghosts
+    - Added inventory move sounds when spiderbots insert or remove items from entity inventories
+    - Added mining and mined sounds when spiderbots deconstruct entities
+    - Added support for per-prototype build, mining, mined, and inventory move sounds
+    - Spiderbots can free themselves when trapped by buildings or ghosts
   Bugfixes:
-    - fixed that upgraded entity results would not return to the character inventory when in remote view
-    - fixed that spiderbots would sometimes refuse to remove modules from entities
-    - fixed that thrown spiderbots did not have consistent speeds
+    - Fixed that upgraded entity results would not return to the character inventory when in remote view
+    - Fixed that spiderbots would sometimes refuse to remove modules from entities
+    - Fixed that thrown spiderbots did not have consistent speeds
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.3
 Date: 05NOV2024
