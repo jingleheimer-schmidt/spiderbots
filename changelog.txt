@@ -1,7 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.6
 Date: ????
-  Changes:
+  Bugfixes:
+    - Fixed error loading mods due to wrong sprite size definition when other mods defined non-square item icons
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.5
 Date: 2025-04-18

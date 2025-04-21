@@ -64,35 +64,35 @@ log("added sound prototypes:")
 log(serpent.block(counts))
 
 ---@param item data.ItemPrototype
----@return string[]
-local function get_item_icon_filenames(item)
-    local filenames = {}
+---@return data.RotatedAnimation
+local function create_animation_from_icon(item)
     if item.icons then
+        local animation = { layers = {} }
         for _, icon in pairs(item.icons) do
             if icon.icon then
-                table.insert(filenames, icon.icon)
+                local layer = {
+                    filename = icon.icon,
+                    width = icon.icon_size or 32,
+                    height = icon.icon_size or 32,
+                    direction_count = 1,
+                    frame_count = 1,
+                    line_length = 1,
+                    tine = icon.tint
+                }
+                table.insert(animation.layers, layer)
             end
         end
-    elseif item.icon then
-        table.insert(filenames, item.icon)
+        return animation
+    else
+        return {
+            filename = item.icon,
+            width = item.icon_size or 32,
+            height = item.icon_size or 32,
+            direction_count = 1,
+            frame_count = 1,
+            line_length = 1,
+        }
     end
-    return filenames
-end
-
----@param item data.ItemPrototype
----@return integer
-local function get_item_icon_size(item)
-    local size = 32
-    if item.icons then
-        for _, icon in pairs(item.icons) do
-            if icon.icon_size then
-                size = icon.icon_size
-            end
-        end
-    elseif item.icon_size then
-        size = item.icon_size
-    end
-    return size or 32
 end
 
 local projectile_items = {
@@ -127,14 +127,7 @@ for _, item_type in pairs(projectile_items) do
             name = item.name .. "-spiderbot-projectile",
             type = "projectile",
             acceleration = 0.001,
-            animation = {
-                direction_count = 1,
-                filenames = get_item_icon_filenames(item),
-                lines_per_file = 1,
-                line_length = 1,
-                frame_count = 1,
-                size = get_item_icon_size(item),
-            },
+            animation = create_animation_from_icon(item),
             turn_speed = 5,
             rotatable = true,
             shadow = table.deepcopy(data.raw["projectile"]["distractor-capsule"].shadow),
