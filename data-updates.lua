@@ -140,6 +140,7 @@ for _, item_type in pairs(projectile_items) do
             shadow = table.deepcopy(data.raw["projectile"]["distractor-capsule"].shadow),
             enable_drawing_with_mask = true,
             hidden = true,
+            flags = { "not-on-map", "placeable-off-grid" },
         }
         projectile.animation.scale = 0.4
         projectile.shadow.scale = 0.4
