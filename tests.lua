@@ -1,7 +1,7 @@
 
 local player = game.player
 local position = player.position
-local x_off = -10
+local x_off = -20
 local y_off = 10
 for name, _ in pairs(prototypes.item) do
     player.surface.create_entity {
@@ -13,7 +13,7 @@ for name, _ in pairs(prototypes.item) do
         orientation = 0.5
     }
     x_off = x_off + 1
-    if x_off > 20 then
+    if x_off > 40 then
         y_off = y_off + 1
         x_off = -10
     end
