@@ -21,3 +21,4 @@ local function spawn_all_projectiles()
         end
     end
 end
+spawn_all_projectiles()
