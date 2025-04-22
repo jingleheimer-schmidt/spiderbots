@@ -72,8 +72,8 @@ local function create_animation_from_icon(item)
             if icon.icon then
                 local layer = {
                     filename = icon.icon,
-                    width = icon.icon_size or 32,
-                    height = icon.icon_size or 32,
+                    width = icon.icon_size or 64,
+                    height = icon.icon_size or 64,
                     direction_count = 1,
                     frame_count = 1,
                     line_length = 1,
@@ -86,8 +86,8 @@ local function create_animation_from_icon(item)
     else
         return {
             filename = item.icon,
-            width = item.icon_size or 32,
-            height = item.icon_size or 32,
+            width = item.icon_size or 64,
+            height = item.icon_size or 64,
             direction_count = 1,
             frame_count = 1,
             line_length = 1,
