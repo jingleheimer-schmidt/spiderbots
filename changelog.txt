@@ -3,6 +3,7 @@ Version: 0.2.6
 Date: ????
   Bugfixes:
     - Fixed error loading mods due to wrong sprite size definition when other mods defined non-square item icons
+    - Fixed the little spiderbot in the mod description did not displaying correctly when the mod is not enabled
   Locale:
     - Updated Russian (ru) locale from Crowdin
     - Updated Ukrainian (uk) locale from Crowdin
