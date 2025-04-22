@@ -77,7 +77,7 @@ local function create_animation_from_icon(item)
                     direction_count = 1,
                     frame_count = 1,
                     line_length = 1,
-                    tine = icon.tint
+                    tint = icon.tint,
                     scale = 0.4,
                 }
                 table.insert(animation.layers, layer)
