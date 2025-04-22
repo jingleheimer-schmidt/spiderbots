@@ -67,32 +67,36 @@ log(serpent.block(sound_counts))
 ---@return data.RotatedAnimation
 local function create_animation_from_icon(item)
     if item.icons then
+        ---@type data.RotatedAnimation
         local animation = { layers = {} }
         for _, icon in pairs(item.icons) do
             if icon.icon then
+                local size = icon.icon_size or 64
+                ---@type data.RotatedAnimation
                 local layer = {
                     filename = icon.icon,
-                    width = icon.icon_size or 64,
-                    height = icon.icon_size or 64,
+                    width = size,
+                    height = size,
                     direction_count = 1,
                     frame_count = 1,
                     line_length = 1,
                     tint = icon.tint,
-                    scale = 0.2,
+                    scale = (icon.scale or (64 / 2 / size)) * 0.6,
                 }
                 table.insert(animation.layers, layer)
             end
         end
         return animation
     else
+        local size = item.icon_size or 64
         return {
             filename = item.icon,
-            width = item.icon_size or 64,
-            height = item.icon_size or 64,
+            width = size,
+            height = size,
             direction_count = 1,
             frame_count = 1,
             line_length = 1,
-            scale = 0.4,
+            scale = 64 / 2 / size * 0.6,
         }
     end
 end
