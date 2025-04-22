@@ -7,7 +7,7 @@ Date: ????
   Bugfixes:
     - Fixed error loading mods due to wrong sprite size definition when other mods defined non-square item icons
     - Fixed improper sprite scaling for projectiles with layered item icons
-    - Fixed the little spiderbot in the mod description did not displaying correctly when the mod is not enabled
+    - Fixed the little spiderbot in the mod description not displaying correctly when the mod is not enabled
     - Added hidden optional dependency on Maraxsis to ensure that its data-final-fixes items can be turned into projectiles too
   Locale:
     - Updated Russian (ru) locale from Crowdin
