@@ -110,7 +110,7 @@ local projectile_items = {
     "selection-tool",
     "blueprint",
     "copy-paste-tool",
-    "deconstruction-planner",
+    "deconstruction-item",
     "spidertron-remote",
     "upgrade-item",
     "module",
