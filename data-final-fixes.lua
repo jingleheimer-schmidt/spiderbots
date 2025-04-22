@@ -1,5 +1,5 @@
 
-local counts = {
+local sound_counts = {
     mined_sound = 0,
     inventory_move_sound = 0,
     mining_sound = 0,
@@ -14,7 +14,7 @@ local function create_sound(prototype, sound_type)
             variations = prototype[sound_type],
         }
         data:extend { sound }
-        counts[sound_type] = counts[sound_type] + 1
+        sound_counts[sound_type] = sound_counts[sound_type] + 1
     else
         ---@type data.SoundPrototype
         local sound = {
@@ -40,7 +40,7 @@ local function create_sound(prototype, sound_type)
             modifiers = prototype[sound_type].modifiers,
         }
         data:extend { sound }
-        counts[sound_type] = counts[sound_type] + 1
+        sound_counts[sound_type] = sound_counts[sound_type] + 1
     end
 end
 
@@ -61,7 +61,7 @@ for _, prototypes in pairs(data.raw) do
 end
 
 log("added sound prototypes:")
-log(serpent.block(counts))
+log(serpent.block(sound_counts))
 
 ---@param item data.ItemPrototype
 ---@return data.RotatedAnimation
@@ -78,7 +78,7 @@ local function create_animation_from_icon(item)
                     frame_count = 1,
                     line_length = 1,
                     tint = icon.tint,
-                    scale = 0.4,
+                    scale = 0.2,
                 }
                 table.insert(animation.layers, layer)
             end
@@ -121,6 +121,8 @@ local projectile_items = {
     "repair-tool",
 }
 
+local projectile_counts = {}
+
 for _, item_type in pairs(projectile_items) do
     if not data.raw[item_type] then goto next end
     for _, item in pairs(data.raw[item_type]) do
@@ -139,6 +141,17 @@ for _, item_type in pairs(projectile_items) do
         }
         projectile.shadow.scale = 0.4
         data:extend { projectile }
+        projectile_counts[item_type] = (projectile_counts[item_type] or 0) + 1
     end
     ::next::
 end
+
+log("added projectile prototypes:")
+local projectile_counts_to_print = {}
+for _, item_type in pairs(projectile_items) do
+    if projectile_counts[item_type] then
+        local str = item_type .. ": " .. projectile_counts[item_type] .. " / " .. table_size(data.raw[item_type])
+        table.insert(projectile_counts_to_print, str)
+    end
+end
+log(serpent.block(projectile_counts_to_print))
