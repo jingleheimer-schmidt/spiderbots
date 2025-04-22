@@ -78,6 +78,7 @@ local function create_animation_from_icon(item)
                     frame_count = 1,
                     line_length = 1,
                     tine = icon.tint
+                    scale = 0.4,
                 }
                 table.insert(animation.layers, layer)
             end
@@ -91,6 +92,7 @@ local function create_animation_from_icon(item)
             direction_count = 1,
             frame_count = 1,
             line_length = 1,
+            scale = 0.4,
         }
     end
 end
@@ -135,7 +137,6 @@ for _, item_type in pairs(projectile_items) do
             hidden = true,
             flags = { "not-on-map", "placeable-off-grid" },
         }
-        projectile.animation.scale = 0.4
         projectile.shadow.scale = 0.4
         data:extend { projectile }
     end
