@@ -2,6 +2,16 @@
 Version: 0.2.6
 Date: ????
   Changes:
+    - Changed item projectiles to be placeable off grid
+    - Moved item projectile and build/move sound prototype creation from data-updates to data-final-fixes to increase compatibility with other mods
+  Bugfixes:
+    - Fixed error loading mods due to wrong sprite size definition when other mods defined non-square item icons
+    - Fixed improper sprite scaling for projectiles with layered item icons
+    - Fixed the little spiderbot in the mod description not displaying correctly when the mod is not enabled
+    - Added hidden optional dependency on Maraxsis to ensure that its data-final-fixes items can be turned into projectiles too
+  Locale:
+    - Updated Russian (ru) locale from Crowdin
+    - Updated Ukrainian (uk) locale from Crowdin
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.5
 Date: 2025-04-18

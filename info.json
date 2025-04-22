@@ -5,7 +5,8 @@
 	"description": "Adds loyal prototype spidertrons that follow you around. They can deconstruct nearby orders, build blueprints, and perform upgrades using your inventory.\nSpiderbots are a basic alternative to early construction mods such as Nanobots and Companion Drones.\nDeploy / Recall: Alt + S",
 	"author": "asher_sky",
 	"dependencies": [
-		"base"
+		"base",
+		"(?) maraxsis"
 	],
 	"factorio_version": "2.0",
 	"package": {

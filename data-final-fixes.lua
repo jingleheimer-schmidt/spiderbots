@@ -1,5 +1,5 @@
 
-local counts = {
+local sound_counts = {
     mined_sound = 0,
     inventory_move_sound = 0,
     mining_sound = 0,
@@ -14,7 +14,7 @@ local function create_sound(prototype, sound_type)
             variations = prototype[sound_type],
         }
         data:extend { sound }
-        counts[sound_type] = counts[sound_type] + 1
+        sound_counts[sound_type] = sound_counts[sound_type] + 1
     else
         ---@type data.SoundPrototype
         local sound = {
@@ -40,7 +40,7 @@ local function create_sound(prototype, sound_type)
             modifiers = prototype[sound_type].modifiers,
         }
         data:extend { sound }
-        counts[sound_type] = counts[sound_type] + 1
+        sound_counts[sound_type] = sound_counts[sound_type] + 1
     end
 end
 
@@ -61,38 +61,44 @@ for _, prototypes in pairs(data.raw) do
 end
 
 log("added sound prototypes:")
-log(serpent.block(counts))
+log(serpent.block(sound_counts))
 
 ---@param item data.ItemPrototype
----@return string[]
-local function get_item_icon_filenames(item)
-    local filenames = {}
+---@return data.RotatedAnimation
+local function create_animation_from_icon(item)
     if item.icons then
+        ---@type data.RotatedAnimation
+        local animation = { layers = {} }
         for _, icon in pairs(item.icons) do
             if icon.icon then
-                table.insert(filenames, icon.icon)
+                local size = icon.icon_size or 64
+                ---@type data.RotatedAnimation
+                local layer = {
+                    filename = icon.icon,
+                    width = size,
+                    height = size,
+                    direction_count = 1,
+                    frame_count = 1,
+                    line_length = 1,
+                    tint = icon.tint,
+                    scale = (icon.scale or (64 / 2 / size)) * 0.6,
+                }
+                table.insert(animation.layers, layer)
             end
         end
-    elseif item.icon then
-        table.insert(filenames, item.icon)
+        return animation
+    else
+        local size = item.icon_size or 64
+        return {
+            filename = item.icon,
+            width = size,
+            height = size,
+            direction_count = 1,
+            frame_count = 1,
+            line_length = 1,
+            scale = 64 / 2 / size * 0.6,
+        }
     end
-    return filenames
-end
-
----@param item data.ItemPrototype
----@return integer
-local function get_item_icon_size(item)
-    local size = 32
-    if item.icons then
-        for _, icon in pairs(item.icons) do
-            if icon.icon_size then
-                size = icon.icon_size
-            end
-        end
-    elseif item.icon_size then
-        size = item.icon_size
-    end
-    return size or 32
 end
 
 local projectile_items = {
@@ -108,7 +114,7 @@ local projectile_items = {
     "selection-tool",
     "blueprint",
     "copy-paste-tool",
-    "deconstruction-planner",
+    "deconstruction-item",
     "spidertron-remote",
     "upgrade-item",
     "module",
@@ -119,6 +125,8 @@ local projectile_items = {
     "repair-tool",
 }
 
+local projectile_counts = {}
+
 for _, item_type in pairs(projectile_items) do
     if not data.raw[item_type] then goto next end
     for _, item in pairs(data.raw[item_type]) do
@@ -127,23 +135,30 @@ for _, item_type in pairs(projectile_items) do
             name = item.name .. "-spiderbot-projectile",
             type = "projectile",
             acceleration = 0.001,
-            animation = {
-                direction_count = 1,
-                filenames = get_item_icon_filenames(item),
-                lines_per_file = 1,
-                line_length = 1,
-                frame_count = 1,
-                size = get_item_icon_size(item),
-            },
+            animation = create_animation_from_icon(item),
             turn_speed = 5,
             rotatable = true,
             shadow = table.deepcopy(data.raw["projectile"]["distractor-capsule"].shadow),
             enable_drawing_with_mask = true,
             hidden = true,
+            flags = { "not-on-map", "placeable-off-grid" },
         }
-        projectile.animation.scale = 0.4
         projectile.shadow.scale = 0.4
+        projectile.icon = table.deepcopy(item.icon)
+        projectile.icon_size = table.deepcopy(item.icon_size)
+        projectile.icons = table.deepcopy(item.icons)
         data:extend { projectile }
+        projectile_counts[item_type] = (projectile_counts[item_type] or 0) + 1
     end
     ::next::
 end
+
+log("added projectile prototypes:")
+local projectile_counts_to_print = {}
+for _, item_type in pairs(projectile_items) do
+    if projectile_counts[item_type] then
+        local str = item_type .. ": " .. projectile_counts[item_type] .. " / " .. table_size(data.raw[item_type])
+        table.insert(projectile_counts_to_print, str)
+    end
+end
+log(serpent.block(projectile_counts_to_print))
