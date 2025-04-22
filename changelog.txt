@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.6
-Date: ????
+Date: 2025-04-22
   Changes:
     - Changed item projectiles to be placeable off grid
     - Moved item projectile and build/move sound prototype creation from data-updates to data-final-fixes to increase compatibility with other mods
