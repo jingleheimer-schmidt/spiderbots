@@ -144,6 +144,9 @@ for _, item_type in pairs(projectile_items) do
             flags = { "not-on-map", "placeable-off-grid" },
         }
         projectile.shadow.scale = 0.4
+        projectile.icon = table.deepcopy(item.icon)
+        projectile.icon_size = table.deepcopy(item.icon_size)
+        projectile.icons = table.deepcopy(item.icons)
         data:extend { projectile }
         projectile_counts[item_type] = (projectile_counts[item_type] or 0) + 1
     end
