@@ -406,6 +406,7 @@ local function request_path(spiderbot, entity)
             -- cliff = true,
             -- is_lower_object = true,
             -- is_object = true
+            spiderbot_leg = true,
         },
         not_colliding_with_itself = true,
         consider_tile_transitions = false,
@@ -425,9 +426,9 @@ local function request_path(spiderbot, entity)
         start = spiderbot.position,
         goal = goal,
         force = spiderbot.force,
-        radius = math.max(x, y),
+        radius = math.min(x, y) / 3,
         can_open_gates = true,
-        path_resolution_modifier = -1,
+        path_resolution_modifier = 0,
         pathfind_flags = path_to_entity_flags,
         max_gap_size = 1,
     }
