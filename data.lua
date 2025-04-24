@@ -1,4 +1,3 @@
-
 local sound_probability = 0.125
 local sound_volume = 1
 
@@ -37,7 +36,11 @@ local spiderbot_leg_collision_layer = {
 }
 data:extend { spiderbot_leg_collision_layer }
 
----@param spider_leg_specification data.SpiderLegSpecification
+---Modifies the properties and collision behavior of a spider leg prototype for the spiderbot entity.
+---@param spider_leg_specification data.SpiderLegSpecification Specification of the spider leg to modify.
+--
+-- Adjusts hit-the-ground trigger properties, sets localized name, disables walking sound, updates working sound probability,
+-- and configures a custom collision mask to control leg interactions with the environment. Also increases the minimal step size for leg movement.
 local function modify_spider_legs(spider_leg_specification)
     for _, trigger in pairs(spider_leg_specification.leg_hit_the_ground_trigger) do
         trigger.repeat_count = 1

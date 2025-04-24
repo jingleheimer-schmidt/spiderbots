@@ -1,4 +1,3 @@
-
 local constants = require("util/constants")
 local max_task_range = constants.max_task_range
 local half_max_task_range = constants.half_max_task_range
@@ -377,7 +376,10 @@ end
 
 ---@param spiderbot LuaEntity
 ---@param entity LuaEntity
----@return integer
+---Requests a path for a spiderbot to reach a target entity, considering spiderbot leg collisions and entity size.
+---@param spiderbot LuaEntity The spiderbot entity requesting the path.
+---@param entity LuaEntity The target entity to pathfind to.
+---@return integer The unique path request ID assigned by the surface.
 local function request_path(spiderbot, entity)
     local spider_leg_bounding_box = { { -0.01, -0.01 }, { 0.01, 0.01 } }
     -- just use the player collision layer, so the spiderbots can path through anything the player can walk through. even though they can't walk through ghosts, they can still path through them and try to fit their legs around them
