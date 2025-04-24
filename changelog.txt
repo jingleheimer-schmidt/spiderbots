@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.7
-Date: ????
+Date: 2025-04-24
   Changes:
     - Removed spiderbot collision with ghost tiles
     - Improved spiderbot pathfinding around large objects and ghosts
