@@ -162,3 +162,11 @@ for _, item_type in pairs(projectile_items) do
     end
 end
 log(serpent.block(projectile_counts_to_print))
+
+local collision_mask_util = require("collision-mask-util")
+
+for name, entity_ghost in pairs(data.raw["entity-ghost"]) do
+    entity_ghost.collision_mask = entity_ghost.collision_mask or collision_mask_util.get_mask(entity_ghost)
+    entity_ghost.collision_mask.layers = entity_ghost.collision_mask.layers or {}
+    entity_ghost.collision_mask.layers["spiderbot_leg"] = true
+end

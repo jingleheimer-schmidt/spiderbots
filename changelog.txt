@@ -2,6 +2,7 @@
 Version: 0.2.7
 Date: ????
   Changes:
+    - Removed spiderbot collision with ghost tiles
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.6
 Date: 2025-04-22
