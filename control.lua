@@ -1056,6 +1056,41 @@ local function on_script_path_request_finished(event)
             local waypoint_position = waypoint.position
             spiderbot.add_autopilot_destination(waypoint_position)
             -- previous_position = waypoint_position
+            rendering.draw_circle {
+                color = task_colors[task.task_type] or color.white,
+                radius = 0.1,
+                filled = true,
+                target = waypoint_position,
+                surface = spiderbot.surface,
+                players = { player },
+                only_in_alt_mode = true,
+                time_to_live = 60 * 5,
+            }
+            if path[_ - 1] then
+                rendering.draw_line {
+                    color = task_colors[task.task_type] or color.white,
+                    width = 0.1,
+                    from = path[_ - 1].position,
+                    to = waypoint_position,
+                    surface = spiderbot.surface,
+                    players = { player },
+                    only_in_alt_mode = true,
+                    time_to_live = 60 * 5,
+                }
+                local distance = get_distance(path[_ - 1].position, waypoint_position)
+                if distance > 1 then
+                    local int, num = math.modf(distance)
+                    rendering.draw_text {
+                        color = color.white,
+                        text = string.format("%.2f", distance),
+                        target = { x = (path[_ - 1].position.x + waypoint_position.x) / 2, y = (path[_ - 1].position.y + waypoint_position.y) / 2 },
+                        surface = spiderbot.surface,
+                        players = { player },
+                        only_in_alt_mode = true,
+                        time_to_live = 60 * 5,
+                    }
+                end
+            end
         end
         spiderbot_data.status = "task_assigned"
         spiderbot_data.path_request_id = nil
