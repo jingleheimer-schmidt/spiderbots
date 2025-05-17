@@ -529,13 +529,21 @@ local function create_item_projectile(origin, destination, item, player, speed_m
     local dist = get_distance(origin_position, destination_position)
     local max_time = 20
     local min_speed = 0.3
-    player.surface.create_entity {
-        name = item .. "-spiderbot-projectile",
-        position = get_random_position_on_tile(origin_position),
-        target = destination,
-        force = player.force,
-        speed = math.max(min_speed, (dist / max_time)) / (speed_modifier or 1),
-    }
+    if prototypes.entity[item .. "-spiderbot-projectile"] then
+        player.physical_surface.create_entity {
+            name = item .. "-spiderbot-projectile",
+            position = get_random_position_on_tile(origin_position),
+            target = destination,
+            force = player.force,
+            speed = math.max(min_speed, (dist / max_time)) / (speed_modifier or 1),
+        }
+    else
+        local history = prototypes.get_history("item", item)
+        local mod_name = history and history.created or "unknown mod"
+        mod_name = "[color=orange][Mod: " .. mod_name .. "][/color]"
+        local item_tag = prototypes.item[item] and "[item=" .. item .. "]" or item
+        player.print({ "error-message.no-projectile", item_tag, mod_name }, { sound_path = "utility/alert_destroyed" })
+    end
 end
 
 ---@param item ItemIDAndQualityIDPair|LuaItemStack

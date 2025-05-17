@@ -2,6 +2,14 @@
 Version: 0.2.8
 Date: ????
   Changes:
+    - Removed photoshop files from distribution
+    - Added console message alert for missing projectiles instead of causing a non-recoverable error
+    - Added hidden optional dependency on Tiny Machines, Micro Machines, and Tiny Assemblers mods to ensure that their data-final-fixes items can be turned into projectiles
+  Bugfixes:
+    - Fixed error when items are thrown while the player is viewing a different surface
+  Locale:
+    - Updated Russian (ru) locale from Crowdin
+    - Updated Ukrainian (uk) locale from Crowdin
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.7
 Date: 2025-04-24
