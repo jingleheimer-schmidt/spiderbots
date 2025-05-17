@@ -530,7 +530,7 @@ local function create_item_projectile(origin, destination, item, player, speed_m
     local max_time = 20
     local min_speed = 0.3
     if prototypes.entity[item .. "-spiderbot-projectile"] then
-        player.surface.create_entity {
+        player.physical_surface.create_entity {
             name = item .. "-spiderbot-projectile",
             position = get_random_position_on_tile(origin_position),
             target = destination,
