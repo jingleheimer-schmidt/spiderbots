@@ -2,6 +2,7 @@
 Version: 0.2.8
 Date: ????
   Changes:
+    - Removed photoshop files from distribution
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.7
 Date: 2025-04-24

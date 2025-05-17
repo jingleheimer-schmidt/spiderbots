@@ -1,3 +1,4 @@
+
 {
 	"name": "spiderbots",
 	"version": "0.2.8",
@@ -11,6 +12,9 @@
 	"factorio_version": "2.0",
 	"package": {
 		"readme": "README.md",
-		"sync_portal_details": true
+		"sync_portal_details": true,
+		"ignore": [
+			"**/*.psd"
+		]
 	}
 }
