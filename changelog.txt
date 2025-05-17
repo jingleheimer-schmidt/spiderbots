@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.8
-Date: ????
+Date: 2025-05-17
   Changes:
     - Removed photoshop files from distribution
     - Added console message alert for missing projectiles instead of causing a non-recoverable error
