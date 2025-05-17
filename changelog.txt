@@ -3,8 +3,8 @@ Version: 0.2.8
 Date: ????
   Changes:
     - Removed photoshop files from distribution
-    - Added hidden optional dependency on Tiny Machines, Micro Machines, and Tiny Assemblers mods
     - Added console message alert for missing projectiles instead of causing a non-recoverable error
+    - Added hidden optional dependency on Tiny Machines, Micro Machines, and Tiny Assemblers mods to ensure that their data-final-fixes items can be turned into projectiles
   Bugfixes:
     - Fixed error when items are thrown while the player is viewing a different surface
   Locale:
