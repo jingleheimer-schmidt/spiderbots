@@ -540,11 +540,9 @@ local function create_item_projectile(origin, destination, item, player, speed_m
     else
         local history = prototypes.get_history("item", item)
         local mod_name = history and history.created or "unknown mod"
-        local localised_name = prototypes.item[item] and prototypes.item[item].localised_name or item
-        player.print(
-            { "", "Missing projectile for ", localised_name, " [", mod_name, "]. Please make a report on the Spiderbots Discussion page." },
-            { color = color.white, skip = defines.print_skip.if_visible, sound = defines.print_sound.never }
-        )
+        mod_name = "[color=orange][Mod: " .. mod_name .. "][/color]"
+        local item_tag = prototypes.item[item] and "[item=" .. item .. "]" or item
+        player.print({ "error-message.no-projectile", item_tag, mod_name }, { sound_path = "utility/alert_destroyed" })
     end
 end
 
