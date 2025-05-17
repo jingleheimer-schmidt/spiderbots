@@ -529,13 +529,23 @@ local function create_item_projectile(origin, destination, item, player, speed_m
     local dist = get_distance(origin_position, destination_position)
     local max_time = 20
     local min_speed = 0.3
-    player.surface.create_entity {
-        name = item .. "-spiderbot-projectile",
-        position = get_random_position_on_tile(origin_position),
-        target = destination,
-        force = player.force,
-        speed = math.max(min_speed, (dist / max_time)) / (speed_modifier or 1),
-    }
+    if prototypes.entity[item .. "-spiderbot-projectile"] then
+        player.surface.create_entity {
+            name = item .. "-spiderbot-projectile",
+            position = get_random_position_on_tile(origin_position),
+            target = destination,
+            force = player.force,
+            speed = math.max(min_speed, (dist / max_time)) / (speed_modifier or 1),
+        }
+    else
+        local history = prototypes.get_history("item", item)
+        local mod_name = history and history.created or "unknown mod"
+        local localised_name = prototypes.item[item] and prototypes.item[item].localised_name or item
+        player.print(
+            { "", "Missing projectile for ", localised_name, " [", mod_name, "]. Please make a report on the Spiderbots Discussion page." },
+            { color = color.white, skip = defines.print_skip.if_visible, sound = defines.print_sound.never }
+        )
+    end
 end
 
 ---@param item ItemIDAndQualityIDPair|LuaItemStack
