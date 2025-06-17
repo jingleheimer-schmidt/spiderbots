@@ -1018,29 +1018,26 @@ local function build_tile(spiderbot_data)
     local spiderbot_id = spiderbot_data.spiderbot_id
     local player = spiderbot_data.player
     local player_index = spiderbot_data.player_index
-    local tile = spiderbot_data.task.tile
-    if player and player.valid and tile and tile.valid then
-        if tile.has_tile_ghost() then
-            local player_entity = get_player_entity(player)
-            if player_entity and player_entity.valid then
-                local inventory = get_entity_inventory(player_entity)
-                if inventory and inventory.valid then
-                    local ghost = tile.get_tile_ghosts()[1]
-                    local tile_prototype = ghost and ghost.ghost_prototype
-                    local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
-                    if items_to_place_this and items_to_place_this[1] then
-                        local item_stack = items_to_place_this[1]
-                        if inventory_has_item(inventory, item_stack) then
-                            local dictionary, revived_tile, request_proxy = ghost.revive({ return_item_request_proxy = false, raise_revive = true })
-                            inventory.remove(item_stack)
-                            local spiderbot = spiderbot_data.spiderbot
-                            create_item_projectile(player_entity, spiderbot, item_stack.name, player)
-                            local build_sound_path = get_valid_sound_path(tile_prototype.name .. "-build_sound", "utility/build_small")
-                            tile.surface.play_sound {
-                                path = build_sound_path,
-                                position = tile.position,
-                            }
-                        end
+    local ghost = spiderbot_data.task.entity
+    if player and player.valid and ghost and ghost.valid then
+        local player_entity = get_player_entity(player)
+        if player_entity and player_entity.valid then
+            local inventory = get_entity_inventory(player_entity)
+            if inventory and inventory.valid then
+                local tile_prototype = ghost and ghost.ghost_prototype
+                local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
+                if items_to_place_this and items_to_place_this[1] then
+                    local item_stack = items_to_place_this[1]
+                    if inventory_has_item(inventory, item_stack) then
+                        local dictionary, revived_tile, request_proxy = ghost.revive({ return_item_request_proxy = false, raise_revive = true })
+                        inventory.remove(item_stack)
+                        local spiderbot = spiderbot_data.spiderbot
+                        create_item_projectile(player_entity, spiderbot, item_stack.name, player)
+                        local build_sound_path = get_valid_sound_path(tile_prototype.name .. "-build_sound", "utility/build_small")
+                        spiderbot.surface.play_sound {
+                            path = build_sound_path,
+                            position = spiderbot.position,
+                        }
                     end
                 end
             end
@@ -1341,7 +1338,7 @@ local function on_tick(event)
         local upgrade_entities = nil --[[@type LuaEntity[]?]]
         local item_proxy_entities = nil --[[@type LuaEntity[]?]]
         local decon_tiles = nil --[[@type LuaTile[]?]]
-        local revive_tiles = nil --[[@type LuaTile[]?]]
+        local revive_tiles = nil --[[@type LuaEntity[]?]]
         local decon_ordered = false
         local revive_ordered = false
         local upgrade_ordered = false
@@ -1594,7 +1591,7 @@ local function on_tick(event)
                 ::next_entity::
             end
             if item_proxy_ordered then goto next_spiderbot end
-            decon_tiles = surface.find_tiles_filtered {
+            decon_tiles = decon_tiles or surface.find_tiles_filtered {
                 area = area,
                 force = player_force,
                 to_be_deconstructed = true,
@@ -1643,40 +1640,38 @@ local function on_tick(event)
                 ::next_tile::
             end
             if decon_tiles_ordered then goto next_spiderbot end
-            revive_tiles = surface.find_tiles_filtered {
+            revive_tiles = revive_tiles or surface.find_entities_filtered {
                 area = area,
                 force = player_force,
-                has_tile_ghost = true,
+                type = "tile-ghost",
             }
             -- process the tile revive tasks and assign available spiderbots to them
             while (#revive_tiles > 0 and spiders_dispatched < max_spiders_dispatched) do
-                local tile = table.remove(revive_tiles, math.random(1, #revive_tiles)) --[[@type LuaTile]]
-                if not (tile and tile.valid) then goto next_tile end
-                local tile_position = tile.position
+                local tile_ghost = table.remove(revive_tiles, math.random(1, #revive_tiles)) --[[@type LuaEntity]]
+                if not (tile_ghost and tile_ghost.valid) then goto next_tile end
+                local tile_position = tile_ghost.position
                 local distance_to_task = get_distance(tile_position, spiderbot.position)
                 if not (distance_to_task < double_max_task_range) then goto next_tile end
-                local tile_id = get_tile_uuid(tile)
-                if is_task_assigned(tile_id) then goto next_tile end
-                local ghost = tile.get_tile_ghosts()[1]
-                local tile_prototype = ghost and ghost.ghost_prototype
+                local ghost_id = get_entity_uuid(tile_ghost)
+                if is_task_assigned(ghost_id) then goto next_tile end
+                local tile_prototype = tile_ghost.ghost_prototype
                 local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
                 if items_to_place_this and items_to_place_this[1] then
                     local item_stack = items_to_place_this[1]
                     if inventory_has_item(inventory, item_stack) then
                         spiderbot_data.task = {
                             task_type = "build_tile",
-                            task_id = tile_id,
-                            tile = tile,
+                            task_id = ghost_id,
+                            entity = tile_ghost,
                         }
                         spiderbot_data.status = "path_requested"
-                        spiderbot_data.path_request_id = request_path(spiderbot, tile)
+                        spiderbot_data.path_request_id = request_path(spiderbot, tile_ghost)
                         spiders_dispatched = spiders_dispatched + 1
                         revive_tiles_ordered = true
                         goto next_spiderbot
                     else
-                        for index, found_tile in pairs(revive_tiles) do
-                            local found_ghost = found_tile.get_tile_ghosts()[1]
-                            if found_ghost.ghost_name == ghost.ghost_name then
+                        for index, found_tile_ghost in pairs(revive_tiles) do
+                            if found_tile_ghost.ghost_name == tile_ghost.ghost_name then
                                 table.remove(revive_tiles, index)
                             end
                         end
