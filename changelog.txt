@@ -2,6 +2,8 @@
 Version: 0.2.9
 Date: ????
   Changes:
+  Bugfixes:
+    - Fixed that spiderbots could be included in blueprints
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.8
 Date: 2025-05-17

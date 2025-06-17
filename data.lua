@@ -25,6 +25,8 @@ spiderbot_prototype.chunk_exploration_radius = 1
 spiderbot_prototype.minable.mining_time = spiderbot_prototype.minable.mining_time / 4
 spiderbot_prototype.working_sound.probability = 1 / 4
 spiderbot_prototype.minimap_representation.scale = 0.125
+spiderbot_prototype.flags = spiderbot_prototype.flags or {}
+table.insert(spiderbot_prototype.flags, "not-blueprintable")
 local lights = spiderbot_prototype.graphics_set.light or {}
 for _, light in pairs(lights) do
     light.intensity = light.intensity / 2.5
