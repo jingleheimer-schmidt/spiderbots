@@ -1005,6 +1005,7 @@ local function deconstruct_tile(spiderbot_data)
                         }
                         local spiderbot = spiderbot_data.spiderbot
                         create_item_projectile(spiderbot, player_entity, products[1].name, player)
+                        player.clear_local_flying_texts()
                     end
                 end
             end
