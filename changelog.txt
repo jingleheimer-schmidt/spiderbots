@@ -1,6 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.9
 Date: ????
+  Features:
+    - Added ability to build and mine tiles
   Changes:
   Bugfixes:
     - Fixed that spiderbots could be included in blueprints

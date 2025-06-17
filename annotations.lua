@@ -10,7 +10,7 @@
 -- -@field render_ids table<integer, boolean>
 -- -@field path_request_id integer?
 
----@alias uuid integer
+---@alias uuid integer | string
 ---@alias player_index integer
 
 -- -@class path_request_data
@@ -39,5 +39,6 @@
 
 ---@class task_data
 ---@field task_type string
----@field entity LuaEntity
----@field entity_id uuid
+---@field task_id uuid
+---@field entity LuaEntity?
+---@field tile LuaTile?

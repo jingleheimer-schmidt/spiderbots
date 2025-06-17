@@ -4,6 +4,7 @@ local max_task_range = constants.max_task_range
 local half_max_task_range = constants.half_max_task_range
 local double_max_task_range = constants.double_max_task_range
 local allowed_controllers = constants.allowed_controllers
+local tile_bounding_box = constants.tile_bounding_box
 
 local color_util = require("util/colors")
 local color = color_util.color
@@ -55,6 +56,14 @@ local function get_entity_uuid(entity)
     else
         return registration_number
     end
+end
+
+---@param tile LuaTile
+---@return string
+local function get_tile_uuid(tile)
+    local position = tile.position
+    local surface = tile.surface.name
+    return string.format("tile_%s_%d_%d", surface, position.x, position.y)
 end
 
 -- register a spiderbot. saves spiderbot data to storage. updates the color, label, and follow target
@@ -376,7 +385,7 @@ local function get_spiderbot_data(spiderbot_id, path_request_id)
 end
 
 ---@param spiderbot LuaEntity
----@param entity LuaEntity
+---@param entity LuaEntity | LuaTile
 ---@return integer
 local function request_path(spiderbot, entity)
     local spider_leg_bounding_box = { { -0.01, -0.01 }, { 0.01, 0.01 } }
@@ -413,7 +422,7 @@ local function request_path(spiderbot, entity)
         colliding_with_tiles_only = false,
     }
     local path_to_entity_flags = { cache = false, low_priority = true }
-    local bounding_box = entity.bounding_box
+    local bounding_box = entity.object_name == "LuaEntity" and entity.bounding_box or tile_bounding_box
     local right_bottom = bounding_box.right_bottom
     local left_top = bounding_box.left_top
     local x = math.abs(right_bottom.x - left_top.x)
@@ -489,12 +498,12 @@ local function perform_directional_jump(spiderbot, player)
     spiderbot.destroy({ raise_destroy = true })
 end
 
----@param entity LuaEntity
+---@param entity LuaEntity | LuaTile
 local function free_stuck_spiderbots(entity)
     if not (entity and entity.valid) then return end
     local colliding_spider_legs = entity.surface.find_entities_filtered {
         type = "spider-leg",
-        area = entity.bounding_box
+        area = entity.object_name == "LuaEntity" and entity.bounding_box or tile_bounding_box,
     }
     for _, colliding_leg in pairs(colliding_spider_legs) do
         if colliding_leg.valid then
@@ -614,7 +623,7 @@ local function find_nearby_cliff_to_deconstruct(spiderbot_data)
         local data = storage.spiderbots[spiderbot_data.player_index][spiderbot_data.spiderbot_id]
         data.task = {
             task_type = "deconstruct_entity",
-            entity_id = get_entity_uuid(cliff),
+            task_id = get_entity_uuid(cliff),
             entity = cliff,
         }
         data.status = "path_requested"
@@ -796,7 +805,7 @@ local function deconstruct_entity(spiderbot_data)
                     end
                 end
             end
-        elseif spiderbot_data.task.entity_id == 0 then
+        elseif spiderbot_data.task.task_id == 0 then
             find_nearby_cliff_to_deconstruct(spiderbot_data)
             return
         end
@@ -966,6 +975,81 @@ local function insert_items(spiderbot_data)
 end
 
 ---@param spiderbot_data spiderbot_data
+local function deconstruct_tile(spiderbot_data)
+    local spiderbot_id = spiderbot_data.spiderbot_id
+    local player = spiderbot_data.player
+    local player_index = spiderbot_data.player_index
+    local tile = spiderbot_data.task.tile
+    if player and player.valid and tile and tile.valid then
+        if tile.to_be_deconstructed() then
+            local player_entity = get_player_entity(player)
+            if player_entity and player_entity.valid then
+                local inventory = get_entity_inventory(player_entity)
+                if inventory and inventory.valid then
+                    local tile_prototype = tile.prototype
+                    local mineable_properties = tile_prototype.mineable_properties
+                    local products = mineable_properties.products
+                    local can_insert = true
+                    for _, product in pairs(products) do
+                        if not inventory_has_space(inventory, product) then
+                            can_insert = false
+                            break
+                        end
+                    end
+                    if can_insert then
+                        player.mine_tile(tile)
+                        local mined_sound = get_valid_sound_path(tile_prototype.name .. "-mined_sound", "utility/deconstruct_small")
+                        tile.surface.play_sound {
+                            path = mined_sound,
+                            position = tile.position,
+                        }
+                        local spiderbot = spiderbot_data.spiderbot
+                        create_item_projectile(spiderbot, player_entity, products[1].name, player)
+                    end
+                end
+            end
+        end
+    end
+    reset_task_data(spiderbot_id, player_index)
+end
+
+---@param spiderbot_data spiderbot_data
+local function build_tile(spiderbot_data)
+    local spiderbot_id = spiderbot_data.spiderbot_id
+    local player = spiderbot_data.player
+    local player_index = spiderbot_data.player_index
+    local tile = spiderbot_data.task.tile
+    if player and player.valid and tile and tile.valid then
+        if tile.has_tile_ghost() then
+            local player_entity = get_player_entity(player)
+            if player_entity and player_entity.valid then
+                local inventory = get_entity_inventory(player_entity)
+                if inventory and inventory.valid then
+                    local ghost = tile.get_tile_ghosts()[1]
+                    local tile_prototype = ghost and ghost.ghost_prototype
+                    local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
+                    if items_to_place_this and items_to_place_this[1] then
+                        local item_stack = items_to_place_this[1]
+                        if inventory_has_item(inventory, item_stack) then
+                            local dictionary, revived_tile, request_proxy = ghost.revive({ return_item_request_proxy = false, raise_revive = true })
+                            inventory.remove(item_stack)
+                            local spiderbot = spiderbot_data.spiderbot
+                            create_item_projectile(player_entity, spiderbot, item_stack.name, player)
+                            local build_sound_path = get_valid_sound_path(tile_prototype.name .. "-build_sound", "utility/build_small")
+                            tile.surface.play_sound {
+                                path = build_sound_path,
+                                position = tile.position,
+                            }
+                        end
+                    end
+                end
+            end
+        end
+    end
+    reset_task_data(spiderbot_id, player_index)
+end
+
+---@param spiderbot_data spiderbot_data
 local function complete_task(spiderbot_data)
     local type = spiderbot_data.task.task_type
     if type == "build_ghost" then
@@ -977,6 +1061,10 @@ local function complete_task(spiderbot_data)
     elseif type == "insert_items" then
         insert_items(spiderbot_data)
     elseif type == "repair_entity" then
+    elseif type == "deconstruct_tile" then
+        deconstruct_tile(spiderbot_data)
+    elseif type == "build_tile" then
+        build_tile(spiderbot_data)
     end
 end
 
@@ -1012,7 +1100,7 @@ local function on_spider_command_completed(event)
                     local task = spiderbot_data.task
                     if task and task.entity then
                         local task_entity = task.entity
-                        local task_position = task_entity.valid and task_entity.position
+                        local task_position = task_entity and task_entity.valid and task_entity.position
                         if task_position then
                             local distance_from_task = get_distance(task_position, player_entity.position)
                             if distance_from_task > (double_max_task_range) then
@@ -1045,9 +1133,10 @@ local function on_script_path_request_finished(event)
     local status = spiderbot_data.status
     if status == "path_requested" then
         local task = spiderbot_data.task
-        if not (task and task.entity and task.entity.valid) then reset_task_data(spiderbot_id, player_index) return end
-        if not (task.entity.surface_index == spiderbot.surface_index) then reset_task_data(spiderbot_id, player_index) return end
-        local task_position = task.entity.position
+        local target = task and (task.entity or task.tile)
+        if not (target and target.valid) then reset_task_data(spiderbot_id, player_index) return end
+        if not (target.surface.index == spiderbot.surface_index) then reset_task_data(spiderbot_id, player_index) return end
+        local task_position = target.position
         local distance_from_task = get_distance(task_position, spiderbot.position)
         if distance_from_task > max_task_range then reset_task_data(spiderbot_id, player_index) return end
         spiderbot.autopilot_destination = nil
@@ -1057,6 +1146,8 @@ local function on_script_path_request_finished(event)
             upgrade_entity = color.green,
             insert_items = color.yellow,
             repair_entity = color.white,
+            deconstruct_tile = color.red,
+            build_tile = color.blue,
         }
         spiderbot.color = task_colors[task.task_type] or color.white
         -- local previous_position = spiderbot.position
@@ -1122,13 +1213,13 @@ end
 
 script.on_event(defines.events.on_player_cursor_stack_changed, on_player_cursor_stack_changed)
 
----@param entity_id uuid
+---@param task_id uuid
 ---@return boolean
-local function is_task_assigned(entity_id)
+local function is_task_assigned(task_id)
     for player_index, spiderbots in pairs(storage.spiderbots) do
         for spider_id, spiderbot_data in pairs(spiderbots) do
             local task = spiderbot_data.task
-            if task and (task.entity_id == entity_id) then
+            if task and (task.task_id == task_id) then
                 return true
             end
         end
@@ -1255,6 +1346,8 @@ local function on_tick(event)
         local revive_ordered = false
         local upgrade_ordered = false
         local item_proxy_ordered = false
+        local decon_tiles_ordered = false
+        local revive_tiles_ordered = false
         local max_spiders_dispatched = 9
         local spiders_dispatched = 0
         for spiderbot_id, spiderbot_data in random_pairs(spiderbots) do
@@ -1331,7 +1424,7 @@ local function on_tick(event)
                     if distance_to_task < double_max_task_range then
                         spiderbot_data.task = {
                             task_type = "deconstruct_entity",
-                            entity_id = entity_id,
+                            task_id = entity_id,
                             entity = entity,
                         }
                         spiderbot_data.status = "path_requested"
@@ -1347,7 +1440,7 @@ local function on_tick(event)
                     if distance_to_task < double_max_task_range then
                         spiderbot_data.task = {
                             task_type = "deconstruct_entity",
-                            entity_id = entity_id,
+                            task_id = entity_id,
                             entity = entity,
                         }
                         spiderbot_data.status = "path_requested"
@@ -1388,7 +1481,7 @@ local function on_tick(event)
                         if distance_to_task < double_max_task_range then
                             spiderbot_data.task = {
                                 task_type = "build_ghost",
-                                entity_id = entity_id,
+                                task_id = entity_id,
                                 entity = entity,
                             }
                             spiderbot_data.status = "path_requested"
@@ -1436,7 +1529,7 @@ local function on_tick(event)
                         if distance_to_task < double_max_task_range then
                             spiderbot_data.task = {
                                 task_type = "upgrade_entity",
-                                entity_id = entity_id,
+                                task_id = entity_id,
                                 entity = entity,
                             }
                             spiderbot_data.status = "path_requested"
@@ -1484,7 +1577,7 @@ local function on_tick(event)
                             if distance_to_task < double_max_task_range then
                                 spiderbot_data.task = {
                                     task_type = "insert_items",
-                                    entity_id = entity_id,
+                                    task_id = entity_id,
                                     entity = entity,
                                 }
                                 spiderbot_data.status = "path_requested"
@@ -1501,6 +1594,97 @@ local function on_tick(event)
                 ::next_entity::
             end
             if item_proxy_ordered then goto next_spiderbot end
+            decon_tiles = surface.find_tiles_filtered {
+                area = area,
+                force = player_force,
+                to_be_deconstructed = true,
+            }
+            -- process the tile deconstruction tasks and assign available spiderbots to them
+            while (#decon_tiles > 0 and spiders_dispatched < max_spiders_dispatched) do
+                local tile = table.remove(decon_tiles, math.random(1, #decon_tiles)) --[[@type LuaTile]]
+                if not (tile and tile.valid) then goto next_tile end
+                local tile_position = tile.position
+                local distance_to_task = get_distance(tile_position, spiderbot.position)
+                if not (distance_to_task < double_max_task_range) then goto next_tile end
+                local tile_id = get_tile_uuid(tile)
+                if is_task_assigned(tile_id) then goto next_tile end
+                local tile_prototype = tile.prototype
+                local mineable_properties = tile_prototype.mineable_properties
+                if mineable_properties and mineable_properties.products then
+                    local products = mineable_properties.products
+                    local inventory_has_space_for_all_products = true
+                    for _, product in pairs(products) do
+                        local count = product.amount or product.amount_max or 0
+                        local item_stack = { name = product.name, count = count }
+                        if not inventory_has_space(inventory, item_stack) then
+                            inventory_has_space_for_all_products = false
+                            break
+                        end
+                    end
+                    if inventory_has_space_for_all_products then
+                        spiderbot_data.task = {
+                            task_type = "deconstruct_tile",
+                            task_id = tile_id,
+                            tile = tile,
+                        }
+                        spiderbot_data.status = "path_requested"
+                        spiderbot_data.path_request_id = request_path(spiderbot, tile)
+                        spiders_dispatched = spiders_dispatched + 1
+                        decon_tiles_ordered = true
+                        goto next_spiderbot
+                    else
+                        for index, found_tile in pairs(decon_tiles) do
+                            if found_tile.name == tile.name then
+                                table.remove(decon_tiles, index)
+                            end
+                        end
+                    end
+                end
+                ::next_tile::
+            end
+            if decon_tiles_ordered then goto next_spiderbot end
+            revive_tiles = surface.find_tiles_filtered {
+                area = area,
+                force = player_force,
+                has_tile_ghost = true,
+            }
+            -- process the tile revive tasks and assign available spiderbots to them
+            while (#revive_tiles > 0 and spiders_dispatched < max_spiders_dispatched) do
+                local tile = table.remove(revive_tiles, math.random(1, #revive_tiles)) --[[@type LuaTile]]
+                if not (tile and tile.valid) then goto next_tile end
+                local tile_position = tile.position
+                local distance_to_task = get_distance(tile_position, spiderbot.position)
+                if not (distance_to_task < double_max_task_range) then goto next_tile end
+                local tile_id = get_tile_uuid(tile)
+                if is_task_assigned(tile_id) then goto next_tile end
+                local ghost = tile.get_tile_ghosts()[1]
+                local tile_prototype = ghost and ghost.ghost_prototype
+                local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
+                if items_to_place_this and items_to_place_this[1] then
+                    local item_stack = items_to_place_this[1]
+                    if inventory_has_item(inventory, item_stack) then
+                        spiderbot_data.task = {
+                            task_type = "build_tile",
+                            task_id = tile_id,
+                            tile = tile,
+                        }
+                        spiderbot_data.status = "path_requested"
+                        spiderbot_data.path_request_id = request_path(spiderbot, tile)
+                        spiders_dispatched = spiders_dispatched + 1
+                        revive_tiles_ordered = true
+                        goto next_spiderbot
+                    else
+                        for index, found_tile in pairs(revive_tiles) do
+                            local found_ghost = found_tile.get_tile_ghosts()[1]
+                            if found_ghost.ghost_name == ghost.ghost_name then
+                                table.remove(revive_tiles, index)
+                            end
+                        end
+                    end
+                end
+                ::next_tile::
+            end
+            if revive_tiles_ordered then goto next_spiderbot end
             ::next_spiderbot::
         end
         ::next_player::
