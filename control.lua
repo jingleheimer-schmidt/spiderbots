@@ -997,15 +997,17 @@ local function deconstruct_tile(spiderbot_data)
                         end
                     end
                     if can_insert then
-                        player_entity.mine_tile(tile)
-                        local mined_sound = get_valid_sound_path(tile_prototype.name .. "-mined_sound", "utility/deconstruct_small")
-                        tile.surface.play_sound {
-                            path = mined_sound,
-                            position = tile.position,
-                        }
-                        local spiderbot = spiderbot_data.spiderbot
-                        create_item_projectile(spiderbot, player_entity, products[1].name, player)
-                        player.clear_local_flying_texts()
+                        local success = player_entity.mine_tile(tile)
+                        if success then
+                            local mined_sound = get_valid_sound_path(tile_prototype.name .. "-mined_sound", "utility/deconstruct_small")
+                            tile.surface.play_sound {
+                                path = mined_sound,
+                                position = tile.position,
+                            }
+                            local spiderbot = spiderbot_data.spiderbot
+                            create_item_projectile(spiderbot, player_entity, products[1].name, player)
+                            player.clear_local_flying_texts()
+                        end
                     end
                 end
             end
