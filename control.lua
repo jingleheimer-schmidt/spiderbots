@@ -1146,6 +1146,7 @@ local function on_script_path_request_finished(event)
     local status = spiderbot_data.status
     if status == "path_requested" then
         local task = spiderbot_data.task
+        if not task then reset_task_data(spiderbot_id, player_index) return end
         local target = task and (task.entity or task.tile)
         if not (target and target.valid) then reset_task_data(spiderbot_id, player_index) return end
         if not (target.surface.index == spiderbot.surface_index) then reset_task_data(spiderbot_id, player_index) return end
