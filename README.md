@@ -8,7 +8,7 @@ This mod adds little spiders that crawl around and fulfill nearby work orders
 
 About:
 - Spiderbots are small, early-game prototype Spidertrons with basic construction abilities.
-- Using your inventory, spiderbots help build, upgrade, and deconstruct nearby machines (and tiles!).
+- Spiderbots can build, upgrade, and deconstruct nearby machines and tiles using your inventory.
 - Throw a Spiderbot capsule at the ground to deploy it (or press **Alt + S** to launch all of them from your inventory).
 - Press **Alt + S** again to recall deployed spiderbots back to your inventory.
 - Spiderbots follow the player who deployed them, even while driving vehicles or traveling across planets.
@@ -24,7 +24,7 @@ Technology:
 ---------------------
 ## Companion Mods
 Spiderbots is a companion mod to:
-- [Little Spiders](https://mods.factorio.com/mod/little-spiders) - Renames spiderbots to "little spiders"
+- [Little Spiders](https://mods.factorio.com/mod/little-spiders) - Renames spiderbots to "Little spiders"
 - [Sentient Spiders](https://mods.factorio.com/mod/sentient_spiders) - Idle spidertrons wander around the factory
 
 ---------------------
