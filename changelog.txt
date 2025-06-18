@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.1
-Date: ????
+Date: 2025-06-18
   Changes:
     - Tile tasks may be abandoned if the player moves too far away
   Bugfixes:
