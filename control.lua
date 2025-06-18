@@ -1561,7 +1561,7 @@ local function on_tick(event)
                 local entity_id = get_entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
                 local proxy_target = entity.proxy_target
-                if proxy_target then
+                if proxy_target and not proxy_target.to_be_upgraded() then
                     local insert_plan = entity.insert_plan
                     local removal_plan = entity.removal_plan
                     local plan_type = (removal_plan[1] and "remove") or (insert_plan[1] and "insert") or nil
