@@ -429,13 +429,14 @@ local function request_path(spiderbot, entity)
     local y = math.abs(right_bottom.y - left_top.y)
     local non_colliding_position = spiderbot.surface.find_non_colliding_position("spiderbot-leg-1", entity.position, 25, 0.5)
     local goal = non_colliding_position or entity.position
+    ---@type LuaSurface.request_path_param
     local request_parameters = {
         bounding_box = spider_leg_bounding_box,
         collision_mask = spider_leg_collision_mask,
         start = spiderbot.position,
         goal = goal,
         force = spiderbot.force,
-        radius = math.min(x, y) / 3,
+        radius = ((entity.object_name == "LuaEntity") and math.min(x, y) / 3) or 2,
         can_open_gates = true,
         path_resolution_modifier = 0,
         pathfind_flags = path_to_entity_flags,
