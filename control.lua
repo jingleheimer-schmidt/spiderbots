@@ -1334,6 +1334,7 @@ local function on_tick(event)
             { character_position_x - half_max_task_range, character_position_y - half_max_task_range },
             { character_position_x + half_max_task_range, character_position_y + half_max_task_range },
         }
+        local revive_landfill = nil --[[@type LuaEntity[]?]]
         local decon_entities = nil --[[@type LuaEntity[]?]]
         local revive_entities = nil --[[@type LuaEntity[]?]]
         local upgrade_entities = nil --[[@type LuaEntity[]?]]
@@ -1395,6 +1396,48 @@ local function on_tick(event)
             if not (status == "idle") then goto next_spiderbot end
             -- if the max number of spiders have been dispatched, go to the next player
             if spiders_dispatched > max_spiders_dispatched then goto next_player end
+            revive_landfill = revive_landfill or surface.find_entities_filtered {
+                area = area,
+                force = player_force,
+                type = "tile-ghost",
+                -- ghost_type = "tile",
+                -- ghost_name = storage.foundation_tile_names,
+            }
+            while (#revive_landfill > 0 and spiders_dispatched < max_spiders_dispatched) do
+                local tile_ghost = table.remove(revive_landfill, math.random(1, #revive_landfill)) --[[@type LuaEntity]]
+                if not (tile_ghost and tile_ghost.valid) then goto next_tile end
+                if not storage.foundation_tile_names[tile_ghost.ghost_name] then goto next_tile end
+                local tile_position = tile_ghost.position
+                local distance_to_task = get_distance(tile_position, spiderbot.position)
+                if not (distance_to_task < double_max_task_range) then goto next_tile end
+                local ghost_id = get_entity_uuid(tile_ghost)
+                if is_task_assigned(ghost_id) then goto next_tile end
+                local tile_prototype = tile_ghost.ghost_prototype
+                local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
+                if items_to_place_this and items_to_place_this[1] then
+                    local item_stack = items_to_place_this[1]
+                    if inventory_has_item(inventory, item_stack) then
+                        spiderbot_data.task = {
+                            task_type = "build_tile",
+                            task_id = ghost_id,
+                            entity = tile_ghost,
+                        }
+                        spiderbot_data.status = "path_requested"
+                        spiderbot_data.path_request_id = request_path(spiderbot, tile_ghost)
+                        spiders_dispatched = spiders_dispatched + 1
+                        revive_tiles_ordered = true
+                        goto next_spiderbot
+                    else
+                        for index, found_tile_ghost in pairs(revive_landfill) do
+                            if found_tile_ghost.ghost_name == tile_ghost.ghost_name then
+                                table.remove(revive_landfill, index)
+                            end
+                        end
+                    end
+                end
+                ::next_tile::
+            end
+            if revive_tiles_ordered then goto next_spiderbot end
             decon_entities = decon_entities or surface.find_entities_filtered {
                 area = area,
                 force = player_force,
