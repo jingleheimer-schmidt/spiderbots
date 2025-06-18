@@ -2,6 +2,7 @@
 Version: 0.3.1
 Date: ????
   Changes:
+    - Tile tasks may be abandoned if the player moves too far away
   Bugfixes:
     - Fixed error when relinking spiderbots to a player when spiderbots were assigned to tile tasks
 ---------------------------------------------------------------------------------------------------
