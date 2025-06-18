@@ -1,7 +1,16 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.9
 Date: ????
+  Features:
+    - Added ability to build and mine tiles
   Changes:
+    - Spiderbots are no longer allowed to be included in blueprints
+  Bugfixes:
+    - Fixed error when inserting modules into entities that were marked for upgrade to an entity with more module slots than the current entity. Spiderbots will now wait until the entity is upgraded before inserting modules.
+    - Fixed that entity ghosts and upgrades with qualities other than "normal" would be built from normal quality items
+  Locale:
+    - Updated Russian (ru) locale from Crowdin
+    - Updated Ukrainian (uk) locale from Crowdin
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.8
 Date: 2025-05-17
