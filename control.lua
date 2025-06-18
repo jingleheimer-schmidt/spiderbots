@@ -247,7 +247,8 @@ local function relink_following_spiderbots(player)
                     spiderbot.follow_target = player_entity
                 elseif spiderbot_data.status == "task_assigned" then
                     local task = spiderbot_data.task
-                    if not (task and task.entity.valid) then
+                    local target = task and (task.entity or task.tile)
+                    if not (task and target and target.valid) then
                         reset_task_data(spider_id, player_index)
                     else
                         local destinations = spiderbot.autopilot_destinations
