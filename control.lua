@@ -227,6 +227,12 @@ local function get_random_position_on_tile(position)
     return { x = x, y = y }
 end
 
+---@param task task_data?
+---@return LuaEntity|LuaTile?
+local function get_task_target(task)
+    return task and (task.entity or task.tile) or nil
+end
+
 ---@param player LuaPlayer
 local function relink_following_spiderbots(player)
     if not (player and player.valid) then return end
@@ -247,7 +253,7 @@ local function relink_following_spiderbots(player)
                     spiderbot.follow_target = player_entity
                 elseif spiderbot_data.status == "task_assigned" then
                     local task = spiderbot_data.task
-                    local target = task and (task.entity or task.tile)
+                    local target = get_task_target(task)
                     if not (task and target and target.valid) then
                         reset_task_data(spider_id, player_index)
                     else
@@ -1112,9 +1118,9 @@ local function on_spider_command_completed(event)
                     if not (player_entity and player_entity.valid) then reset_task_data(spiderbot_id, player_index) return end
                     -- if the player is too far away from the task position, abandon the task and follow the player
                     local task = spiderbot_data.task
-                    if task and (task.entity or task.tile) then
-                        local task_entity = task.entity or task.tile
-                        local task_position = task_entity and task_entity.valid and task_entity.position
+                    local task_target = get_task_target(task)
+                    if task_target then
+                        local task_position = task_target.valid and task_target.position
                         if task_position then
                             local distance_from_task = get_distance(task_position, player_entity.position)
                             if distance_from_task > (double_max_task_range) then
@@ -1148,7 +1154,7 @@ local function on_script_path_request_finished(event)
     if status == "path_requested" then
         local task = spiderbot_data.task
         if not task then reset_task_data(spiderbot_id, player_index) return end
-        local target = task and (task.entity or task.tile)
+        local target = get_task_target(task)
         if not (target and target.valid) then reset_task_data(spiderbot_id, player_index) return end
         if not (target.surface.index == spiderbot.surface_index) then reset_task_data(spiderbot_id, player_index) return end
         local task_position = target.position
