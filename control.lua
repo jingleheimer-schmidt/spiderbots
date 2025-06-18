@@ -1014,6 +1014,14 @@ local function deconstruct_tile(spiderbot_data)
     reset_task_data(spiderbot_id, player_index)
 end
 
+---@param event EventData.script_raised_set_tiles
+local function script_raised_set_tiles(event)
+    if storage.tile_built == false then
+        storage.tile_built = true
+    end
+end
+script.on_event(defines.events.script_raised_set_tiles, script_raised_set_tiles)
+
 ---@param spiderbot_data spiderbot_data
 local function build_tile(spiderbot_data)
     local spiderbot_id = spiderbot_data.spiderbot_id
@@ -1030,15 +1038,19 @@ local function build_tile(spiderbot_data)
                 if items_to_place_this and items_to_place_this[1] then
                     local item_stack = items_to_place_this[1]
                     if inventory_has_item(inventory, item_stack) then
-                        local dictionary, revived_tile, request_proxy = ghost.revive({ return_item_request_proxy = false, raise_revive = true })
-                        inventory.remove(item_stack)
-                        local spiderbot = spiderbot_data.spiderbot
-                        create_item_projectile(player_entity, spiderbot, item_stack.name, player)
-                        local build_sound_path = get_valid_sound_path(tile_prototype.name .. "-build_sound", "utility/build_small")
-                        spiderbot.surface.play_sound {
-                            path = build_sound_path,
-                            position = spiderbot.position,
-                        }
+                        storage.tile_built = false
+                        ghost.revive({ raise_revive = true })
+                        if storage.tile_built then
+                            inventory.remove(item_stack)
+                            local spiderbot = spiderbot_data.spiderbot
+                            create_item_projectile(player_entity, spiderbot, item_stack.name, player)
+                            local build_sound_path = get_valid_sound_path(tile_prototype.name .. "-build_sound", "utility/build_small")
+                            spiderbot.surface.play_sound {
+                                path = build_sound_path,
+                                position = spiderbot.position,
+                            }
+                        end
+                        storage.tile_built = nil
                     end
                 end
             end
