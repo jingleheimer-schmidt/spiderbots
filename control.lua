@@ -1415,8 +1415,6 @@ local function on_tick(event)
                 area = area,
                 force = player_force,
                 type = "tile-ghost",
-                -- ghost_type = "tile",
-                -- ghost_name = storage.foundation_tile_names,
             }
             while (#revive_landfill > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local tile_ghost = table.remove(revive_landfill, math.random(1, #revive_landfill)) --[[@type LuaEntity]]
@@ -1816,6 +1814,14 @@ local function setup_storage()
     storage.spider_leg_collision_mask = prototypes.entity["spiderbot-leg-1"].collision_mask
     --[[@type table<player_index, LuaRenderObject[]>]]
     storage.render_objects = storage.render_objects or {}
+
+    -- gather the names of all tiles that can be used as foundations
+    storage.foundation_tile_names = {}
+    for name, tile in pairs(prototypes.tile) do
+        if tile.is_foundation then
+            storage.foundation_tile_names[name] = true
+        end
+    end
 end
 
 local function reset_follower_count()
