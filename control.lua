@@ -581,7 +581,7 @@ local function build_ghost(spiderbot_data)
                 if inventory and inventory.valid and inventory_has_item(inventory, item_quality_pair) then
                     local dictionary, revived_entity, request_proxy = entity.revive({ return_item_request_proxy = false, raise_revive = true })
                     if revived_entity then
-                        inventory.remove(item_stack)
+                        inventory.remove { name = item_stack.name, count = item_stack.count, quality = item_quality_pair.quality }
                         local spiderbot = spiderbot_data.spiderbot
                         create_item_projectile(player_entity, spiderbot, item_stack.name, player)
                         free_stuck_spiderbots(revived_entity)
@@ -851,7 +851,7 @@ local function upgrade_entity(spiderbot_data)
                             raise_built = true,
                         }
                         if upgraded_entity then
-                            inventory.remove(item_stack)
+                            inventory.remove { name = item_stack.name, count = item_stack.count, quality = quality_prototype }
                             if (player.controller_type ~= defines.controllers.character) and result_item then
                                 inventory.insert(result_item)
                             end

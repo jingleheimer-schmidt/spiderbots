@@ -7,6 +7,7 @@ Date: ????
   Bugfixes:
     - Fixed that spiderbots could be included in blueprints
     - Fixed error when inserting modules into entities that were marked for upgrade to an entity with more module slots than the current entity. Spiderbots will now wait until the entity is upgraded before inserting modules.
+    - Fixed that entity ghosts and upgrades with qualities other than "normal" would be built from normal quality items
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.8
 Date: 2025-05-17
