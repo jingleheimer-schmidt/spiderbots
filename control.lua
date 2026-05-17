@@ -1107,6 +1107,12 @@ local function on_spider_command_completed(event)
         local spiderbot_id = get_entity_uuid(spiderbot)
         local spiderbot_data = get_spiderbot_data(spiderbot_id)
         if spiderbot_data then
+            local player = spiderbot_data.player
+            if player and player.valid then
+                local player_entity = get_player_entity(player)
+                if not (player_entity and player_entity.valid) then reset_task_data(spiderbot_id, spiderbot_data.player_index) return end
+                if not (player_entity.surface.index == spiderbot.surface_index) then reset_task_data(spiderbot_id, spiderbot_data.player_index) return end
+            end
             local status = spiderbot_data.status
             if status == "task_assigned" then
                 complete_task(spiderbot_data)
@@ -1129,9 +1135,10 @@ local function on_spider_command_completed(event)
         if task_type and construction_tasks[task_type] then
             if task and task.projectile_item then
                 local player = spiderbot_data and spiderbot_data.player
-                if player and player.valid then
+                if spiderbot_data and player and player.valid then
                     local character = get_player_entity(player)
                     if character and character.valid then
+                        if not (character.surface_index == spiderbot.surface_index) then reset_task_data(spiderbot_id, spiderbot_data.player_index) return end
                         create_item_projectile(character, spiderbot, task.projectile_item, player)
                         task.projectile_item = nil
                     end
@@ -1146,7 +1153,7 @@ local function on_spider_command_completed(event)
             if spiderbot_data then
                 local player = spiderbot_data.player
                 local player_index = spiderbot_data.player_index
-                if player.valid then
+                if player and player.valid then
                     -- if the player doesn't have a valid character anymore, reset the task data and attempt to follow the player
                     local player_entity = get_player_entity(player)
                     if not (player_entity and player_entity.valid) then reset_task_data(spiderbot_id, player_index) return end
