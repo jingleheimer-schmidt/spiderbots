@@ -591,7 +591,7 @@ local function build_ghost(spiderbot_data)
                     if revived_entity then
                         inventory.remove { name = item_stack.name, count = item_stack.count, quality = item_quality_pair.quality }
                         local spiderbot = spiderbot_data.spiderbot
-                        create_item_projectile(player_entity, spiderbot, item_stack.name, player)
+                        create_item_projectile(spiderbot, revived_entity, item_stack.name, player)
                         free_stuck_spiderbots(revived_entity)
                     else
                         free_stuck_spiderbots(entity)
@@ -633,6 +633,7 @@ local function find_nearby_cliff_to_deconstruct(spiderbot_data)
             task_type = "deconstruct_entity",
             task_id = get_entity_uuid(cliff),
             entity = cliff,
+            projectile_item = "cliff-explosives",
         }
         data.status = "path_requested"
         data.path_request_id = request_path(spiderbot_data.spiderbot, cliff)
@@ -807,7 +808,7 @@ local function deconstruct_entity(spiderbot_data)
                                     speed = 0.0125,
                                 }
                                 inventory.remove({ name = "cliff-explosives", count = 1, quality = quality })
-                                create_item_projectile(player_entity, spiderbot, "cliff-explosives", player)
+                                -- create_item_projectile(player_entity, spiderbot, "cliff-explosives", player)
                             end
                         end
                     end
@@ -864,7 +865,7 @@ local function upgrade_entity(spiderbot_data)
                                 inventory.insert(result_item)
                             end
                             local spiderbot = spiderbot_data.spiderbot
-                            create_item_projectile(player_entity, spiderbot, item_with_quality.name, player)
+                            create_item_projectile(spiderbot, upgraded_entity, item_with_quality.name, player)
                             if result_item then
                                 create_item_projectile(spiderbot, player_entity, result_item.name, player)
                             end
@@ -1048,12 +1049,13 @@ local function build_tile(spiderbot_data)
                 if items_to_place_this and items_to_place_this[1] then
                     local item_stack = items_to_place_this[1]
                     if inventory_has_item(inventory, item_stack) then
+                        local tile_position = ghost.position
                         storage.tile_built = false
                         ghost.revive({ raise_revive = true })
                         if storage.tile_built then
                             inventory.remove(item_stack)
                             local spiderbot = spiderbot_data.spiderbot
-                            create_item_projectile(player_entity, spiderbot, item_stack.name, player)
+                            create_item_projectile(spiderbot, tile_position, item_stack.name, player)
                             local build_sound_path = get_valid_sound_path(tile_prototype.name .. "-build_sound", "utility/build_small")
                             spiderbot.surface.play_sound {
                                 path = build_sound_path,
@@ -1102,6 +1104,32 @@ local function on_spider_command_completed(event)
             local status = spiderbot_data.status
             if status == "task_assigned" then
                 complete_task(spiderbot_data)
+            end
+        end
+    elseif destination_count < 5 then
+        local spiderbot_id = get_entity_uuid(spiderbot)
+        local spiderbot_data = get_spiderbot_data(spiderbot_id)
+        local task = spiderbot_data and spiderbot_data.task
+        local task_type = task and task.task_type
+        local construction_tasks = {
+            build_ghost = true,
+            deconstruct_entity = false,
+            upgrade_entity = true,
+            insert_items = false,
+            repair_entity = false,
+            deconstruct_tile = false,
+            build_tile = true,
+        }
+        if task_type and construction_tasks[task_type] then
+            if task and task.projectile_item then
+                local player = spiderbot_data and spiderbot_data.player
+                if player and player.valid then
+                    local character = get_player_entity(player)
+                    if character and character.valid then
+                        create_item_projectile(character, spiderbot, task.projectile_item, player)
+                        task.projectile_item = nil
+                    end
+                end
             end
         end
     else
@@ -1442,6 +1470,7 @@ local function on_tick(event)
                             task_type = "build_tile",
                             task_id = ghost_id,
                             entity = tile_ghost,
+                            projectile_item = item_stack.name,
                         }
                         spiderbot_data.status = "path_requested"
                         spiderbot_data.path_request_id = request_path(spiderbot, tile_ghost)
@@ -1488,6 +1517,7 @@ local function on_tick(event)
                             task_type = "deconstruct_entity",
                             task_id = entity_id,
                             entity = entity,
+                            projectile_item = mining_result and mining_result.name,
                         }
                         spiderbot_data.status = "path_requested"
                         spiderbot_data.path_request_id = request_path(spiderbot, entity)
@@ -1504,6 +1534,7 @@ local function on_tick(event)
                             task_type = "deconstruct_entity",
                             task_id = entity_id,
                             entity = entity,
+                            projectile_item = "cliff-explosives",
                         }
                         spiderbot_data.status = "path_requested"
                         spiderbot_data.path_request_id = request_path(spiderbot, entity)
@@ -1545,6 +1576,7 @@ local function on_tick(event)
                                 task_type = "build_ghost",
                                 task_id = entity_id,
                                 entity = entity,
+                                projectile_item = item_stack.name,
                             }
                             spiderbot_data.status = "path_requested"
                             spiderbot_data.path_request_id = request_path(spiderbot, entity)
@@ -1593,6 +1625,7 @@ local function on_tick(event)
                                 task_type = "upgrade_entity",
                                 task_id = entity_id,
                                 entity = entity,
+                                projectile_item = item_stack.name,
                             }
                             spiderbot_data.status = "path_requested"
                             spiderbot_data.path_request_id = request_path(spiderbot, entity)
@@ -1641,6 +1674,7 @@ local function on_tick(event)
                                     task_type = "insert_items",
                                     task_id = entity_id,
                                     entity = entity,
+                                    projectile_item = item_quality_pair.name,
                                 }
                                 spiderbot_data.status = "path_requested"
                                 spiderbot_data.path_request_id = request_path(spiderbot, entity)
@@ -1728,6 +1762,7 @@ local function on_tick(event)
                             task_type = "build_tile",
                             task_id = ghost_id,
                             entity = tile_ghost,
+                            projectile_item = item_stack.name,
                         }
                         spiderbot_data.status = "path_requested"
                         spiderbot_data.path_request_id = request_path(spiderbot, tile_ghost)
