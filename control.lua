@@ -1447,6 +1447,12 @@ local function on_tick(event)
             if not (status == "idle") then goto next_spiderbot end
             -- if the max number of spiders have been dispatched, go to the next player
             if spiders_dispatched > max_spiders_dispatched then goto next_player end
+            decon_ordered = false
+            revive_ordered = false
+            upgrade_ordered = false
+            item_proxy_ordered = false
+            decon_tiles_ordered = false
+            revive_tiles_ordered = false
             revive_landfill = revive_landfill or surface.find_entities_filtered {
                 area = area,
                 force = player_force,

@@ -3,6 +3,8 @@ Version: 0.3.2
 Date: ????
   Changes:
     - Item projectiles are now throw from the player to the spiderbot, and then from the spiderbot to the target position.
+  Bugfixes:
+    - Fixed spiderbot task assignment only dispatching one spiderbot per pass for tile ghost tasks
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.1
 Date: 2025-06-18
