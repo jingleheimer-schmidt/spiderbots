@@ -6,6 +6,7 @@ Date: ????
   Bugfixes:
     - Fixed spiderbot task assignment only dispatching one spiderbot per pass for tile ghost tasks
     - Fixed that spiderbots would not be assigned build tasks when player was in a vehicle
+    - Fixed error when deconstructing tiles while the player is in a vehicle
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.1
 Date: 2025-06-18
