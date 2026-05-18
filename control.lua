@@ -99,6 +99,11 @@ local function register_new_spiderbot(spiderbot, player, player_index)
         storage.spiderbots_enabled[player_index] = true
         player.set_shortcut_toggled("toggle-spiderbots", true)
     end
+    if player_entity and player_entity.valid and player_entity.surface_index ~= spiderbot.surface_index then
+        local position_in_radius = player_entity.surface.find_non_colliding_position("spiderbot-leg-1", player_entity.position, 50, 0.5)
+        local position = position_in_radius or player_entity.position
+        spiderbot.teleport(position, player_entity.surface, true)
+    end
 end
 
 -- register spiderbots when created by script triggers (thrown capsules)
@@ -112,6 +117,25 @@ local function on_trigger_created_entity(event)
             if player and player.valid then
                 local player_index = player.index
                 register_new_spiderbot(entity, player, player_index)
+            end
+        end
+        if storage.spiderbot_projectiles then
+            for player_index, projectiles in pairs(storage.spiderbot_projectiles) do
+                for i, projectile_data in pairs(projectiles) do
+                    if get_distance(projectile_data.destination, entity.position) < 0.05 then
+                        if not source or not source.valid then
+                            local player = game.get_player(player_index)
+                            if player and player.valid then
+                                local character = get_player_character(player)
+                                if character and character.valid then
+                                    register_new_spiderbot(entity, player, player_index)
+                                end
+                            end
+                        end
+                        table.remove(projectiles, i)
+                        return
+                    end
+                end
             end
         end
     end
@@ -138,6 +162,10 @@ local function create_spiderbot_projectile(origin, destination, player, speed_mu
         speed = speed_override or math.random() * (speed_multiplier or 1),
         raise_built = true,
     }
+    ---@type table<integer, { origin: MapPosition, destination: MapPosition, source: LuaEntity, tick: integer }[]>
+    storage.spiderbot_projectiles = storage.spiderbot_projectiles or {}
+    storage.spiderbot_projectiles[player.index] = storage.spiderbot_projectiles[player.index] or {}
+    table.insert(storage.spiderbot_projectiles[player.index], { origin = origin, destination = destination, source = character, tick = game.tick })
 end
 
 -- create the spiderbot projectile when a player uses a spiderbot capsule
