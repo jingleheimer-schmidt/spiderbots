@@ -122,18 +122,20 @@ local function on_trigger_created_entity(event)
         if storage.spiderbot_projectiles then
             for player_index, projectiles in pairs(storage.spiderbot_projectiles) do
                 for i, projectile_data in pairs(projectiles) do
-                    if get_distance(projectile_data.destination, entity.position) < 0.05 then
-                        if not source or not source.valid then
-                            local player = game.get_player(player_index)
-                            if player and player.valid then
-                                local character = get_player_character(player)
-                                if character and character.valid then
-                                    register_new_spiderbot(entity, player, player_index)
+                    if projectile_data.surface == entity.surface then
+                        if get_distance(projectile_data.destination, entity.position) < 0.05 then
+                            if not source or not source.valid then
+                                local player = game.get_player(player_index)
+                                if player and player.valid then
+                                    local character = get_player_character(player)
+                                    if character and character.valid then
+                                        register_new_spiderbot(entity, player, player_index)
+                                    end
                                 end
                             end
+                            table.remove(projectiles, i)
+                            return
                         end
-                        table.remove(projectiles, i)
-                        return
                     end
                 end
             end
@@ -162,10 +164,10 @@ local function create_spiderbot_projectile(origin, destination, player, speed_mu
         speed = speed_override or math.random() * (speed_multiplier or 1),
         raise_built = true,
     }
-    ---@type table<integer, { origin: MapPosition, destination: MapPosition, source: LuaEntity, tick: integer }[]>
+    ---@type table<integer, { origin: MapPosition, destination: MapPosition, surface: SurfaceIdentification, tick: integer }[]>
     storage.spiderbot_projectiles = storage.spiderbot_projectiles or {}
     storage.spiderbot_projectiles[player.index] = storage.spiderbot_projectiles[player.index] or {}
-    table.insert(storage.spiderbot_projectiles[player.index], { origin = origin, destination = destination, source = character, tick = game.tick })
+    table.insert(storage.spiderbot_projectiles[player.index], { origin = origin, destination = destination, surface = character.surface, tick = game.tick })
 end
 
 -- create the spiderbot projectile when a player uses a spiderbot capsule
