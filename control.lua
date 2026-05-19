@@ -1428,7 +1428,8 @@ local function on_tick(event)
             { character_position_x - half_max_task_range, character_position_y - half_max_task_range },
             { character_position_x + half_max_task_range, character_position_y + half_max_task_range },
         }
-        local revive_landfill = nil --[[@type LuaEntity[]?]]
+        local tile_ghosts = nil --[[@type LuaEntity[]?]]
+        local revive_foundation = nil --[[@type LuaEntity[]?]]
         local decon_entities = nil --[[@type LuaEntity[]?]]
         local revive_entities = nil --[[@type LuaEntity[]?]]
         local upgrade_entities = nil --[[@type LuaEntity[]?]]
@@ -1496,15 +1497,25 @@ local function on_tick(event)
             item_proxy_ordered = false
             decon_tiles_ordered = false
             revive_tiles_ordered = false
-            revive_landfill = revive_landfill or surface.find_entities_filtered {
+            tile_ghosts = tile_ghosts or surface.find_entities_filtered {
                 area = area,
                 force = player_force,
                 type = "tile-ghost",
             }
-            while (#revive_landfill > 0 and spiders_dispatched < max_spiders_dispatched) do
-                local tile_ghost = table.remove(revive_landfill, math.random(1, #revive_landfill)) --[[@type LuaEntity]]
+            revive_foundation = revive_foundation or {}
+            revive_tiles = revive_tiles or {}
+            for index, tile_ghost in pairs(tile_ghosts) do
+                if storage.foundation_tile_names[tile_ghost.ghost_name] then
+                    table.insert(revive_foundation, tile_ghost)
+                else
+                    table.insert(revive_tiles, tile_ghost)
+                end
+            end
+            tile_ghosts = {}
+            while (#revive_foundation > 0 and spiders_dispatched < max_spiders_dispatched) do
+                local tile_ghost = table.remove(revive_foundation, math.random(1, #revive_foundation)) --[[@type LuaEntity]]
                 if not (tile_ghost and tile_ghost.valid) then goto next_tile end
-                if not storage.foundation_tile_names[tile_ghost.ghost_name] then goto next_tile end
+                -- if not storage.foundation_tile_names[tile_ghost.ghost_name] then goto next_tile end
                 local tile_position = tile_ghost.position
                 local distance_to_task = get_distance(tile_position, spiderbot.position)
                 if not (distance_to_task < double_max_task_range) then goto next_tile end
@@ -1527,9 +1538,9 @@ local function on_tick(event)
                         revive_tiles_ordered = true
                         goto next_spiderbot
                     else
-                        for index, found_tile_ghost in pairs(revive_landfill) do
+                        for index, found_tile_ghost in pairs(revive_foundation) do
                             if found_tile_ghost.ghost_name == tile_ghost.ghost_name then
-                                table.remove(revive_landfill, index)
+                                table.remove(revive_foundation, index)
                             end
                         end
                     end
@@ -1909,9 +1920,11 @@ local function setup_storage()
 
     -- gather the names of all tiles that can be used as foundations
     storage.foundation_tile_names = {}
+    storage.foundation_tile_names_array = {}
     for name, tile in pairs(prototypes.tile) do
         if tile.is_foundation then
             storage.foundation_tile_names[name] = true
+            table.insert(storage.foundation_tile_names_array, name)
         end
     end
 end

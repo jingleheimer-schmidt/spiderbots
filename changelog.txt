@@ -7,6 +7,7 @@ Date: ????
     - Fixed spiderbot task assignment only dispatching one spiderbot per pass for tile ghost tasks
     - Fixed that spiderbots would not be assigned build tasks when player was in a vehicle
     - Fixed error when deconstructing tiles while the player was in a vehicle
+    - Fixed error causing tile build tasks to not get assigned at the same rate as other task types
     - Fixed that in-progress work orders could be completed and create projectiles when the player was on a different surface than the spiderbot
     - Reduced chance that spiderbots could become disassociated when the player rapidly changed surfaces while the spiderbots were still in projectile form
 ---------------------------------------------------------------------------------------------------
