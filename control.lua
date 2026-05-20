@@ -700,7 +700,7 @@ end
 ---@return table<string, integer>
 local function get_inventory_contents(entity)
     local entity_inventory_contents = {}
-    for i = 1, 11 do
+    for i = 1, 11 --[[@type defines.inventory]] do
         local inventory_contents = entity.get_inventory(i)
         if inventory_contents and inventory_contents.valid then
             for _, item in pairs(inventory_contents.get_contents()) do
@@ -918,6 +918,8 @@ local function upgrade_entity(spiderbot_data)
     end
     reset_task_data(spiderbot_id, player_index)
 end
+
+---@class BlueprintItemIDAndQualityIDPair : ItemIDAndQualityIDPair
 
 ---@param spiderbot_data spiderbot_data
 local function insert_items(spiderbot_data)
