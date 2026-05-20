@@ -1036,7 +1036,7 @@ local function deconstruct_tile(spiderbot_data)
                     local products = mineable_properties.products
                     local can_insert = true
                     for _, product in pairs(products) do
-                        if not inventory_has_space(inventory, product) then
+                        if not inventory_has_space(inventory, product.name) then
                             can_insert = false
                             break
                         end
@@ -1527,7 +1527,7 @@ local function on_tick(event)
                 local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
                 if items_to_place_this and items_to_place_this[1] then
                     local item_stack = items_to_place_this[1]
-                    if inventory_has_item(inventory, item_stack) then
+                    if inventory_has_item(inventory, item_stack.name) then
                         spiderbot_data.task = {
                             task_type = "build_tile",
                             task_id = ghost_id,
