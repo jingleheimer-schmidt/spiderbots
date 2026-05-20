@@ -121,7 +121,8 @@ local function on_trigger_created_entity(event)
         end
         if storage.spiderbot_projectiles then
             for player_index, projectiles in pairs(storage.spiderbot_projectiles) do
-                for i, projectile_data in pairs(projectiles) do
+                for i = #projectiles, 1, -1 do
+                    local projectile_data = projectiles[i]
                     if projectile_data.surface == entity.surface then
                         if get_distance(projectile_data.destination, entity.position) < 0.05 then
                             if not source or not source.valid then
@@ -136,6 +137,9 @@ local function on_trigger_created_entity(event)
                             table.remove(projectiles, i)
                             return
                         end
+                    end
+                    if game.tick - projectile_data.tick > 60 * 60 then
+                        table.remove(projectiles, i)
                     end
                 end
             end
