@@ -710,7 +710,7 @@ local function get_inventory_contents(entity)
             end
         end
     end
-    local belt_types = {
+    local transport_belt_connectables = {
         ["lane-splitter"] = true,
         ["linked-belt"] = true,
         ["loader-1x1"] = true,
@@ -719,8 +719,8 @@ local function get_inventory_contents(entity)
         ["transport-belt"] = true,
         ["underground-belt"] = true
     }
-    if belt_types[entity.type] then
-        for i = 1, entity.get_max_transport_line_index() do
+    if transport_belt_connectables[entity.type] then
+        for i = 1, entity.get_max_transport_line_index() --[[@type defines.transport_line]] do
             local transport_line = entity.get_transport_line(i)
             if transport_line and transport_line.valid then
                 local transport_line_contents = transport_line.get_contents()
