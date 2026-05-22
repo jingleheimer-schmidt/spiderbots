@@ -1826,7 +1826,7 @@ local function on_tick(event)
                 local tile_position = tile_ghost.position
                 local distance_to_task = get_distance(tile_position, spiderbot.position)
                 if not (distance_to_task < double_max_task_range) then goto next_tile end
-                local ghost_id = get_entity_uuid(tile_ghost)
+                local ghost_id = task.task_id
                 if is_task_assigned(ghost_id) then goto next_tile end
                 spiderbot_data.task = task
                 spiderbot_data.status = "path_requested"
