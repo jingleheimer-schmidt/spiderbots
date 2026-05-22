@@ -1581,7 +1581,7 @@ local function on_tick(event)
                 area = area,
                 force = inverse_player_forces,
                 to_be_deconstructed = false,
-                type = "deconstructable-tile-proxy",
+                type = "deconstructible-tile-proxy",
                 invert = true,
             }
             -- process the deconstruction tasks and assign available spiderbots to them
