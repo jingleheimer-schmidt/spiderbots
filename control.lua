@@ -1080,32 +1080,31 @@ local function build_tile(spiderbot_data)
     local spiderbot_id = spiderbot_data.spiderbot_id
     local player = spiderbot_data.player
     local player_index = spiderbot_data.player_index
-    local ghost = spiderbot_data.task.entity
-    if player and player.valid and ghost and ghost.valid then
+    local task = spiderbot_data.task
+    local ghost = task and task.entity
+    if player and player.valid and ghost and ghost.valid and task then
         local player_character = get_player_character(player)
         if player_character and player_character.valid then
             local inventory = get_entity_inventory(player_character)
             if inventory and inventory.valid then
+                local item_to_place_this = task.item_to_place_this
                 local tile_prototype = ghost and ghost.ghost_prototype
-                local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
-                if items_to_place_this and items_to_place_this[1] then
-                    local item_stack = items_to_place_this[1]
-                    if inventory_has_item(inventory, item_stack) then
-                        local tile_position = ghost.position
-                        storage.tile_built = false
-                        ghost.revive({ raise_revive = true })
-                        if storage.tile_built then
-                            inventory.remove(item_stack)
-                            local spiderbot = spiderbot_data.spiderbot
-                            create_item_projectile(spiderbot, tile_position, item_stack.name, player)
-                            local build_sound_path = get_valid_sound_path(tile_prototype.name .. "-build_sound", "utility/build_small")
-                            spiderbot.surface.play_sound {
-                                path = build_sound_path,
-                                position = spiderbot.position,
-                            }
-                        end
-                        storage.tile_built = nil
+                local item_stack = { name = item_to_place_this.name, quality = item_to_place_this.quality } --[[@type ItemIDAndQualityIDPair]]
+                if inventory_has_item(inventory, item_stack) then
+                    local tile_position = ghost.position
+                    storage.tile_built = false
+                    ghost.revive({ raise_revive = true })
+                    if storage.tile_built then
+                        inventory.remove(item_to_place_this)
+                        local spiderbot = spiderbot_data.spiderbot
+                        create_item_projectile(spiderbot, tile_position, item_stack.name, player)
+                        local build_sound_path = get_valid_sound_path(tile_prototype.name .. "-build_sound", "utility/build_small")
+                        spiderbot.surface.play_sound {
+                            path = build_sound_path,
+                            position = spiderbot.position,
+                        }
                     end
+                    storage.tile_built = nil
                 end
             end
         end
@@ -1454,8 +1453,9 @@ local function on_tick(event)
         local revive_tiles_ordered = false
         local max_spiders_dispatched = 9
         local spiders_dispatched = 0
-        local item_not_in_inventory = {}
-        local item_not_insertable = {}
+        local item_not_in_inventory = {} --[[@type table<string, boolean> ]]
+        local item_not_insertable = {} --[[@type table<string, boolean> ]]
+        local item_is_in_inventory = {} --[[@type table<string, ItemWithQualityCount> ]]
         for spiderbot_id, spiderbot_data in random_pairs(spiderbots) do
             local spiderbot = spiderbot_data.spiderbot
             if not (spiderbot and spiderbot.valid) then
@@ -1519,54 +1519,93 @@ local function on_tick(event)
                 local tile = table.remove(revive_tiles, math.random(1, #revive_tiles)) --[[@type LuaTile]]
                 local tile_ghosts = tile and tile.get_tile_ghosts()
                 local tile_ghost = tile_ghosts and tile_ghosts[#tile_ghosts]
-                if item_not_in_inventory[tile_ghost.ghost_name] then goto next_tile end
-                if not storage.foundation_tile_names[tile_ghost.ghost_name] then
-                    local tile_prototype = tile_ghost.ghost_prototype
-                    local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
-                    if items_to_place_this and items_to_place_this[1] then
-                        local item_stack = items_to_place_this[1]
-                        if inventory_has_item(inventory, item_stack.name) then
-                            local task = {
-                                task_type = "build_tile",
-                                task_id = get_entity_uuid(tile_ghost),
-                                entity = tile_ghost,
-                                projectile_item = item_stack.name,
-                            }
-                            table.insert(tile_ghost_tasks, task)
-                        else
-                            item_not_in_inventory[tile_ghost.ghost_name] = true
-                        end
+                local tile_ghost_name = tile_ghost and tile_ghost.ghost_name
+                if item_not_in_inventory[tile_ghost_name] then goto next_tile end
+                if not storage.foundation_tile_names[tile_ghost_name] then
+                    local item_with_quality_count = item_is_in_inventory[tile_ghost_name]
+                    if item_with_quality_count then
+                        local task = {
+                            task_type = "build_tile",
+                            task_id = get_entity_uuid(tile_ghost),
+                            entity = tile_ghost,
+                            projectile_item = item_with_quality_count.name,
+                            item_to_place_this = item_with_quality_count
+                        } --[[@as task_data]]
+                        table.insert(tile_ghost_tasks, task)
+                        goto next_tile
                     else
-                        item_not_in_inventory[tile_ghost.ghost_name] = true
+                        local tile_prototype = tile_ghost.ghost_prototype
+                        local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
+                        if items_to_place_this and items_to_place_this[1] then
+                            local item_stack = items_to_place_this[1]
+                            local item_name = item_stack.name
+                            item_with_quality_count = { count = item_stack.count, name = item_name, quality = "normal" }
+                            if inventory_has_item(inventory, item_name) then
+                                local task = {
+                                    task_type = "build_tile",
+                                    task_id = get_entity_uuid(tile_ghost),
+                                    entity = tile_ghost,
+                                    projectile_item = item_name,
+                                    item_to_place_this = item_with_quality_count
+                                } --[[@as task_data]]
+                                table.insert(tile_ghost_tasks, task)
+                                item_is_in_inventory[tile_ghost_name] = item_with_quality_count
+                            else
+                                item_not_in_inventory[tile_ghost_name] = true
+                            end
+                        else
+                            item_not_in_inventory[tile_ghost_name] = true
+                        end
+                        goto next_tile
                     end
-                    goto next_tile
                 end
                 local tile_position = tile_ghost.position
                 local distance_to_task = get_distance(tile_position, spiderbot.position)
                 if not (distance_to_task < double_max_task_range) then goto next_tile end
                 local ghost_id = get_entity_uuid(tile_ghost)
                 if is_task_assigned(ghost_id) then goto next_tile end
-                local tile_prototype = tile_ghost.ghost_prototype
-                local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
-                if items_to_place_this and items_to_place_this[1] then
-                    local item_stack = items_to_place_this[1]
-                    if inventory_has_item(inventory, item_stack.name) then
-                        spiderbot_data.task = {
-                            task_type = "build_tile",
-                            task_id = ghost_id,
-                            entity = tile_ghost,
-                            projectile_item = item_stack.name,
-                        }
-                        spiderbot_data.status = "path_requested"
-                        spiderbot_data.path_request_id = request_path(spiderbot, tile_ghost)
-                        spiders_dispatched = spiders_dispatched + 1
-                        revive_foundation_ordered = true
-                        goto next_spiderbot
-                    else
-                        item_not_in_inventory[tile_ghost.ghost_name] = true
-                    end
+                local item_with_quality_count = item_is_in_inventory[tile_ghost_name]
+                if item_with_quality_count then
+                    local task = {
+                        task_type = "build_tile",
+                        task_id = ghost_id,
+                        entity = tile_ghost,
+                        projectile_item = item_with_quality_count.name,
+                        item_to_place_this = item_with_quality_count
+                    } --[[@as task_data]]
+                    spiderbot_data.task = task
+                    spiderbot_data.status = "path_requested"
+                    spiderbot_data.path_request_id = request_path(spiderbot, tile_ghost)
+                    spiders_dispatched = spiders_dispatched + 1
+                    revive_foundation_ordered = true
+                    goto next_spiderbot
                 else
-                    item_not_in_inventory[tile_ghost.ghost_name] = true
+                    local tile_prototype = tile_ghost.ghost_prototype
+                    local items_to_place_this = tile_prototype and tile_prototype.items_to_place_this
+                    if items_to_place_this and items_to_place_this[1] then
+                        local item_stack = items_to_place_this[1]
+                        local item_name = item_stack.name
+                        item_with_quality_count = { count = item_stack.count, name = item_name, quality = "normal" }
+                        if inventory_has_item(inventory, item_name) then
+                            spiderbot_data.task = {
+                                task_type = "build_tile",
+                                task_id = ghost_id,
+                                entity = tile_ghost,
+                                projectile_item = item_name,
+                                item_to_place_this = item_with_quality_count
+                            }
+                            spiderbot_data.status = "path_requested"
+                            spiderbot_data.path_request_id = request_path(spiderbot, tile_ghost)
+                            spiders_dispatched = spiders_dispatched + 1
+                            revive_foundation_ordered = true
+                            item_is_in_inventory[tile_ghost_name] = item_with_quality_count
+                            goto next_spiderbot
+                        else
+                            item_not_in_inventory[tile_ghost_name] = true
+                        end
+                    else
+                        item_not_in_inventory[tile_ghost_name] = true
+                    end
                 end
                 ::next_tile::
             end
@@ -1822,7 +1861,6 @@ local function on_tick(event)
                 local task = table.remove(tile_ghost_tasks, math.random(1, #tile_ghost_tasks)) --[[@type task_data]]
                 local tile_ghost = task.entity
                 if not (tile_ghost and tile_ghost.valid) then goto next_tile end
-                if item_not_in_inventory[tile_ghost.ghost_name] then goto next_tile end
                 local tile_position = tile_ghost.position
                 local distance_to_task = get_distance(tile_position, spiderbot.position)
                 if not (distance_to_task < double_max_task_range) then goto next_tile end

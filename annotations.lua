@@ -43,3 +43,4 @@
 ---@field entity LuaEntity?
 ---@field tile LuaTile?
 ---@field projectile_item string?
+---@field item_to_place_this ItemWithQualityCount
