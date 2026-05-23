@@ -1389,6 +1389,36 @@ local function random_pairs(tbl)
     end
 end
 
+---@param area BoundingBox
+---@param subset_size number
+---@return BoundingBox
+local function get_subset_of_area(area, subset_size)
+    local x1 = area[1][1]
+    local y1 = area[1][2]
+    local x2 = area[2][1]
+    local y2 = area[2][2]
+
+    local width = x2 - x1
+    local height = y2 - y1
+
+    local chunks_wide = math.ceil(width / subset_size)
+    local chunks_high = math.ceil(height / subset_size)
+
+    if chunks_wide < 1 or chunks_high < 1 then
+        return area
+    end
+
+    local chunk_x = math.random(0, chunks_wide - 1)
+    local chunk_y = math.random(0, chunks_high - 1)
+
+    local subset_x1 = x1 + chunk_x * subset_size
+    local subset_y1 = y1 + chunk_y * subset_size
+    local subset_x2 = math.min(subset_x1 + subset_size, x2)
+    local subset_y2 = math.min(subset_y1 + subset_size, y2)
+
+    return { { subset_x1, subset_y1 }, { subset_x2, subset_y2 } }
+end
+
 ---@param event NthTickEventData
 local function on_tick(event)
     for _, player in pairs(game.connected_players) do
@@ -1468,6 +1498,8 @@ local function on_tick(event)
                 table.insert(inverse_player_forces, name)
             end
         end
+        local tile_search_attempts = 0
+        local max_tile_search_attempts = 9
         for spiderbot_id, spiderbot_data in random_pairs(spiderbots) do
             local spiderbot = spiderbot_data.spiderbot
             if not (spiderbot and spiderbot.valid) then
@@ -1523,10 +1555,19 @@ local function on_tick(event)
             decon_tiles_ordered = false
             revive_tiles_ordered = false
             revive_tiles = revive_tiles or surface.find_tiles_filtered {
-                area = area,
+                area = get_subset_of_area(area, 15),
                 force = player_force,
                 has_tile_ghost = true,
             }
+            while #revive_tiles == 0 and tile_search_attempts < max_tile_search_attempts do
+                tile_search_attempts = tile_search_attempts + 1
+                revive_tiles = surface.find_tiles_filtered {
+                    area = get_subset_of_area(area, 15),
+                    force = player_force,
+                    has_tile_ghost = true,
+                }
+            end
+            tile_search_attempts = max_tile_search_attempts
             while (#revive_tiles > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local tile = table.remove(revive_tiles, math.random(1, #revive_tiles)) --[[@type LuaTile]]
                 local tile_ghosts = tile and tile.get_tile_ghosts()
