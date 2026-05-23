@@ -1397,25 +1397,19 @@ local function get_subset_of_area(area, subset_size)
     local y1 = area[1][2]
     local x2 = area[2][1]
     local y2 = area[2][2]
-
     local width = x2 - x1
     local height = y2 - y1
-
     local chunks_wide = math.ceil(width / subset_size)
     local chunks_high = math.ceil(height / subset_size)
-
     if chunks_wide < 1 or chunks_high < 1 then
         return area
     end
-
     local chunk_x = math.random(0, chunks_wide - 1)
     local chunk_y = math.random(0, chunks_high - 1)
-
     local subset_x1 = x1 + chunk_x * subset_size
     local subset_y1 = y1 + chunk_y * subset_size
     local subset_x2 = math.min(subset_x1 + subset_size, x2)
     local subset_y2 = math.min(subset_y1 + subset_size, y2)
-
     return { { subset_x1, subset_y1 }, { subset_x2, subset_y2 } }
 end
 
