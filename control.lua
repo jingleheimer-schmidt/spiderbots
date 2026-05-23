@@ -1462,6 +1462,12 @@ local function on_tick(event)
         local item_not_in_inventory = {} --[[@type table<string, boolean> ]]
         local item_not_insertable = {} --[[@type table<string, boolean> ]]
         local item_is_in_inventory = {} --[[@type table<string, ItemWithQualityCount> ]]
+        local inverse_player_forces = {}
+        for name, force in pairs(game.forces) do
+            if not ((name == player.force.name) or (name == "neutral")) then
+                table.insert(inverse_player_forces, name)
+            end
+        end
         for spiderbot_id, spiderbot_data in random_pairs(spiderbots) do
             local spiderbot = spiderbot_data.spiderbot
             if not (spiderbot and spiderbot.valid) then
@@ -1616,12 +1622,6 @@ local function on_tick(event)
                 ::next_tile::
             end
             if revive_foundation_ordered then goto next_spiderbot end
-            local inverse_player_forces = {}
-            for name, force in pairs(game.forces) do
-                if not ((name == player.force.name) or (name == "neutral")) then
-                    table.insert(inverse_player_forces, name)
-                end
-            end
             decon_entities = decon_entities or surface.find_entities_filtered {
                 area = area,
                 force = inverse_player_forces,
