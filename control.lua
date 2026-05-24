@@ -1419,6 +1419,19 @@ local function get_subset_of_area(area, subset_size)
     return { { subset_x1, subset_y1 }, { subset_x2, subset_y2 } }
 end
 
+---@generic T
+---@param list T[]
+---@return T?
+local function pop_random(list)
+    local count = #list
+    if count == 0 then return nil end
+    local index = math.random(count)
+    local value = list[index]
+    list[index] = list[count]
+    list[count] = nil
+    return value
+end
+
 ---@param event NthTickEventData
 local function on_tick(event)
     for _, player in pairs(game.connected_players) do
@@ -1569,7 +1582,8 @@ local function on_tick(event)
             end
             tile_search_attempts = max_tile_search_attempts
             while (#revive_tiles > 0 and spiders_dispatched < max_spiders_dispatched) do
-                local tile = table.remove(revive_tiles, math.random(1, #revive_tiles)) --[[@type LuaTile]]
+                local tile = pop_random(revive_tiles)
+                if not (tile and tile.valid) then goto next_tile end
                 local tile_ghosts = tile and tile.get_tile_ghosts()
                 local tile_ghost = tile_ghosts and tile_ghosts[#tile_ghosts]
                 local tile_ghost_name = tile_ghost and tile_ghost.ghost_name
@@ -1672,7 +1686,7 @@ local function on_tick(event)
             }
             -- process the deconstruction tasks and assign available spiderbots to them
             while (#decon_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
-                local entity = table.remove(decon_entities, math.random(1, #decon_entities)) --[[@type LuaEntity]]
+                local entity = pop_random(decon_entities)
                 if not (entity and entity.valid) then goto next_entity end
                 if entity.type == "fish" then goto next_entity end
                 if item_not_insertable[entity.name] then goto next_entity end
@@ -1735,7 +1749,7 @@ local function on_tick(event)
             }
             -- process the revive tasks and assign available spiderbots to them
             while (#revive_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
-                local entity = table.remove(revive_entities, math.random(1, #revive_entities)) --[[@type LuaEntity]]
+                local entity = pop_random(revive_entities)
                 if not (entity and entity.valid) then goto next_entity end
                 if item_not_in_inventory[entity.ghost_name] then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
@@ -1777,7 +1791,7 @@ local function on_tick(event)
             }
             -- process the upgrade tasks and assign available spiderbots to them
             while (#upgrade_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
-                local entity = table.remove(upgrade_entities, math.random(1, #upgrade_entities)) --[[@type LuaEntity]]
+                local entity = pop_random(upgrade_entities)
                 if not (entity and entity.valid) then goto next_entity end
                 if item_not_in_inventory[entity.name] then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
@@ -1818,7 +1832,7 @@ local function on_tick(event)
             }
             -- process the item proxy tasks and assign available spiderbots to them
             while (#item_proxy_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
-                local entity = table.remove(item_proxy_entities, math.random(1, #item_proxy_entities)) --[[@type LuaEntity]]
+                local entity = pop_random(item_proxy_entities)
                 if not (entity and entity.valid) then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
@@ -1862,7 +1876,7 @@ local function on_tick(event)
             }
             -- process the tile deconstruction tasks and assign available spiderbots to them
             while (#decon_tiles > 0 and spiders_dispatched < max_spiders_dispatched) do
-                local tile = table.remove(decon_tiles, math.random(1, #decon_tiles)) --[[@type LuaTile]]
+                local tile = pop_random(decon_tiles)
                 if not (tile and tile.valid) then goto next_tile end
                 if item_not_insertable[tile.name] then goto next_tile end
                 local tile_position = tile.position
@@ -1905,7 +1919,8 @@ local function on_tick(event)
             if decon_tiles_ordered then goto next_spiderbot end
             -- process the tile revive tasks and assign available spiderbots to them
             while (#tile_ghost_tasks > 0 and spiders_dispatched < max_spiders_dispatched) do
-                local task = table.remove(tile_ghost_tasks, math.random(1, #tile_ghost_tasks)) --[[@type task_data]]
+                local task = pop_random(tile_ghost_tasks)
+                if not task then goto next_tile end
                 local tile_ghost = task.entity
                 if not (tile_ghost and tile_ghost.valid) then goto next_tile end
                 local tile_position = tile_ghost.position
