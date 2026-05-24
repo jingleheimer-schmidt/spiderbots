@@ -1173,11 +1173,17 @@ local function on_spider_command_completed(event)
                 if spiderbot_data and player and player.valid then
                     local character = get_player_entity(player)
                     if character and character.valid then
-                        if not (character.surface_index == spiderbot.surface_index) then reset_task_data(spiderbot_id, spiderbot_data.player_index) return end
+                        if not (character.surface_index == spiderbot.surface_index) then
+                            reset_task_data(spiderbot_id, spiderbot_data.player_index)
+                            return
+                        end
                         if task.item_to_place_this then
                             local inventory = get_entity_inventory(character)
                             if inventory and inventory.valid then
-                                if not inventory_has_item(inventory, task.item_to_place_this) then return end
+                                if not inventory_has_item(inventory, task.item_to_place_this) then
+                                    reset_task_data(spiderbot_id, spiderbot_data.player_index)
+                                    return
+                                end
                             end
                         end
                         create_item_projectile(character, spiderbot, task.projectile_item, player)
