@@ -1489,6 +1489,7 @@ local function on_tick(event)
         local upgrade_entities = nil --[[@type LuaEntity[]? ]]
         local item_proxy_entities = nil --[[@type LuaEntity[]? ]]
         local decon_tiles = nil --[[@type LuaTile[]? ]]
+        local revive_tiles = {} --[[@type LuaTile[] ]]
         local tile_ghost_tasks = {} --[[@type task_data[] ]]
         local revive_foundation_ordered = false
         local decon_ordered = false
@@ -1564,11 +1565,6 @@ local function on_tick(event)
             item_proxy_ordered = false
             decon_tiles_ordered = false
             revive_tiles_ordered = false
-            revive_tiles = revive_tiles or surface.find_tiles_filtered {
-                area = get_subset_of_area(area, 15),
-                force = player_force,
-                has_tile_ghost = true,
-            }
             while #revive_tiles == 0 and tile_search_attempts < max_tile_search_attempts do
                 tile_search_attempts = tile_search_attempts + 1
                 revive_tiles = surface.find_tiles_filtered {
