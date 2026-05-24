@@ -1484,14 +1484,11 @@ local function on_tick(event)
             { character_position_x - half_max_task_range, character_position_y - half_max_task_range },
             { character_position_x + half_max_task_range, character_position_y + half_max_task_range },
         }
-        -- local tiles_with_ghosts = nil --[[@type LuaTile[]?]]
-        -- local non_foundation_tile_ghosts = {} --[[@type LuaEntity[] ]]
-        local decon_entities = nil --[[@type LuaEntity[]?]]
-        local revive_entities = nil --[[@type LuaEntity[]?]]
-        local upgrade_entities = nil --[[@type LuaEntity[]?]]
-        local item_proxy_entities = nil --[[@type LuaEntity[]?]]
-        local decon_tiles = nil --[[@type LuaTile[]?]]
-        local revive_tiles = nil --[[@type LuaTile[]?]]
+        local decon_entities = nil --[[@type LuaEntity[]? ]]
+        local revive_entities = nil --[[@type LuaEntity[]? ]]
+        local upgrade_entities = nil --[[@type LuaEntity[]? ]]
+        local item_proxy_entities = nil --[[@type LuaEntity[]? ]]
+        local decon_tiles = nil --[[@type LuaTile[]? ]]
         local tile_ghost_tasks = {} --[[@type task_data[] ]]
         local revive_foundation_ordered = false
         local decon_ordered = false
@@ -1683,7 +1680,7 @@ local function on_tick(event)
                 to_be_deconstructed = false,
                 type = "deconstructible-tile-proxy",
                 invert = true,
-            }
+            } --[[@as LuaEntity[] ]]
             -- process the deconstruction tasks and assign available spiderbots to them
             while (#decon_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = pop_random(decon_entities)
@@ -1746,7 +1743,7 @@ local function on_tick(event)
                 area = area,
                 force = player_force,
                 type = "entity-ghost",
-            }
+            } --[[@as LuaEntity[] ]]
             -- process the revive tasks and assign available spiderbots to them
             while (#revive_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = pop_random(revive_entities)
@@ -1788,7 +1785,7 @@ local function on_tick(event)
                 area = area,
                 force = player_force,
                 to_be_upgraded = true,
-            }
+            } --[[@as LuaEntity[] ]]
             -- process the upgrade tasks and assign available spiderbots to them
             while (#upgrade_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = pop_random(upgrade_entities)
@@ -1829,7 +1826,7 @@ local function on_tick(event)
                 area = area,
                 force = player_force,
                 type = "item-request-proxy",
-            }
+            } --[[@as LuaEntity[] ]]
             -- process the item proxy tasks and assign available spiderbots to them
             while (#item_proxy_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = pop_random(item_proxy_entities)
@@ -1873,7 +1870,7 @@ local function on_tick(event)
                 area = area,
                 force = player_force,
                 to_be_deconstructed = true,
-            }
+            } --[[@as LuaTile[] ]]
             -- process the tile deconstruction tasks and assign available spiderbots to them
             while (#decon_tiles > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local tile = pop_random(decon_tiles)
