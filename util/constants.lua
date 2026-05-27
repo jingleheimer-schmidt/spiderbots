@@ -1,7 +1,8 @@
 
 local max_task_range = 45
-local half_max_task_range = max_task_range / 2
-local double_max_task_range = max_task_range * 2
+local half_max_task_range = 22.5
+local double_max_task_range = 90
+
 ---@type table<defines.controllers, boolean>
 local allowed_controllers = {
     [defines.controllers.character] = true,
@@ -12,6 +13,8 @@ local allowed_controllers = {
     [defines.controllers.remote] = true,
     [defines.controllers.spectator] = false,
 }
+
+--[[@type BoundingBox]]
 local tile_bounding_box = {
     left_top = { x = -0.5, y = -0.5 },
     right_bottom = { x = 0.5, y = 0.5 },
