@@ -469,13 +469,20 @@ local function request_path(spiderbot, entity)
         colliding_with_tiles_only = false,
     }
     local path_to_entity_flags = { cache = false, low_priority = true }
-    local bounding_box = entity.object_name == "LuaEntity" and entity.bounding_box or tile_bounding_box
-    local right_bottom = bounding_box.right_bottom
-    local left_top = bounding_box.left_top
-    local x = math.abs(right_bottom.x - left_top.x)
-    local y = math.abs(right_bottom.y - left_top.y)
     local non_colliding_position = spiderbot.surface.find_non_colliding_position("spiderbot-leg-1", entity.position, 25, 0.5)
     local goal = non_colliding_position or entity.position
+    local radius = 2
+    if entity.object_name == "LuaEntity" then
+        local bounding_box = entity.bounding_box
+        local right_bottom = bounding_box.right_bottom
+        local left_top = bounding_box.left_top
+        local x = math.abs(right_bottom.x - left_top.x)
+        local y = math.abs(right_bottom.y - left_top.y)
+        radius = math.min(x, y) / 3
+        if entity.type == "cliff" then
+            radius = 5
+        end
+    end
     ---@type LuaSurface.request_path_param
     local request_parameters = {
         bounding_box = spider_leg_bounding_box,
@@ -483,7 +490,7 @@ local function request_path(spiderbot, entity)
         start = spiderbot.position,
         goal = goal,
         force = spiderbot.force,
-        radius = ((entity.object_name == "LuaEntity") and math.min(x, y) / 3) or 2,
+        radius = radius,
         can_open_gates = true,
         path_resolution_modifier = 0,
         pathfind_flags = path_to_entity_flags,
@@ -643,6 +650,18 @@ local function build_ghost(spiderbot_data)
     reset_task_data(spiderbot_id, player_index)
 end
 
+---returns a string position key, with x and y rounded to the nearest 10 tiles
+---@param entity LuaEntity
+---@return string
+local function get_cliff_position_key(entity)
+    local surface_index = entity.surface_index
+    local position = entity.position
+    local precision = 1
+    local x = math.floor(position.x / precision + 0.5) * precision
+    local y = math.floor(position.y / precision + 0.5) * precision
+    return string.format("[%d][%d][%d]", surface_index, x, y)
+end
+
 ---@param inventory LuaInventory
 ---@return boolean, LuaQualityPrototype?
 local function inventory_has_cliff_explosives(inventory)
@@ -660,23 +679,36 @@ end
 local function find_nearby_cliff_to_deconstruct(spiderbot_data)
     local surface = spiderbot_data.spiderbot.surface
     local spiderbot_position = spiderbot_data.spiderbot.position
-    local cliff = surface.find_entities_filtered {
+    local cliffs = surface.find_entities_filtered {
         type = "cliff",
         position = spiderbot_position,
         radius = 32,
-        limit = 1,
         to_be_deconstructed = true,
-    }[1]
-    if cliff then
-        local data = storage.spiderbots[spiderbot_data.player_index][spiderbot_data.spiderbot_id]
-        data.task = {
-            task_type = "deconstruct_entity",
-            task_id = get_entity_uuid(cliff),
-            entity = cliff,
-            projectile_item = "cliff-explosives",
-        }
-        data.status = "path_requested"
-        data.path_request_id = request_path(spiderbot_data.spiderbot, cliff)
+    }
+    for _, cliff in pairs(cliffs) do
+        local position_key = get_cliff_position_key(cliff)
+        if not (storage.cliffs_to_be_exploded and storage.cliffs_to_be_exploded[position_key]) then
+            local data = storage.spiderbots[spiderbot_data.player_index][spiderbot_data.spiderbot_id]
+            data.task = {
+                task_type = "deconstruct_entity",
+                task_id = position_key,
+                entity = cliff,
+                projectile_item = "cliff-explosives",
+            }
+            data.status = "path_requested"
+            data.path_request_id = request_path(spiderbot_data.spiderbot, cliff)
+            storage.cliffs_to_be_exploded = storage.cliffs_to_be_exploded or {}
+            local nearby_cliffs = surface.find_entities_filtered {
+                position = cliff.position,
+                radius = 7,
+                type = "cliff",
+                to_be_deconstructed = true,
+            }
+            for _, nearby_cliff in pairs(nearby_cliffs) do
+                storage.cliffs_to_be_exploded[get_cliff_position_key(nearby_cliff)] = { cliff = nearby_cliff, tick = game.tick }
+            end
+            return
+        end
     end
 end
 
@@ -838,23 +870,51 @@ local function deconstruct_entity(spiderbot_data)
                         elseif entity.type == "cliff" then
                             local has_cliff_explosives, quality = inventory_has_cliff_explosives(inventory)
                             if has_cliff_explosives then
+                                local target_position = {
+                                    x = entity.position.x + ((math.random() - 0.5) * 1.5),
+                                    y = entity.position.y + ((math.random() - 0.5) * 1.5),
+                                }
+                                local nearby_cliffs = entity.surface.find_entities_filtered {
+                                    type = "cliff",
+                                    position = target_position,
+                                    radius = 4,
+                                    to_be_deconstructed = true,
+                                }
+                                local nearby_cliffs_count = #nearby_cliffs
+                                --[[@type table<string, { cliff: LuaEntity, tick: uint }>]]
+                                storage.cliffs_to_be_exploded = storage.cliffs_to_be_exploded or {}
+                                if nearby_cliffs_count > 0 then
+                                    local sum_x = 0
+                                    local sum_y = 0
+                                    for _, cliff in pairs(nearby_cliffs) do
+                                        sum_x = sum_x + cliff.position.x
+                                        sum_y = sum_y + cliff.position.y
+                                        storage.cliffs_to_be_exploded[get_cliff_position_key(cliff)] = {
+                                            cliff = cliff,
+                                            tick = game.tick
+                                        }
+                                    end
+                                    target_position = {
+                                        x = sum_x / nearby_cliffs_count,
+                                        y = sum_y / nearby_cliffs_count,
+                                    }
+                                end
                                 spiderbot.surface.create_entity {
                                     name = "cliff-explosives",
                                     quality = quality,
                                     position = spiderbot.position,
-                                    target = entity_position,
+                                    target = target_position,
                                     force = player.force,
                                     raise_built = true,
                                     speed = 0.0125,
                                 }
                                 inventory.remove({ name = "cliff-explosives", count = 1, quality = quality })
-                                -- create_item_projectile(player_entity, spiderbot, "cliff-explosives", player)
                             end
                         end
                     end
                 end
             end
-        elseif spiderbot_data.task.task_id == 0 then
+        elseif spiderbot_data.task.projectile_item and spiderbot_data.task.projectile_item == "cliff-explosives" then
             find_nearby_cliff_to_deconstruct(spiderbot_data)
             return
         end
@@ -1156,8 +1216,10 @@ local function on_spider_command_completed(event)
     elseif destination_count < 5 then
         local spiderbot_id = get_entity_uuid(spiderbot)
         local spiderbot_data = get_spiderbot_data(spiderbot_id)
-        local task = spiderbot_data and spiderbot_data.task
-        local task_type = task and task.task_type
+        if not spiderbot_data then return end
+        local task = spiderbot_data.task
+        if not task then return end
+        local task_type = task.task_type
         local construction_tasks = {
             build_ghost = true,
             deconstruct_entity = false,
@@ -1167,10 +1229,10 @@ local function on_spider_command_completed(event)
             deconstruct_tile = false,
             build_tile = true,
         }
-        if task_type and construction_tasks[task_type] then
-            if task and task.projectile_item then
-                local player = spiderbot_data and spiderbot_data.player
-                if spiderbot_data and player and player.valid then
+        if construction_tasks[task_type] then
+            if task.projectile_item then
+                local player = spiderbot_data.player
+                if player and player.valid then
                     local character = get_player_entity(player)
                     if character and character.valid then
                         if not (character.surface_index == spiderbot.surface_index) then
@@ -1188,6 +1250,34 @@ local function on_spider_command_completed(event)
                         end
                         create_item_projectile(character, spiderbot, task.projectile_item, player)
                         task.projectile_item = nil
+                    end
+                end
+            end
+        elseif task_type == "deconstruct_entity" then
+            if task.projectile_item == "cliff-explosives" then
+                local entity = task.entity
+                if not (entity and entity.valid) then
+                    find_nearby_cliff_to_deconstruct(spiderbot_data)
+                    return
+                end
+                local player = spiderbot_data.player
+                if player and player.valid then
+                    local character = get_player_entity(player)
+                    if character and character.valid then
+                        if not (character.surface_index == spiderbot.surface_index) or not task.entity.valid then
+                            reset_task_data(spiderbot_id, spiderbot_data.player_index)
+                            return
+                        end
+                        local inventory = get_entity_inventory(character)
+                        if inventory and inventory.valid then
+                            if inventory_has_cliff_explosives(inventory) then
+                                create_item_projectile(character, spiderbot, task.projectile_item, player)
+                                task.projectile_item = nil
+                            else
+                                reset_task_data(spiderbot_id, spiderbot_data.player_index)
+                                return
+                            end
+                        end
                     end
                 end
             end
@@ -1434,6 +1524,13 @@ end
 
 ---@param event NthTickEventData
 local function on_tick(event)
+    for index, cliff_data in pairs(storage.cliffs_to_be_exploded or {}) do
+        local cliff = cliff_data.cliff
+        local tick = cliff_data.tick
+        if not (cliff and cliff.valid) or (event.tick >= tick + 60 * 5) then
+            storage.cliffs_to_be_exploded[index] = nil
+        end
+    end
     for _, player in pairs(game.connected_players) do
         local player_index = player.index
         storage.spiderbots[player_index] = storage.spiderbots[player_index] or {}
@@ -1713,11 +1810,14 @@ local function on_tick(event)
                         goto next_spiderbot
                     end
                 elseif (entity.type == "cliff") and inventory_has_cliff_explosives(inventory) then
+                    local cliff_position_key = get_cliff_position_key(entity)
+                    storage.cliffs_to_be_exploded = storage.cliffs_to_be_exploded or {}
+                    if storage.cliffs_to_be_exploded[cliff_position_key] then goto next_entity end
                     local distance_to_task = get_distance(entity.position, spiderbot.position)
                     if distance_to_task < double_max_task_range then
                         spiderbot_data.task = {
                             task_type = "deconstruct_entity",
-                            task_id = entity_id,
+                            task_id = cliff_position_key,
                             entity = entity,
                             projectile_item = "cliff-explosives",
                         }
@@ -1725,6 +1825,15 @@ local function on_tick(event)
                         spiderbot_data.path_request_id = request_path(spiderbot, entity)
                         spiders_dispatched = spiders_dispatched + 1
                         decon_ordered = true
+                        local nearby_cliffs = surface.find_entities_filtered {
+                            position = entity.position,
+                            radius = 7,
+                            type = "cliff",
+                            to_be_deconstructed = true,
+                        }
+                        for _, nearby_cliff in pairs(nearby_cliffs) do
+                            storage.cliffs_to_be_exploded[get_cliff_position_key(nearby_cliff)] = { cliff = nearby_cliff, tick = event.tick }
+                        end
                         goto next_spiderbot
                     else
                         goto next_spiderbot
