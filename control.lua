@@ -37,7 +37,7 @@ local function is_backer_name(name)
             storage.backer_name_lookup[backer_name] = true
         end
     end
-    return storage.backer_name_lookup[name]
+    return storage.backer_name_lookup[name] or false
 end
 
 ---@param pos_1 MapPosition|TilePosition
