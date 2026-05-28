@@ -882,8 +882,8 @@ local function deconstruct_entity(spiderbot_data)
                             local has_cliff_explosives, quality = inventory_has_cliff_explosives(inventory)
                             if has_cliff_explosives then
                                 local target_position = {
-                                    x = entity.position.x + ((math.random() - 0.5) * 1.5),
-                                    y = entity.position.y + ((math.random() - 0.5) * 1.5),
+                                    x = entity.position.x + ((math.random() - 0.5) * 0.25),
+                                    y = entity.position.y + ((math.random() - 0.5) * 0.25),
                                 }
                                 spiderbot.surface.create_entity {
                                     name = "cliff-explosives",
