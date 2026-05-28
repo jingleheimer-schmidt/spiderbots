@@ -687,8 +687,24 @@ local function find_nearby_cliff_to_deconstruct(spiderbot_data)
     }
     for _, cliff in pairs(cliffs) do
         local position_key = get_cliff_position_key(cliff)
-        if not (storage.cliffs_to_be_exploded and storage.cliffs_to_be_exploded[position_key]) then
+        storage.cliffs_to_be_exploded = storage.cliffs_to_be_exploded or {}
+        if not storage.cliffs_to_be_exploded[position_key] then
             local data = storage.spiderbots[spiderbot_data.player_index][spiderbot_data.spiderbot_id]
+            local neighbors = cliff.neighbours or {} --[[@as table<defines.direction, LuaEntity> ]]
+            local neighbor_count = table_size(neighbors)
+            if neighbor_count == 1 then
+                for direction, neighbor in pairs(neighbors) do
+                    local has_more_than_one_neighbor = neighbor.neighbours and table_size(neighbor.neighbours) > 1
+                    local neighbor_position_key = get_cliff_position_key(neighbor)
+                    local not_registered = not storage.cliffs_to_be_exploded[neighbor_position_key]
+                    if has_more_than_one_neighbor and not_registered and neighbor.to_be_deconstructed() then
+                        neighbors = neighbor.neighbours --[[@as table<defines.direction, LuaEntity> ]]
+                        cliff = neighbor
+                        position_key = neighbor_position_key
+                        break
+                    end
+                end
+            end
             data.task = {
                 task_type = "deconstruct_entity",
                 task_id = position_key,
@@ -697,16 +713,11 @@ local function find_nearby_cliff_to_deconstruct(spiderbot_data)
             }
             data.status = "path_requested"
             data.path_request_id = request_path(spiderbot_data.spiderbot, cliff)
-            storage.cliffs_to_be_exploded = storage.cliffs_to_be_exploded or {}
-            local nearby_cliffs = surface.find_entities_filtered {
-                position = cliff.position,
-                radius = 7,
-                type = "cliff",
-                to_be_deconstructed = true,
-            }
-            for _, nearby_cliff in pairs(nearby_cliffs) do
-                storage.cliffs_to_be_exploded[get_cliff_position_key(nearby_cliff)] = { cliff = nearby_cliff, tick = game.tick }
+            local game_tick = game.tick
+            for direction, neighbor in pairs(neighbors) do
+                storage.cliffs_to_be_exploded[get_cliff_position_key(neighbor)] = { cliff = neighbor, tick = game_tick }
             end
+            storage.cliffs_to_be_exploded[position_key] = { cliff = cliff, tick = game_tick }
             return
         end
     end
@@ -874,31 +885,6 @@ local function deconstruct_entity(spiderbot_data)
                                     x = entity.position.x + ((math.random() - 0.5) * 1.5),
                                     y = entity.position.y + ((math.random() - 0.5) * 1.5),
                                 }
-                                local nearby_cliffs = entity.surface.find_entities_filtered {
-                                    type = "cliff",
-                                    position = target_position,
-                                    radius = 4,
-                                    to_be_deconstructed = true,
-                                }
-                                local nearby_cliffs_count = #nearby_cliffs
-                                --[[@type table<string, { cliff: LuaEntity, tick: uint }>]]
-                                storage.cliffs_to_be_exploded = storage.cliffs_to_be_exploded or {}
-                                if nearby_cliffs_count > 0 then
-                                    local sum_x = 0
-                                    local sum_y = 0
-                                    for _, cliff in pairs(nearby_cliffs) do
-                                        sum_x = sum_x + cliff.position.x
-                                        sum_y = sum_y + cliff.position.y
-                                        storage.cliffs_to_be_exploded[get_cliff_position_key(cliff)] = {
-                                            cliff = cliff,
-                                            tick = game.tick
-                                        }
-                                    end
-                                    target_position = {
-                                        x = sum_x / nearby_cliffs_count,
-                                        y = sum_y / nearby_cliffs_count,
-                                    }
-                                end
                                 spiderbot.surface.create_entity {
                                     name = "cliff-explosives",
                                     quality = quality,
@@ -1815,6 +1801,21 @@ local function on_tick(event)
                     if storage.cliffs_to_be_exploded[cliff_position_key] then goto next_entity end
                     local distance_to_task = get_distance(entity.position, spiderbot.position)
                     if distance_to_task < double_max_task_range then
+                        local neighbors = entity.neighbours or {} --[[@as table<defines.direction, LuaEntity> ]]
+                        local neighbor_count = table_size(neighbors)
+                        if neighbor_count == 1 then
+                            for direction, neighbor in pairs(neighbors) do
+                                local has_more_than_one_neighbor = neighbor.neighbours and table_size(neighbor.neighbours) > 1
+                                local neighbor_position_key = get_cliff_position_key(neighbor)
+                                local not_registered = not storage.cliffs_to_be_exploded[neighbor_position_key]
+                                if has_more_than_one_neighbor and not_registered and neighbor.to_be_deconstructed() then
+                                    neighbors = neighbor.neighbours --[[@as table<defines.direction, LuaEntity> ]]
+                                    entity = neighbor
+                                    cliff_position_key = neighbor_position_key
+                                    break
+                                end
+                            end
+                        end
                         spiderbot_data.task = {
                             task_type = "deconstruct_entity",
                             task_id = cliff_position_key,
@@ -1825,15 +1826,11 @@ local function on_tick(event)
                         spiderbot_data.path_request_id = request_path(spiderbot, entity)
                         spiders_dispatched = spiders_dispatched + 1
                         decon_ordered = true
-                        local nearby_cliffs = surface.find_entities_filtered {
-                            position = entity.position,
-                            radius = 7,
-                            type = "cliff",
-                            to_be_deconstructed = true,
-                        }
-                        for _, nearby_cliff in pairs(nearby_cliffs) do
-                            storage.cliffs_to_be_exploded[get_cliff_position_key(nearby_cliff)] = { cliff = nearby_cliff, tick = event.tick }
+                        local game_tick = event.tick
+                        for direction, neighbor in pairs(neighbors) do
+                            storage.cliffs_to_be_exploded[get_cliff_position_key(neighbor)] = { cliff = neighbor, tick = game_tick }
                         end
+                        storage.cliffs_to_be_exploded[cliff_position_key] = { cliff = entity, tick = game_tick }
                         goto next_spiderbot
                     else
                         goto next_spiderbot
