@@ -53,15 +53,7 @@ end
 ---@return integer
 local function get_entity_uuid(entity)
     local registration_number, useful_id, type = script.register_on_object_destroyed(entity)
-    if useful_id == 0 then
-        if entity.type == "cliff" then
-            return useful_id
-        else
-            return registration_number
-        end
-    else
-        return registration_number
-    end
+    return registration_number
 end
 
 ---@param tile LuaTile
