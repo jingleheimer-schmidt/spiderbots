@@ -208,11 +208,11 @@ script.on_event(defines.events.on_player_used_capsule, on_player_used_capsule)
 -- remove the spiderbot data when a spiderbot is destroyed
 ---@param event EventData.on_object_destroyed
 local function on_spider_destroyed(event)
-    local unit_number = event.useful_id
-    if not unit_number then return end
+    local registration_number = event.registration_number
+    if not registration_number then return end
     for player_index, spiderbot_data in pairs(storage.spiderbots) do
         for spider_id, data in pairs(spiderbot_data) do
-            if data.spiderbot_id == unit_number then
+            if data.spiderbot_id == registration_number then
                 storage.spiderbots[player_index][spider_id] = nil
                 return
             end
