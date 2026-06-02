@@ -521,6 +521,46 @@ local function get_entity_inventory(entity)
     end
 end
 
+---@param player LuaPlayer
+---@param item ItemIDAndQualityIDPair|LuaItemStack|string
+---@return LuaInventory?
+local function get_inventory_with_item(player, item)
+    local character = player.character
+    if character and character.valid then
+        local inventory = get_entity_inventory(character)
+        if inventory and inventory.valid and inventory_has_item(inventory, item) then
+            return inventory
+        end
+    end
+    local vehicle = player.physical_vehicle
+    if vehicle and vehicle.valid then
+        local inventory = get_entity_inventory(vehicle)
+        if inventory and inventory.valid and inventory_has_item(inventory, item) then
+            return inventory
+        end
+    end
+end
+
+---@param player LuaPlayer
+---@param item ItemStackDefinition|LuaItemStack|string
+---@return LuaInventory?
+local function get_inventory_with_space(player, item)
+    local character = player.character
+    if character and character.valid then
+        local inventory = get_entity_inventory(character)
+        if inventory and inventory.valid and inventory_has_space(inventory, item) then
+            return inventory
+        end
+    end
+    local vehicle = player.physical_vehicle
+    if vehicle and vehicle.valid then
+        local inventory = get_entity_inventory(vehicle)
+        if inventory and inventory.valid and inventory_has_space(inventory, item) then
+            return inventory
+        end
+    end
+end
+
 ---@param spiderbot LuaEntity
 ---@param player LuaPlayer
 local function perform_directional_jump(spiderbot, player)
@@ -665,6 +705,32 @@ local function inventory_has_cliff_explosives(inventory)
         end
     end
     return false, nil
+end
+
+---@param player LuaPlayer
+---@return LuaInventory?
+---@return LuaQualityPrototype?
+local function get_inventory_with_cliff_explosives(player)
+    local character = player.character
+    if character and character.valid then
+        local inventory = get_entity_inventory(character)
+        if inventory and inventory.valid then
+            local has_cliff_explosives, quality_prototype = inventory_has_cliff_explosives(inventory)
+            if has_cliff_explosives then
+                return inventory, quality_prototype
+            end
+        end
+    end
+    local vehicle = player.physical_vehicle
+    if vehicle and vehicle.valid then
+        local inventory = get_entity_inventory(vehicle)
+        if inventory and inventory.valid then
+            local has_cliff_explosives, quality_prototype = inventory_has_cliff_explosives(inventory)
+            if has_cliff_explosives then
+                return inventory, quality_prototype
+            end
+        end
+    end
 end
 
 ---@param spiderbot_data spiderbot_data
