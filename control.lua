@@ -127,7 +127,7 @@ local function on_trigger_created_entity(event)
                                 end
                             end
                             table.remove(projectiles, i)
-                            return
+                            break
                         end
                     end
                     if game.tick - projectile_data.tick > 60 * 60 then
