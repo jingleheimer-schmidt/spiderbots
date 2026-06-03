@@ -10,6 +10,7 @@ Date: ????
     - Fixed error causing tile build tasks to not get assigned at the same rate as other task types
     - Fixed that in-progress work orders could be completed and create projectiles when the player was on a different surface than the spiderbot
     - Reduced chance that spiderbots could become disassociated when the player rapidly changed surfaces while the spiderbots were still in projectile form
+    - Fixed that item quality was not considered when checking for inventory space for items in deconstruction task entity inventories
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.1
 Date: 2025-06-18

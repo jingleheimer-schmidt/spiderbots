@@ -799,17 +799,13 @@ local function get_entity_size_category(entity)
 end
 
 ---@param entity LuaEntity
----@return table<string, integer>
+---@return ItemWithQualityCount[]
 local function get_inventory_contents(entity)
     local entity_inventory_contents = {}
     for i = 1, 11 --[[@type defines.inventory]] do
-        local inventory_contents = entity.get_inventory(i)
-        if inventory_contents and inventory_contents.valid then
-            for _, item in pairs(inventory_contents.get_contents()) do
-                local item_name = item.name
-                local item_count = item.count
-                entity_inventory_contents[item_name] = (entity_inventory_contents[item_name] or 0) + item_count
-            end
+        local inventory = entity.get_inventory(i)
+        if inventory and inventory.valid then
+            entity_inventory_contents = inventory.get_contents()
         end
     end
     local transport_belt_connectables = {
@@ -827,9 +823,7 @@ local function get_inventory_contents(entity)
             if transport_line and transport_line.valid then
                 local transport_line_contents = transport_line.get_contents()
                 for _, item in pairs(transport_line_contents) do
-                    local item_name = item.name
-                    local item_count = item.count
-                    entity_inventory_contents[item_name] = (entity_inventory_contents[item_name] or 0) + item_count
+                    table.insert(entity_inventory_contents, item)
                 end
             end
         end
@@ -909,9 +903,9 @@ local function deconstruct_entity(spiderbot_data)
                                 end
                                 if count > 4 then break end
                                 create_item_projectile(spiderbot, player_character, mining_result_name, player)
-                                for item_name, item_count in pairs(entity_inventory_contents) do
-                                    for i = 1, math.max(math.ceil(item_count * 0.75), 1) do
-                                        create_item_projectile(spiderbot, player_character, item_name, player, math.random(5, 10) / 5)
+                                for _, item in pairs(entity_inventory_contents) do
+                                    for i = 1, math.max(math.ceil(item.count * 0.75), 1) do
+                                        create_item_projectile(spiderbot, player_character, item.name, player, math.random(5, 10) / 5)
                                     end
                                 end
                             end
@@ -1813,9 +1807,9 @@ local function on_tick(event)
                 local mining_result = get_result_when_mined(entity)
                 local inventory_contents = get_inventory_contents(entity)
                 local inventory_has_space_for_all_contents = mining_result and ((character_inventory and inventory_has_space(character_inventory, mining_result)) or (vehicle_inventory and inventory_has_space(vehicle_inventory, mining_result)))
-                for item_name, item_count in pairs(inventory_contents) do
-                    local item_stack = { name = item_name, count = item_count }
-                    if not ((character_inventory and inventory_has_space(character_inventory, item_stack)) or (vehicle_inventory and inventory_has_space(vehicle_inventory, item_stack))) then
+                for _, item in pairs(inventory_contents) do
+                    ---@cast item ItemStackDefinition
+                    if not ((character_inventory and inventory_has_space(character_inventory, item)) or (vehicle_inventory and inventory_has_space(vehicle_inventory, item))) then
                         inventory_has_space_for_all_contents = false
                         break
                     end
