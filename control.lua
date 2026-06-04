@@ -1231,7 +1231,7 @@ local function on_spider_command_completed(event)
             if player and player.valid then
                 local player_entity = get_player_entity(player)
                 if not (player_entity and player_entity.valid) then reset_task_data(spiderbot_id, spiderbot_data.player_index) return end
-                if not (player_entity.surface.index == spiderbot.surface_index) then reset_task_data(spiderbot_id, spiderbot_data.player_index) return end
+                if not (player_entity.surface_index == spiderbot.surface_index) then reset_task_data(spiderbot_id, spiderbot_data.player_index) return end
             end
             local status = spiderbot_data.status
             if status == "task_assigned" then
@@ -1280,7 +1280,7 @@ local function on_spider_command_completed(event)
             if task.projectile_item == "cliff-explosives" then
                 local entity = task.entity
                 if not (entity and entity.valid) then
-                    find_nearby_cliff_to_deconstruct(spiderbot_data)
+                    reset_task_data(spiderbot_id, spiderbot_data.player_index)
                     return
                 end
                 local player = spiderbot_data.player
@@ -1548,8 +1548,7 @@ end
 local function on_tick(event)
     for index, cliff_data in pairs(storage.cliffs_to_be_exploded or {}) do
         local cliff = cliff_data.cliff
-        local tick = cliff_data.tick
-        if not (cliff and cliff.valid) or (event.tick >= tick + 60 * 5) then
+        if not (cliff and cliff.valid) or (event.tick >= cliff_data.tick + 60 * 5) then
             storage.cliffs_to_be_exploded[index] = nil
         end
     end
