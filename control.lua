@@ -2211,9 +2211,36 @@ end
 
 script.on_event(defines.events.on_technology_effects_reset, reset_follower_count)
 
+local function create_simulation_player()
+    local simulation = game.simulation
+    if not simulation then return end
+    local surface = game.surfaces[1]
+    -- local position_1 = { x = -0.75, y = -0.75 }
+    -- local position_2 = { x = -0.25, y = 0.75 }
+    -- local position_3 = { x = 0.5, y = -0.25 }
+    -- surface.create_entity { name = "spiderbot", position = position_1, }
+    -- surface.create_entity { name = "spiderbot", position = position_2, }
+    -- surface.create_entity { name = "spiderbot", position = position_3, }
+    local character = surface.create_entity { name = "character", position = { x = 0, y = 0 }, force = game.forces.neutral }
+    character.color = { r = 1, g = 0.5, b = 0 }
+    for i = 1, 7 do
+        surface.create_entity {
+            name = "spiderbot-trigger",
+            position = character.position,
+            source = character,
+            target = get_random_position_in_radius({ x = 0, y = 0 }, 3),
+            speed = math.random() / 7,
+            raise_built = true,
+            color = character.color,
+        }
+    end
+    character.direction = defines.direction.south
+end
+
 local function on_init()
     setup_storage()
     reset_follower_count()
+    create_simulation_player()
 end
 
 script.on_init(on_init)

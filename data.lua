@@ -142,6 +142,14 @@ local spiderbot_item = {
                 -- 	no action, since control.lua creates the projectile when a player uses the capsule. the ammo type here is just for the tooltip on the item
             }
         }
+    },
+    factoriopedia_simulation = {
+        checkboard = true,
+        mods = { "spiderbots" },
+        game_view_settings = {
+            default_show_value = false,
+            show_quickbar = false,
+        }
     }
 }
 data:extend { spiderbot_item }
