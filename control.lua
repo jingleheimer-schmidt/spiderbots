@@ -1801,7 +1801,8 @@ local function on_tick(event)
                 local entity = pop_random(decon_entities)
                 if not (entity and entity.valid) then goto next_entity end
                 if entity.type == "fish" then goto next_entity end
-                if item_not_insertable[entity.name] then goto next_entity end
+                local entity_name_with_quality = string.format("%s|%s", entity.name, entity.quality.name)
+                if item_not_insertable[entity_name_with_quality] then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
                 local mining_result = get_result_when_mined(entity)
@@ -1872,7 +1873,7 @@ local function on_tick(event)
                         goto next_spiderbot
                     end
                 else -- if player has no space for the result or no cliff explosives, remove all entities of the same name from the table
-                    item_not_insertable[entity.name] = true
+                    item_not_insertable[entity_name_with_quality] = true
                 end
                 ::next_entity::
             end
@@ -1886,7 +1887,8 @@ local function on_tick(event)
             while (#revive_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = pop_random(revive_entities)
                 if not (entity and entity.valid) then goto next_entity end
-                if item_not_in_inventory[entity.ghost_name] then goto next_entity end
+                local ghost_name_with_quality = string.format("%s|%s", entity.ghost_name, entity.quality.name)
+                if item_not_in_inventory[ghost_name_with_quality] then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
                 local items = entity.ghost_prototype.items_to_place_this
@@ -1911,10 +1913,10 @@ local function on_tick(event)
                             goto next_spiderbot
                         end
                     else
-                        item_not_in_inventory[entity.ghost_name] = true
+                        item_not_in_inventory[ghost_name_with_quality] = true
                     end
                 else
-                    item_not_in_inventory[entity.ghost_name] = true
+                    item_not_in_inventory[ghost_name_with_quality] = true
                 end
                 ::next_entity::
             end
@@ -1928,7 +1930,8 @@ local function on_tick(event)
             while (#upgrade_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = pop_random(upgrade_entities)
                 if not (entity and entity.valid) then goto next_entity end
-                if item_not_in_inventory[entity.name] then goto next_entity end
+                local entity_name_with_quality = string.format("%s|%s", entity.name, entity.quality.name)
+                if item_not_in_inventory[entity_name_with_quality] then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
                 local upgrade_target, quality_prototype = entity.get_upgrade_target()
@@ -1954,7 +1957,7 @@ local function on_tick(event)
                             goto next_spiderbot
                         end
                     else
-                        item_not_in_inventory[entity.name] = true
+                        item_not_in_inventory[entity_name_with_quality] = true
                     end
                 end
                 ::next_entity::
