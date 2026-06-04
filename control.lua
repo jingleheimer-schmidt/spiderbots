@@ -1561,7 +1561,7 @@ local function on_tick(event)
         storage.spiderbots[player_index] = storage.spiderbots[player_index] or {}
         local spiderbots = storage.spiderbots[player_index]
         -- goto next player if the player has no spiderbots deployed
-        if table_size(spiderbots) == 0 then goto next_player end
+        if next(spiderbots) == nil then goto next_player end
         local player_entity = get_player_entity(player)
         -- relink spiderbots if the player changes character
         if not (player_entity and player_entity.valid) then
