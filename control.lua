@@ -1469,13 +1469,14 @@ local function return_spiderbot_to_inventory(spiderbot, player)
         -- raise_built = true,
         quality = spiderbot.quality,
     }
-    local inventory = get_inventory_with_space(player, "spiderbot")
+    local item_stack = { name = "spiderbot", count = 1, quality = spiderbot.quality.name } --[[@as ItemStackDefinition]]
+    local inventory = get_inventory_with_space(player, item_stack)
     if inventory then
-        inventory.insert { name = "spiderbot", count = 1, quality = spiderbot.quality }
+        inventory.insert(item_stack)
     else
         player_character.surface.spill_item_stack {
             position = spiderbot.position,
-            stack = { name = "spiderbot", count = 1, quality = spiderbot.quality },
+            stack = item_stack,
             enable_looted = true,
             force = player_character.force,
             allow_belts = false,
