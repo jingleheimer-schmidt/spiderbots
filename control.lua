@@ -1807,6 +1807,8 @@ local function on_tick(event)
                 if entity.type == "fish" then goto next_entity end
                 local entity_name_with_quality = string.format("%s|%s", entity.name, entity.quality.name)
                 if item_not_insertable[entity_name_with_quality] then goto next_entity end
+                local distance_to_task = get_distance(entity.position, spiderbot.position)
+                if not (distance_to_task < double_max_task_range) then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
                 local mining_result = get_result_when_mined(entity)
@@ -1820,62 +1822,52 @@ local function on_tick(event)
                     end
                 end
                 if inventory_has_space_for_all_contents then
-                    local distance_to_task = get_distance(entity.position, spiderbot.position)
-                    if distance_to_task < double_max_task_range then
-                        spiderbot_data.task = {
-                            task_type = "deconstruct_entity",
-                            task_id = entity_id,
-                            entity = entity,
-                            projectile_item = mining_result and mining_result.name,
-                        }
-                        spiderbot_data.status = "path_requested"
-                        spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                        spiders_dispatched = spiders_dispatched + 1
-                        decon_ordered = true
-                        goto next_spiderbot
-                    else
-                        goto next_spiderbot
-                    end
+                    spiderbot_data.task = {
+                        task_type = "deconstruct_entity",
+                        task_id = entity_id,
+                        entity = entity,
+                        projectile_item = mining_result and mining_result.name,
+                    }
+                    spiderbot_data.status = "path_requested"
+                    spiderbot_data.path_request_id = request_path(spiderbot, entity)
+                    spiders_dispatched = spiders_dispatched + 1
+                    decon_ordered = true
+                    goto next_spiderbot
                 elseif (entity.type == "cliff") and ((character_inventory and inventory_has_cliff_explosives(character_inventory)) or (vehicle_inventory and inventory_has_cliff_explosives(vehicle_inventory))) then
                     local cliff_position_key = get_cliff_position_key(entity)
                     storage.cliffs_to_be_exploded = storage.cliffs_to_be_exploded or {}
                     if storage.cliffs_to_be_exploded[cliff_position_key] then goto next_entity end
-                    local distance_to_task = get_distance(entity.position, spiderbot.position)
-                    if distance_to_task < double_max_task_range then
-                        local neighbors = entity.neighbours or {} --[[@as table<defines.direction, LuaEntity> ]]
-                        local neighbor_count = table_size(neighbors)
-                        if neighbor_count == 1 then
-                            for direction, neighbor in pairs(neighbors) do
-                                local has_more_than_one_neighbor = neighbor.neighbours and table_size(neighbor.neighbours) > 1
-                                local neighbor_position_key = get_cliff_position_key(neighbor)
-                                local not_registered = not storage.cliffs_to_be_exploded[neighbor_position_key]
-                                if has_more_than_one_neighbor and not_registered and neighbor.to_be_deconstructed() then
-                                    neighbors = neighbor.neighbours --[[@as table<defines.direction, LuaEntity> ]]
-                                    entity = neighbor
-                                    cliff_position_key = neighbor_position_key
-                                    break
-                                end
+                    local neighbors = entity.neighbours or {} --[[@as table<defines.direction, LuaEntity> ]]
+                    local neighbor_count = table_size(neighbors)
+                    if neighbor_count == 1 then
+                        for direction, neighbor in pairs(neighbors) do
+                            local has_more_than_one_neighbor = neighbor.neighbours and table_size(neighbor.neighbours) > 1
+                            local neighbor_position_key = get_cliff_position_key(neighbor)
+                            local not_registered = not storage.cliffs_to_be_exploded[neighbor_position_key]
+                            if has_more_than_one_neighbor and not_registered and neighbor.to_be_deconstructed() then
+                                neighbors = neighbor.neighbours --[[@as table<defines.direction, LuaEntity> ]]
+                                entity = neighbor
+                                cliff_position_key = neighbor_position_key
+                                break
                             end
                         end
-                        spiderbot_data.task = {
-                            task_type = "deconstruct_entity",
-                            task_id = cliff_position_key,
-                            entity = entity,
-                            projectile_item = "cliff-explosives",
-                        }
-                        spiderbot_data.status = "path_requested"
-                        spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                        spiders_dispatched = spiders_dispatched + 1
-                        decon_ordered = true
-                        local game_tick = event.tick
-                        for direction, neighbor in pairs(neighbors) do
-                            storage.cliffs_to_be_exploded[get_cliff_position_key(neighbor)] = { cliff = neighbor, tick = game_tick }
-                        end
-                        storage.cliffs_to_be_exploded[cliff_position_key] = { cliff = entity, tick = game_tick }
-                        goto next_spiderbot
-                    else
-                        goto next_spiderbot
                     end
+                    spiderbot_data.task = {
+                        task_type = "deconstruct_entity",
+                        task_id = cliff_position_key,
+                        entity = entity,
+                        projectile_item = "cliff-explosives",
+                    }
+                    spiderbot_data.status = "path_requested"
+                    spiderbot_data.path_request_id = request_path(spiderbot, entity)
+                    spiders_dispatched = spiders_dispatched + 1
+                    decon_ordered = true
+                    local game_tick = event.tick
+                    for direction, neighbor in pairs(neighbors) do
+                        storage.cliffs_to_be_exploded[get_cliff_position_key(neighbor)] = { cliff = neighbor, tick = game_tick }
+                    end
+                    storage.cliffs_to_be_exploded[cliff_position_key] = { cliff = entity, tick = game_tick }
+                    goto next_spiderbot
                 else -- if player has no space for the result or no cliff explosives, remove all entities of the same name from the table
                     item_not_insertable[entity_name_with_quality] = true
                 end
@@ -1893,6 +1885,8 @@ local function on_tick(event)
                 if not (entity and entity.valid) then goto next_entity end
                 local ghost_name_with_quality = string.format("%s|%s", entity.ghost_name, entity.quality.name)
                 if item_not_in_inventory[ghost_name_with_quality] then goto next_entity end
+                local distance_to_task = get_distance(entity.position, spiderbot.position)
+                if not (distance_to_task < double_max_task_range) then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
                 local items = entity.ghost_prototype.items_to_place_this
@@ -1900,22 +1894,17 @@ local function on_tick(event)
                 if item_stack then
                     local item_with_quality = { name = item_stack.name, quality = entity.quality }
                     if (character_inventory and inventory_has_item(character_inventory, item_with_quality)) or (vehicle_inventory and inventory_has_item(vehicle_inventory, item_with_quality)) then
-                        local distance_to_task = get_distance(entity.position, spiderbot.position)
-                        if distance_to_task < double_max_task_range then
-                            spiderbot_data.task = {
-                                task_type = "build_ghost",
-                                task_id = entity_id,
-                                entity = entity,
-                                projectile_item = item_stack.name,
-                            }
-                            spiderbot_data.status = "path_requested"
-                            spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                            spiders_dispatched = spiders_dispatched + 1
-                            revive_ordered = true
-                            goto next_spiderbot
-                        else
-                            goto next_spiderbot
-                        end
+                        spiderbot_data.task = {
+                            task_type = "build_ghost",
+                            task_id = entity_id,
+                            entity = entity,
+                            projectile_item = item_stack.name,
+                        }
+                        spiderbot_data.status = "path_requested"
+                        spiderbot_data.path_request_id = request_path(spiderbot, entity)
+                        spiders_dispatched = spiders_dispatched + 1
+                        revive_ordered = true
+                        goto next_spiderbot
                     else
                         item_not_in_inventory[ghost_name_with_quality] = true
                     end
@@ -1936,6 +1925,8 @@ local function on_tick(event)
                 if not (entity and entity.valid) then goto next_entity end
                 local entity_name_with_quality = string.format("%s|%s", entity.name, entity.quality.name)
                 if item_not_in_inventory[entity_name_with_quality] then goto next_entity end
+                local distance_to_task = get_distance(entity.position, spiderbot.position)
+                if not (distance_to_task < double_max_task_range) then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
                 local upgrade_target, quality_prototype = entity.get_upgrade_target()
@@ -1944,22 +1935,17 @@ local function on_tick(event)
                 if upgrade_target and item_stack then
                     local item_with_quality = { name = item_stack.name, quality = quality_prototype }
                     if (character_inventory and inventory_has_item(character_inventory, item_with_quality)) or (vehicle_inventory and inventory_has_item(vehicle_inventory, item_with_quality)) then
-                        local distance_to_task = get_distance(entity.position, spiderbot.position)
-                        if distance_to_task < double_max_task_range then
-                            spiderbot_data.task = {
-                                task_type = "upgrade_entity",
-                                task_id = entity_id,
-                                entity = entity,
-                                projectile_item = item_stack.name,
-                            }
-                            spiderbot_data.status = "path_requested"
-                            spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                            spiders_dispatched = spiders_dispatched + 1
-                            upgrade_ordered = true
-                            goto next_spiderbot
-                        else
-                            goto next_spiderbot
-                        end
+                        spiderbot_data.task = {
+                            task_type = "upgrade_entity",
+                            task_id = entity_id,
+                            entity = entity,
+                            projectile_item = item_stack.name,
+                        }
+                        spiderbot_data.status = "path_requested"
+                        spiderbot_data.path_request_id = request_path(spiderbot, entity)
+                        spiders_dispatched = spiders_dispatched + 1
+                        upgrade_ordered = true
+                        goto next_spiderbot
                     else
                         item_not_in_inventory[entity_name_with_quality] = true
                     end
@@ -1976,6 +1962,8 @@ local function on_tick(event)
             while (#item_proxy_entities > 0 and spiders_dispatched < max_spiders_dispatched) do
                 local entity = pop_random(item_proxy_entities)
                 if not (entity and entity.valid) then goto next_entity end
+                local distance_to_task = get_distance(entity.position, spiderbot.position)
+                if not (distance_to_task < double_max_task_range) then goto next_entity end
                 local entity_id = get_entity_uuid(entity)
                 if is_task_assigned(entity_id) then goto next_entity end
                 local proxy_target = entity.proxy_target
@@ -1989,22 +1977,17 @@ local function on_tick(event)
                         local item_quality_pair = (plan and plan.id) or nil
                         local has_item_or_space = plan_type == "insert" and ((character_inventory and inventory_has_item(character_inventory, item_quality_pair)) or (vehicle_inventory and inventory_has_item(vehicle_inventory, item_quality_pair))) or plan_type == "remove" and ((character_inventory and inventory_has_space(character_inventory, item_quality_pair)) or (vehicle_inventory and inventory_has_space(vehicle_inventory, item_quality_pair))) or nil
                         if has_item_or_space then
-                            local distance_to_task = get_distance(entity.position, spiderbot.position)
-                            if distance_to_task < double_max_task_range then
-                                spiderbot_data.task = {
-                                    task_type = "insert_items",
-                                    task_id = entity_id,
-                                    entity = entity,
-                                    projectile_item = item_quality_pair.name,
-                                }
-                                spiderbot_data.status = "path_requested"
-                                spiderbot_data.path_request_id = request_path(spiderbot, entity)
-                                spiders_dispatched = spiders_dispatched + 1
-                                item_proxy_ordered = true
-                                goto next_spiderbot
-                            else
-                                goto next_spiderbot
-                            end
+                            spiderbot_data.task = {
+                                task_type = "insert_items",
+                                task_id = entity_id,
+                                entity = entity,
+                                projectile_item = item_quality_pair.name,
+                            }
+                            spiderbot_data.status = "path_requested"
+                            spiderbot_data.path_request_id = request_path(spiderbot, entity)
+                            spiders_dispatched = spiders_dispatched + 1
+                            item_proxy_ordered = true
+                            goto next_spiderbot
                         end
                     end
                 end
