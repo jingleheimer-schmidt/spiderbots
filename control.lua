@@ -805,7 +805,10 @@ local function get_inventory_contents(entity)
     for i = 1, 11 --[[@type defines.inventory]] do
         local inventory = entity.get_inventory(i)
         if inventory and inventory.valid then
-            entity_inventory_contents = inventory.get_contents()
+            local inventory_contents = inventory.get_contents()
+            for _, item in pairs(inventory_contents) do
+                table.insert(entity_inventory_contents, item)
+            end
         end
     end
     local transport_belt_connectables = {
