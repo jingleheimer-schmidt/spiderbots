@@ -119,6 +119,7 @@ spiderbot_recipe.order = "a[robot]-b[spiderbot]"
 data:extend { spiderbot_recipe }
 
 local spidertron_item = table.deepcopy(data.raw["item-with-entity-data"]["spidertron"])
+---@type data.ItemPrototype
 local spiderbot_item = {
     type = "capsule",
     name = "spiderbot",
@@ -141,6 +142,14 @@ local spiderbot_item = {
                 target_type = "position",
                 -- 	no action, since control.lua creates the projectile when a player uses the capsule. the ammo type here is just for the tooltip on the item
             }
+        }
+    },
+    factoriopedia_simulation = {
+        checkboard = true,
+        mods = { "spiderbots" },
+        game_view_settings = {
+            default_show_value = false,
+            show_quickbar = false,
         }
     }
 }
@@ -173,6 +182,7 @@ local spiderbot_projectile = {
 }
 data:extend { spiderbot_projectile }
 
+---@type data.ProjectilePrototype
 local spiderbot_no_trigger_projectile = {
     type = "projectile",
     name = "spiderbot-no-trigger",
@@ -199,6 +209,7 @@ local toggle_spiderbots_shortcut = {
 }
 data:extend({ toggle_spiderbots_shortcut })
 
+---@type data.CustomInputPrototype
 local toggle_spiderbots_hotkey = {
     type = "custom-input",
     name = "toggle-spiderbots",

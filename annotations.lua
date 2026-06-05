@@ -33,12 +33,14 @@
 ---@field spiderbot_id uuid
 ---@field player LuaPlayer
 ---@field player_index player_index
----@field status string
+---@field status "path_requested" | "idle" | "task_assigned"
 ---@field path_request_id integer?
 ---@field task task_data?
 
 ---@class task_data
----@field task_type string
+---@field task_type "build_ghost" | "deconstruct_entity" | "upgrade_entity" | "insert_items" | "repair_entity" | "deconstruct_tile" | "build_tile"
 ---@field task_id uuid
 ---@field entity LuaEntity?
 ---@field tile LuaTile?
+---@field projectile_item string?
+---@field item_to_place_this ItemWithQualityCount?
