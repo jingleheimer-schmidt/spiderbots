@@ -1134,11 +1134,15 @@ local function deconstruct_tile(spiderbot_data)
                 local tile_prototype = tile.prototype
                 local mineable_properties = tile_prototype.mineable_properties
                 local products = mineable_properties.products
+                local any_item_was_inserted = false
                 for _, product in pairs(products) do
                     local product_item_stack = { name = product.name, count = product.amount }
                     local inventory = get_inventory_with_space(player, product_item_stack)
                     if inventory then
                         local inserted_count = inventory.insert(product_item_stack)
+                        if inserted_count > 0 then
+                            any_item_was_inserted = true
+                        end
                         if inserted_count < product_item_stack.count then
                             spiderbot_data.spiderbot.surface.spill_item_stack {
                                 position = tile.position,
@@ -1155,13 +1159,15 @@ local function deconstruct_tile(spiderbot_data)
                         end
                     end
                 end
-                local tile_position = tile.position
-                tile.surface.set_tiles({ { name = hidden_tile, position = tile_position } })
-                local mined_sound = get_valid_sound_path(tile_prototype.name .. "-mined_sound", "utility/deconstruct_small")
-                tile.surface.play_sound {
-                    path = mined_sound,
-                    position = tile_position,
-                }
+                if any_item_was_inserted then
+                    local tile_position = tile.position
+                    tile.surface.set_tiles({ { name = hidden_tile, position = tile_position } })
+                    local mined_sound = get_valid_sound_path(tile_prototype.name .. "-mined_sound", "utility/deconstruct_small")
+                    tile.surface.play_sound {
+                        path = mined_sound,
+                        position = tile_position,
+                    }
+                end
             end
         end
     end
