@@ -95,6 +95,7 @@ local function register_new_spiderbot(spiderbot, player, player_index)
         local position_in_radius = player_entity.surface.find_non_colliding_position("spiderbot-leg-1", player_entity.position, 50, 0.5)
         local position = position_in_radius or player_entity.position
         spiderbot.teleport(position, player_entity.surface, true)
+        spiderbot.follow_target = player_entity
     end
 end
 
