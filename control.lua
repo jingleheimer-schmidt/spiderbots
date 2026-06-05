@@ -1138,9 +1138,20 @@ local function deconstruct_tile(spiderbot_data)
                     local product_item_stack = { name = product.name, count = product.amount }
                     local inventory = get_inventory_with_space(player, product_item_stack)
                     if inventory then
-                        inventory.insert(product_item_stack)
+                        local inserted_count = inventory.insert(product_item_stack)
+                        if inserted_count < product_item_stack.count then
+                            spiderbot_data.spiderbot.surface.spill_item_stack {
+                                position = tile.position,
+                                stack = { name = product.name, count = product_item_stack.count - inserted_count },
+                                force = player.force,
+                                enable_looted = true,
+                                allow_belts = false,
+                            }
+                        end
                         if player_character and player_character.valid then
-                            create_item_projectile(spiderbot_data.spiderbot, player_character, product.name, player)
+                            for i = 1, inserted_count do
+                                create_item_projectile(spiderbot_data.spiderbot, player_character, product.name, player)
+                            end
                         end
                     end
                 end
