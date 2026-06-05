@@ -679,7 +679,7 @@ local function build_ghost(spiderbot_data)
     reset_task_data(spiderbot_id, player_index)
 end
 
----returns a string position key, with x and y rounded to the nearest 10 tiles
+---returns a string position key, with x and y rounded to the nearest tile
 ---@param entity LuaEntity
 ---@return string
 local function get_cliff_position_key(entity)
@@ -2201,6 +2201,7 @@ local function create_simulation_player()
     local simulation = game.simulation
     if not simulation then return end
     local surface = game.surfaces[1]
+    -- surface.create_entity { name = "spiderbot", position = { x = 0, y = 0 } }
     -- local position_1 = { x = -0.75, y = -0.75 }
     -- local position_2 = { x = -0.25, y = 0.75 }
     -- local position_3 = { x = 0.5, y = -0.25 }
@@ -2208,6 +2209,7 @@ local function create_simulation_player()
     -- surface.create_entity { name = "spiderbot", position = position_2, }
     -- surface.create_entity { name = "spiderbot", position = position_3, }
     local character = surface.create_entity { name = "character", position = { x = 0, y = 0 }, force = game.forces.neutral }
+    if not (character and character.valid) then return end
     character.color = { r = 1, g = 0.5, b = 0 }
     for i = 1, 7 do
         surface.create_entity {
