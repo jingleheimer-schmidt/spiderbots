@@ -3,6 +3,12 @@ Version: 0.3.2
 Date: ????
   Changes:
     - Item projectiles are now thrown from the player to the spiderbot, and then from the spiderbot to the target position.
+    - Added a Factoriopedia simulation preview for the Spiderbot item/recipe page.
+    - Improved cliff explosive handling. Adjacent cliffs are grouped and reserved together, reducing duplicate assignments and enabling both more efficient and coordinated simultaneous cliff explosions.
+    - Improved task-selection performance by narrowing tile-ghost searches and skipping out-of-range tasks earlier.
+    - Added support for quality spiderbot items and entities.
+    - Spiderbots now prioritize using the player inventory, while using associated vehicle inventories as overflow when the player is in a vehicle.
+    - Improved performance when near large numbers of ghosts and deconstruction requests
   Bugfixes:
     - Fixed spiderbot task assignment only dispatching one spiderbot per pass for tile ghost tasks
     - Fixed that spiderbots would not be assigned build tasks when player was in a vehicle
@@ -10,7 +16,11 @@ Date: ????
     - Fixed error causing tile build tasks to not get assigned at the same rate as other task types
     - Fixed that in-progress work orders could be completed and create projectiles when the player was on a different surface than the spiderbot
     - Reduced chance that spiderbots could become disassociated when the player rapidly changed surfaces while the spiderbots were still in projectile form
-    - Fixed that item quality was not considered when checking for inventory space for items in deconstruction task entity inventories
+    - Fixed destroyed spiderbots sometimes remaining in mod tracking due to object-destroy ID mismatch.
+    - Fixed deconstruction inventory checks to preserve quality and include contents from all entity inventories/transport lines.
+    - Fixed item projectiles being sent after the required item was no longer available.
+  Locale:
+    - Updated Spiderbot description
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.1
 Date: 2025-06-18
