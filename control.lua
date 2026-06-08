@@ -429,38 +429,7 @@ end
 ---@return integer
 local function request_path(spiderbot, entity)
     local spider_leg_bounding_box = { { -0.01, -0.01 }, { 0.01, 0.01 } }
-    -- just use the player collision layer, so the spiderbots can path through anything the player can walk through. even though they can't walk through ghosts, they can still path through them and try to fit their legs around them
-    local spider_leg_collision_mask = {
-        layers = {
-            -- ground_tile = true,
-            water_tile = true,
-            -- resource = true,
-            -- doodad = true,
-            -- floor = true,
-            -- rail = true,
-            -- transport_belt = true,
-            -- item = true,
-            -- ghost = true,
-            object = true,
-            -- player = true,
-            -- car = true,
-            -- train = true,
-            -- elevated_rail = true,
-            -- elevated_train = true,
-            empty_space = true,
-            lava_tile = true,
-            -- meltable = true,
-            rail_support = true,
-            -- trigger_target = true,
-            -- cliff = true,
-            -- is_lower_object = true,
-            -- is_object = true
-            spiderbot_leg = true,
-        },
-        not_colliding_with_itself = true,
-        consider_tile_transitions = false,
-        colliding_with_tiles_only = false,
-    }
+    local spider_leg_collision_mask = storage.spider_leg_collision_mask or prototypes.entity["spiderbot-leg-1"].collision_mask
     local path_to_entity_flags = { cache = false, low_priority = true }
     local non_colliding_position = spiderbot.surface.find_non_colliding_position("spiderbot-leg-1", entity.position, 25, 0.5)
     local goal = non_colliding_position or entity.position
@@ -2260,3 +2229,5 @@ local function on_configuration_changed(event)
 end
 
 script.on_configuration_changed(on_configuration_changed)
+
+require("tests")
