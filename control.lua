@@ -323,12 +323,13 @@ local function redeploy_active_spiderbots(player, player_index, player_entity)
     for spider_id, spiderbot_data in pairs(spiderbots) do
         local spiderbot = spiderbot_data.spiderbot
         if spiderbot.valid then
+            local quality = spiderbot.quality
             local position_in_radius = get_random_position_in_radius(player_entity.position, 15)
             local non_colliding_position = surface.find_non_colliding_position("character", position_in_radius, 50, 0.5)
             local position = non_colliding_position or player_entity.position
             spiderbot.destroy({ raise_destroy = true })
             reset_task_data(spider_id, player_index)
-            create_spiderbot_projectile(player_entity.position, position, player, 1, 0.25, spiderbot.quality)
+            create_spiderbot_projectile(player_entity.position, position, player, 1, 0.25, quality)
         end
     end
     relink_following_spiderbots(player)
