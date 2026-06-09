@@ -2117,15 +2117,28 @@ end
 script.on_event("toggle-spiderbots", toggle_spiderbots)
 script.on_event(defines.events.on_lua_shortcut, toggle_spiderbots)
 
+---@param technology LuaTechnology
+---@return integer?
+local function get_spiderbot_follower_count_from_technology(technology)
+    local level = tonumber(string.match(technology.name, "%d+$"))
+    if not level then return nil end
+    local prototype = technology.prototype
+    if prototype and prototype.max_level > prototype.level then
+        level = math.max(level, (technology.level or level) - 1)
+    end
+    return level * 10 + 10
+end
+
 ---@param event EventData.on_research_finished
 local function on_research_finished(event)
     local research = event.research
     local name = research.name
     if string.find(name, "spiderbot-follower-count", 1, true) then
-        local level = tonumber(string.match(name, "%d+$"))
         local force = research.force.name
+        local follower_count = get_spiderbot_follower_count_from_technology(research)
+        if not follower_count then return end
         storage.spiderbot_follower_count = storage.spiderbot_follower_count or {}
-        storage.spiderbot_follower_count[force] = level * 10 + 10
+        storage.spiderbot_follower_count[force] = math.max(storage.spiderbot_follower_count[force] or 10, follower_count)
     end
 end
 
@@ -2171,11 +2184,12 @@ local function reset_follower_count()
         for _, technology in pairs(force.technologies) do
             if string.find(technology.name, "spiderbot-follower-count", 1, true) then
                 if technology.researched then
-                    local level = tonumber(string.match(technology.name, "%d+$"))
-                    local count = level * 10 + 10
-                    local previous_count = storage.spiderbot_follower_count[force.name] or 0
-                    if count > previous_count then
-                        storage.spiderbot_follower_count[force.name] = count
+                    local follower_count = get_spiderbot_follower_count_from_technology(technology)
+                    if follower_count then
+                        local previous_count = storage.spiderbot_follower_count[force.name] or 0
+                        if follower_count > previous_count then
+                            storage.spiderbot_follower_count[force.name] = follower_count
+                        end
                     end
                 end
             end
