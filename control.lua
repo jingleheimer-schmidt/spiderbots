@@ -1501,8 +1501,35 @@ end
 
 ---@param area BoundingBox
 ---@param subset_size number
+---@param subset_id number
 ---@return BoundingBox
-local function get_subset_of_area(area, subset_size)
+local function get_subset_of_area(area, subset_size, subset_id)
+    local x1 = area[1][1]
+    local y1 = area[1][2]
+    local x2 = area[2][1]
+    local y2 = area[2][2]
+    local width = x2 - x1
+    local height = y2 - y1
+    local chunks_wide = math.ceil(width / subset_size)
+    local chunks_high = math.ceil(height / subset_size)
+    if chunks_wide < 1 or chunks_high < 1 then
+        return area
+    end
+    local total_subsets = chunks_wide * chunks_high
+    local id = (subset_id % total_subsets) + 1
+    local chunk_x = ((id - 1) % chunks_wide)
+    local chunk_y = math.floor((id - 1) / chunks_wide)
+    local subset_x1 = x1 + chunk_x * subset_size
+    local subset_y1 = y1 + chunk_y * subset_size
+    local subset_x2 = math.min(subset_x1 + subset_size, x2)
+    local subset_y2 = math.min(subset_y1 + subset_size, y2)
+    return { { subset_x1, subset_y1 }, { subset_x2, subset_y2 } }
+end
+
+---@param area BoundingBox
+---@param subset_size number
+---@return BoundingBox
+local function get_random_subset_of_area(area, subset_size)
     local x1 = area[1][1]
     local y1 = area[1][2]
     local x2 = area[2][1]
@@ -1676,13 +1703,27 @@ local function on_tick(event)
             item_proxy_ordered = false
             decon_tiles_ordered = false
             revive_tiles_ordered = false
+            local tile_search_areas = {
+                get_subset_of_area(area, 15, 0),
+                get_subset_of_area(area, 15, 1),
+                get_subset_of_area(area, 15, 2),
+                get_subset_of_area(area, 15, 3),
+                get_subset_of_area(area, 15, 4),
+                get_subset_of_area(area, 15, 5),
+                get_subset_of_area(area, 15, 6),
+                get_subset_of_area(area, 15, 7),
+                get_subset_of_area(area, 15, 8),
+            }
             while #revive_tiles == 0 and tile_search_attempts < max_tile_search_attempts do
                 tile_search_attempts = tile_search_attempts + 1
-                revive_tiles = surface.find_tiles_filtered {
-                    area = get_subset_of_area(area, 15),
-                    force = player_force,
-                    has_tile_ghost = true,
-                }
+                local search_area = pop_random(tile_search_areas)
+                if search_area then
+                    revive_tiles = surface.find_tiles_filtered {
+                        area = search_area,
+                        force = player_force,
+                        has_tile_ghost = true,
+                    }
+                end
             end
             tile_search_attempts = max_tile_search_attempts
             while (#revive_tiles > 0 and spiders_dispatched < max_spiders_dispatched) do
