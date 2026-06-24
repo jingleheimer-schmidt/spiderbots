@@ -614,10 +614,11 @@ local function create_item_projectile(origin, destination, item, player, speed_m
             speed = math.max(min_speed, (dist / max_time)) / (speed_modifier or 1),
         }
     else
-        local history = prototypes.get_history("item", item)
+        local item_prototype = prototypes.item[item]
+        local history = item_prototype and prototypes.get_history("item", item)
         local mod_name = history and history.created or "unknown mod"
         mod_name = "[color=orange][Mod: " .. mod_name .. "][/color]"
-        local item_tag = prototypes.item[item] and "[item=" .. item .. "]" or item
+        local item_tag = item_prototype and "[item=" .. item .. "]" or item
         player.print({ "error-message.no-projectile", item_tag, mod_name }, { sound_path = "utility/alert_destroyed" })
     end
 end
