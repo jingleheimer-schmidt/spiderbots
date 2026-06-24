@@ -2162,7 +2162,9 @@ local function toggle_spiderbots(event)
             end
         end
     end
-    game.get_player(player_index).set_shortcut_toggled("toggle-spiderbots", storage.spiderbots_enabled[player_index])
+    local player = game.get_player(player_index)
+    if not (player and player.valid) then return end
+    player.set_shortcut_toggled("toggle-spiderbots", storage.spiderbots_enabled[player_index])
 end
 
 script.on_event("toggle-spiderbots", toggle_spiderbots)
