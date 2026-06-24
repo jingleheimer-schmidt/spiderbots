@@ -187,10 +187,13 @@ local function on_player_used_capsule(event)
         local inventory = player.get_main_inventory()
         if inventory and inventory.valid then
             local cursor_stack = player.cursor_stack
-            if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name == "spiderbot" then
+            local event_quality = event.quality.name
+            local valid_for_read = cursor_stack and cursor_stack.valid_for_read
+            local cursor_quality = cursor_stack and valid_for_read and cursor_stack.quality.name
+            if cursor_stack and valid_for_read and cursor_stack.name == "spiderbot" and cursor_quality == event_quality then
                 cursor_stack.count = cursor_stack.count + 1
             else
-                player.cursor_stack.set_stack({ name = "spiderbot", count = 1, quality = event.quality })
+                player.cursor_stack.set_stack({ name = "spiderbot", count = 1, quality = event_quality })
             end
         end
     end
