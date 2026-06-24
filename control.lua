@@ -228,7 +228,8 @@ script.on_event(defines.events.on_object_destroyed, on_spider_destroyed)
 ---@param spiderbot_id uuid
 ---@param player_index player_index
 local function reset_task_data(spiderbot_id, player_index)
-    local spiderbots = storage.spiderbots[player_index]
+    local spiderbots = storage.spiderbots and storage.spiderbots[player_index]
+    if not spiderbots then return end
     local spiderbot_data = spiderbots[spiderbot_id]
     if spiderbot_data then
         spiderbot_data.task = nil
@@ -236,7 +237,7 @@ local function reset_task_data(spiderbot_id, player_index)
         spiderbot_data.path_request_id = nil
         local player = spiderbot_data.player
         local spiderbot = spiderbot_data.spiderbot
-        if player.valid and spiderbot.valid then
+        if player and player.valid and spiderbot and spiderbot.valid then
             spiderbot.color = player.color
             local target = get_player_entity(player)
             if target and target.valid then
