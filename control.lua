@@ -2115,55 +2115,52 @@ local function toggle_spiderbots(event)
     local name = event.prototype_name or event.input_name
     if name ~= "toggle-spiderbots" then return end
     local player_index = event.player_index
+    local player = player_index and game.get_player(player_index)
+    if not (player and player.valid) then return end
     storage.spiderbots_enabled = storage.spiderbots_enabled or {}
     storage.spiderbots_enabled[player_index] = not storage.spiderbots_enabled[player_index]
     if storage.spiderbots_enabled[player_index] then
-        local player = game.get_player(player_index)
-        if player and player.valid then
-            local max_followers = storage.spiderbot_follower_count[player.force.name] or 10
-            local deployed_followers = 0
-            local player_character = get_player_character(player)
-            if player_character and player_character.valid then
-                local position = player_character.position
-                local inventory = get_entity_inventory(player_character)
-                local count_by_quality = inventory and inventory.get_item_quality_counts("spiderbot")
-                for quality, count in pairs(count_by_quality or {}) do
-                    if inventory and count > 0 then
-                        for i = 1, math.min(count, max_followers) do
-                            local destination = get_random_position_in_radius(position, 25)
-                            destination = player_character.surface.find_non_colliding_position("spiderbot-leg-1", destination, 100, 0.5) or destination
-                            create_spiderbot_projectile(position, destination, player, nil, nil, quality)
-                            inventory.remove({ name = "spiderbot", count = 1, quality = quality })
-                            deployed_followers = deployed_followers + 1
-                            if deployed_followers >= max_followers then break end
-                        end
+        local max_followers = storage.spiderbot_follower_count[player.force.name] or 10
+        local deployed_followers = 0
+        local player_character = get_player_character(player)
+        if player_character and player_character.valid then
+            local position = player_character.position
+            local inventory = get_entity_inventory(player_character)
+            local count_by_quality = inventory and inventory.get_item_quality_counts("spiderbot")
+            for quality, count in pairs(count_by_quality or {}) do
+                if inventory and count > 0 then
+                    for i = 1, math.min(count, max_followers) do
+                        local destination = get_random_position_in_radius(position, 25)
+                        destination = player_character.surface.find_non_colliding_position("spiderbot-leg-1", destination, 100, 0.5) or destination
+                        create_spiderbot_projectile(position, destination, player, nil, nil, quality)
+                        inventory.remove({ name = "spiderbot", count = 1, quality = quality })
+                        deployed_followers = deployed_followers + 1
+                        if deployed_followers >= max_followers then break end
                     end
-                    if deployed_followers >= max_followers then break end
                 end
+                if deployed_followers >= max_followers then break end
             end
-            local vehicle = player.vehicle
-            if vehicle and vehicle.valid then
-                local position = vehicle.position
-                local inventory = get_entity_inventory(vehicle)
-                local count_by_quality = inventory and inventory.get_item_quality_counts("spiderbot")
-                for quality, count in pairs(count_by_quality or {}) do
-                    if inventory and (count > 0) then
-                        for i = 1, math.min(count, max_followers) do
-                            local destination = get_random_position_in_radius(position, 25)
-                            destination = vehicle.surface.find_non_colliding_position("spiderbot-leg-1", destination, 100, 0.5) or destination
-                            create_spiderbot_projectile(position, destination, player, nil, nil, quality)
-                            inventory.remove({ name = "spiderbot", count = 1, quality = quality })
-                            deployed_followers = deployed_followers + 1
-                            if deployed_followers >= max_followers then break end
-                        end
+        end
+        local vehicle = player.vehicle
+        if vehicle and vehicle.valid then
+            local position = vehicle.position
+            local inventory = get_entity_inventory(vehicle)
+            local count_by_quality = inventory and inventory.get_item_quality_counts("spiderbot")
+            for quality, count in pairs(count_by_quality or {}) do
+                if inventory and (count > 0) then
+                    for i = 1, math.min(count, max_followers) do
+                        local destination = get_random_position_in_radius(position, 25)
+                        destination = vehicle.surface.find_non_colliding_position("spiderbot-leg-1", destination, 100, 0.5) or destination
+                        create_spiderbot_projectile(position, destination, player, nil, nil, quality)
+                        inventory.remove({ name = "spiderbot", count = 1, quality = quality })
+                        deployed_followers = deployed_followers + 1
+                        if deployed_followers >= max_followers then break end
                     end
-                    if deployed_followers >= max_followers then break end
                 end
+                if deployed_followers >= max_followers then break end
             end
         end
     end
-    local player = game.get_player(player_index)
-    if not (player and player.valid) then return end
     player.set_shortcut_toggled("toggle-spiderbots", storage.spiderbots_enabled[player_index])
 end
 
