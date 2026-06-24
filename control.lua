@@ -105,34 +105,40 @@ local function on_trigger_created_entity(event)
     local entity = event.entity
     local source = event.source
     if entity.name == "spiderbot" then
+        local source_player_index = nil
         if source and source.valid then
             local player = source.type == "character" and source.player
             if player and player.valid then
                 local player_index = player.index
+                source_player_index = player_index
                 register_new_spiderbot(entity, player, player_index)
             end
         end
         if storage.spiderbot_projectiles then
-            for player_index, projectiles in pairs(storage.spiderbot_projectiles) do
-                for i = #projectiles, 1, -1 do
-                    local projectile_data = projectiles[i]
-                    if projectile_data.surface == entity.surface then
-                        if get_distance(projectile_data.destination, entity.position) < 0.05 then
-                            if not source or not source.valid then
-                                local player = game.get_player(player_index)
-                                if player and player.valid then
-                                    local character = get_player_character(player)
-                                    if character and character.valid then
-                                        register_new_spiderbot(entity, player, player_index)
+            local projectile_owners = source_player_index and { [source_player_index] = true } or storage.spiderbot_projectiles
+            for player_index, _ in pairs(projectile_owners) do
+                local projectiles = storage.spiderbot_projectiles[player_index]
+                if projectiles then
+                    for i = #projectiles, 1, -1 do
+                        local projectile_data = projectiles[i]
+                        if projectile_data.surface == entity.surface then
+                            if get_distance(projectile_data.destination, entity.position) < 0.05 then
+                                if not source_player_index then
+                                    local player = game.get_player(player_index)
+                                    if player and player.valid then
+                                        local character = get_player_character(player)
+                                        if character and character.valid then
+                                            register_new_spiderbot(entity, player, player_index)
+                                        end
                                     end
                                 end
+                                table.remove(projectiles, i)
+                                break
                             end
-                            table.remove(projectiles, i)
-                            break
                         end
-                    end
-                    if game.tick - projectile_data.tick > 60 * 60 then
-                        table.remove(projectiles, i)
+                        if game.tick - projectile_data.tick > 60 * 60 then
+                            table.remove(projectiles, i)
+                        end
                     end
                 end
             end
