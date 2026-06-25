@@ -693,6 +693,22 @@ function remove_all_qualities_from_main_inventory(player, item_name)
     inventory.remove({ name = item_name, count = 1000 })
 end
 
+function inventory_slot_contains(inventory, lua_slot, item_name, quality, count)
+    if not (inventory and inventory.valid) then return false end
+    local stack = inventory[lua_slot]
+    if not (stack and stack.valid_for_read and stack.name == item_name) then
+        return false
+    end
+    local stack_quality = stack.quality and stack.quality.name or "normal"
+    return stack_quality == (quality or "normal") and stack.count == (count or 1)
+end
+
+function inventory_slot_empty(inventory, lua_slot)
+    if not (inventory and inventory.valid) then return false end
+    local stack = inventory[lua_slot]
+    return stack and not stack.valid_for_read
+end
+
 function cleanup_test_inventory(player)
     clear_player_cursor_stack(player)
     local item_names = {
@@ -1967,8 +1983,8 @@ function deconstruction_complete(run)
     local player_inventory = require_inventory(player)
     return expected_task_was_seen(run)
         and find_entity_near("wooden-chest", run.context.deconstruct_position, nil, run.context.surface_name) == nil
-        and player_inventory.get_item_count({ name = "wooden-chest", quality = "normal" }) > run.context.deconstruct_chest_start_count
-        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) > run.context.deconstruct_content_start_count
+        and player_inventory.get_item_count({ name = "wooden-chest", quality = "normal" }) == run.context.deconstruct_chest_start_count + 1
+        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.deconstruct_content_start_count + 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2083,8 +2099,8 @@ function vehicle_contents_deconstruction_complete(run)
     local player_inventory = require_inventory(player)
     return expected_task_was_seen(run)
         and find_entity_near("car", run.context.vehicle_contents_deconstruct_position, 2, run.context.surface_name) == nil
-        and player_inventory.get_item_count({ name = "car", quality = "normal" }) > run.context.vehicle_contents_deconstruct_car_start_count
-        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) >= run.context.vehicle_contents_deconstruct_content_start_count + run.context.vehicle_contents_deconstruct_inserted_count
+        and player_inventory.get_item_count({ name = "car", quality = "normal" }) == run.context.vehicle_contents_deconstruct_car_start_count + 1
+        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.vehicle_contents_deconstruct_content_start_count + run.context.vehicle_contents_deconstruct_inserted_count
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2121,8 +2137,8 @@ function spider_vehicle_contents_deconstruction_complete(run)
     local player_inventory = require_inventory(player)
     return expected_task_was_seen(run)
         and find_entity_near("spidertron", run.context.spider_vehicle_contents_deconstruct_position, 4, run.context.surface_name) == nil
-        and player_inventory.get_item_count({ name = "spidertron", quality = "normal" }) > run.context.spider_vehicle_contents_deconstruct_vehicle_start_count
-        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) >= run.context.spider_vehicle_contents_deconstruct_content_start_count + run.context.spider_vehicle_contents_deconstruct_inserted_count
+        and player_inventory.get_item_count({ name = "spidertron", quality = "normal" }) == run.context.spider_vehicle_contents_deconstruct_vehicle_start_count + 1
+        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.spider_vehicle_contents_deconstruct_content_start_count + run.context.spider_vehicle_contents_deconstruct_inserted_count
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2151,7 +2167,7 @@ function item_entity_deconstruction_complete(run)
     local inventory = require_inventory(player)
     return expected_task_was_seen(run)
         and find_item_on_ground_near("iron-plate", run.context.item_entity_deconstruct_position, nil, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) > run.context.item_entity_deconstruct_start_count
+        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.item_entity_deconstruct_start_count + 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2192,7 +2208,7 @@ function belt_contents_deconstruction_complete(run)
     local inventory = require_inventory(player)
     return expected_task_was_seen(run)
         and find_entity_near("transport-belt", run.context.belt_contents_deconstruct_position, nil, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) >= run.context.belt_contents_deconstruct_start_count + run.context.belt_contents_deconstruct_inserted_count
+        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.belt_contents_deconstruct_start_count + run.context.belt_contents_deconstruct_inserted_count
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2234,7 +2250,7 @@ function splitter_contents_deconstruction_complete(run)
     local inventory = require_inventory(player)
     return expected_task_was_seen(run)
         and find_entity_near("splitter", run.context.splitter_contents_deconstruct_position, 2, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) >= run.context.splitter_contents_deconstruct_start_count + run.context.splitter_contents_deconstruct_inserted_count
+        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.splitter_contents_deconstruct_start_count + run.context.splitter_contents_deconstruct_inserted_count
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2277,7 +2293,7 @@ function underground_contents_deconstruction_complete(run)
     local inventory = require_inventory(player)
     return expected_task_was_seen(run)
         and find_entity_near("underground-belt", run.context.underground_contents_deconstruct_position, nil, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) >= run.context.underground_contents_deconstruct_start_count + run.context.underground_contents_deconstruct_inserted_count
+        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.underground_contents_deconstruct_start_count + run.context.underground_contents_deconstruct_inserted_count
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2320,7 +2336,7 @@ function loader_contents_deconstruction_complete(run)
     local inventory = require_inventory(player)
     return expected_task_was_seen(run)
         and find_entity_near("loader", run.context.loader_contents_deconstruct_position, nil, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) >= run.context.loader_contents_deconstruct_start_count + run.context.loader_contents_deconstruct_inserted_count
+        and inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.loader_contents_deconstruct_start_count + run.context.loader_contents_deconstruct_inserted_count
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2369,7 +2385,7 @@ function item_request_complete(run)
     return expected_task_was_seen(run)
         and inventory
         and inventory.valid
-        and inventory.get_item_count({ name = "speed-module", quality = "normal" }) >= 1
+        and inventory_slot_contains(inventory, 1, "speed-module", "normal", 1)
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2434,9 +2450,9 @@ function chest_inventory_insertion_complete(run)
     local completed = expected_task_was_seen(run)
         and chest_inventory
         and chest_inventory.valid
-        and chest_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == 1
-        and chest_inventory.get_item_count({ name = "copper-plate", quality = "normal" }) == 1
-        and player_inventory.get_item_count({ name = "copper-plate", quality = "normal" }) < run.context.chest_inventory_insertion_start_count
+        and inventory_slot_contains(chest_inventory, 1, "iron-plate", "normal", 1)
+        and inventory_slot_contains(chest_inventory, 2, "copper-plate", "normal", 1)
+        and player_inventory.get_item_count({ name = "copper-plate", quality = "normal" }) == run.context.chest_inventory_insertion_start_count - 1
         and all_spiderbots_idle(run.player_index)
     if completed then
         local proxy = run.context.chest_inventory_insertion_proxy
@@ -2508,8 +2524,8 @@ function item_removal_request_complete(run)
     return expected_task_was_seen(run)
         and module_inventory
         and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
-        and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) > run.context.item_removal_start_count
+        and inventory_slot_empty(module_inventory, 1)
+        and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == run.context.item_removal_start_count + 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2570,8 +2586,8 @@ function chest_inventory_removal_complete(run)
     local completed = expected_task_was_seen(run)
         and chest_inventory
         and chest_inventory.valid
-        and chest_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == 0
-        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) > run.context.chest_inventory_removal_start_count
+        and inventory_slot_empty(chest_inventory, 1)
+        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.chest_inventory_removal_start_count + 1
         and all_spiderbots_idle(run.player_index)
     if completed then
         local proxy = run.context.chest_inventory_removal_proxy
@@ -2660,10 +2676,10 @@ function bidirectional_item_request_complete(run)
     local completed = expected_task_was_seen(run)
         and module_inventory
         and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
-        and module_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) == 1
-        and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) > run.context.bidirectional_item_proxy_start_speed
-        and player_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) < run.context.bidirectional_item_proxy_start_efficiency
+        and inventory_slot_empty(module_inventory, 1)
+        and inventory_slot_contains(module_inventory, 2, "efficiency-module", "normal", 1)
+        and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == run.context.bidirectional_item_proxy_start_speed + 1
+        and player_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) == run.context.bidirectional_item_proxy_start_efficiency - 1
         and all_spiderbots_idle(run.player_index)
     if completed then
         local proxy = run.context.bidirectional_item_proxy
@@ -2730,7 +2746,8 @@ function multi_item_request_complete(run)
     return expected_task_was_seen(run)
         and inventory
         and inventory.valid
-        and inventory.get_item_count({ name = "speed-module", quality = "normal" }) >= 2
+        and inventory_slot_contains(inventory, 1, "speed-module", "normal", 1)
+        and inventory_slot_contains(inventory, 2, "speed-module", "normal", 1)
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2796,8 +2813,8 @@ function later_item_request_plan_complete(run)
     local completed = expected_task_was_seen(run)
         and inventory
         and inventory.valid
-        and inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
-        and inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) >= 1
+        and inventory_slot_empty(inventory, 1)
+        and inventory_slot_contains(inventory, 2, "efficiency-module", "normal", 1)
         and all_spiderbots_idle(run.player_index)
     if completed then
         local proxy = run.context.later_item_request_plan_proxy
@@ -2877,8 +2894,9 @@ function multi_item_removal_request_complete(run)
     return expected_task_was_seen(run)
         and module_inventory
         and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
-        and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) >= run.context.multi_item_removal_start_count + 2
+        and inventory_slot_empty(module_inventory, 1)
+        and inventory_slot_empty(module_inventory, 2)
+        and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == run.context.multi_item_removal_start_count + 2
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -2976,9 +2994,9 @@ function later_item_removal_plan_complete(run)
     local completed = expected_task_was_seen(run)
         and module_inventory
         and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 1
-        and module_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) == 0
-        and player_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) > run.context.later_removal_start_efficiency
+        and inventory_slot_contains(module_inventory, 1, "speed-module", "normal", 1)
+        and inventory_slot_empty(module_inventory, 2)
+        and player_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) == run.context.later_removal_start_efficiency + 1
         and all_spiderbots_idle(run.player_index)
     if completed then
         local proxy = run.context.later_item_removal_plan_proxy
@@ -3047,7 +3065,7 @@ function tile_deconstruction_complete(run)
         and tile
         and tile.valid
         and tile.name ~= "stone-path"
-        and inventory.get_item_count({ name = "stone-brick", quality = "normal" }) > run.context.tile_deconstruction_start_count
+        and inventory.get_item_count({ name = "stone-brick", quality = "normal" }) == run.context.tile_deconstruction_start_count + 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -3736,7 +3754,7 @@ function quality_cliff_deconstruction_complete(run)
     local quality = quality_under_test(run)
     return expected_task_was_seen(run)
         and #find_entities_near({ type = "cliff" }, run.context.quality_cliff_position, 4, run.context.surface_name) == 0
-        and inventory.get_item_count({ name = "cliff-explosives", quality = quality }) < run.context.quality_cliff_explosive_start_count
+        and inventory.get_item_count({ name = "cliff-explosives", quality = quality }) == run.context.quality_cliff_explosive_start_count - 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -3964,7 +3982,7 @@ function combined_character_vehicle_deploy_recalled(run)
     local player = require_player(run)
     local inventory = require_inventory(player)
     return spiderbot_count(run.player_index) == 0
-        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) >= 3
+        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) == 3
 end
 
 function cleanup_combined_character_vehicle_deploy_limit(run)
@@ -4027,8 +4045,8 @@ function mixed_quality_toggle_recall_complete(run)
     local player = require_player(run)
     local inventory = require_inventory(player)
     return spiderbot_count(run.player_index) == 0
-        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) >= 1
-        and inventory.get_item_count({ name = "spiderbot", quality = quality }) >= 1
+        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) == 1
+        and inventory.get_item_count({ name = "spiderbot", quality = quality }) == 1
 end
 
 function use_quality_spiderbot_capsule(run)
@@ -4152,7 +4170,7 @@ function quality_deconstruction_complete(run)
     local quality = quality_under_test(run)
     return expected_task_was_seen(run)
         and find_entity_near("wooden-chest", run.context.quality_deconstruct_position, nil, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "wooden-chest", quality = quality }) > run.context.quality_deconstruct_start_count
+        and inventory.get_item_count({ name = "wooden-chest", quality = quality }) == run.context.quality_deconstruct_start_count + 1
         and all_spiderbots_idle_with_quality(run.player_index, quality)
 end
 
@@ -4205,7 +4223,7 @@ function quality_contents_deconstruction_complete(run)
     }
     return run.context.quality_contents_state.expected_task_seen
         and chest == nil
-        and current_count > run.context.quality_contents_start_count
+        and current_count == run.context.quality_contents_start_count + 1
         and run.context.quality_contents_state.quality_spiderbot_idle
 end
 
@@ -4249,7 +4267,7 @@ function quality_belt_contents_deconstruction_complete(run)
     local quality = quality_under_test(run)
     return expected_task_was_seen(run)
         and find_entity_near("transport-belt", run.context.quality_belt_contents_deconstruct_position, nil, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "speed-module", quality = quality }) >= run.context.quality_belt_contents_start_count + run.context.quality_belt_contents_inserted_count
+        and inventory.get_item_count({ name = "speed-module", quality = quality }) == run.context.quality_belt_contents_start_count + run.context.quality_belt_contents_inserted_count
         and all_spiderbots_idle_with_quality(run.player_index, quality)
 end
 
@@ -4301,7 +4319,7 @@ function quality_item_request_complete(run)
     return expected_task_was_seen(run)
         and inventory
         and inventory.valid
-        and inventory.get_item_count({ name = "speed-module", quality = quality }) >= 1
+        and inventory_slot_contains(inventory, 1, "speed-module", quality, 1)
         and all_spiderbots_idle_with_quality(run.player_index, quality)
 end
 
@@ -4366,8 +4384,8 @@ function quality_item_removal_complete(run)
     return expected_task_was_seen(run)
         and module_inventory
         and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = quality }) == 0
-        and player_inventory.get_item_count({ name = "speed-module", quality = quality }) > run.context.quality_item_removal_start_count
+        and inventory_slot_empty(module_inventory, 1)
+        and player_inventory.get_item_count({ name = "speed-module", quality = quality }) == run.context.quality_item_removal_start_count + 1
         and all_spiderbots_idle_with_quality(run.player_index, quality)
 end
 
@@ -4453,7 +4471,7 @@ function quality_recall_complete(run)
     local inventory = require_inventory(player)
     local quality = quality_under_test(run)
     return spiderbot_count_by_quality(run.player_index, quality) == 0
-        and inventory.get_item_count({ name = "spiderbot", quality = quality }) > run.context.quality_recall_start_inventory
+        and inventory.get_item_count({ name = "spiderbot", quality = quality }) == run.context.quality_recall_start_inventory + 1
 end
 
 function toggle_deploys_all_available_quality_spiderbots(run)
@@ -4510,7 +4528,7 @@ function all_quality_toggle_recall_complete(run)
     if spiderbot_count(run.player_index) ~= 0 then return false end
     if shortcut_toggled(player) ~= false then return false end
     for _, quality in pairs(quality_names) do
-        if inventory.get_item_count({ name = "spiderbot", quality = quality }) < 1 then
+        if inventory.get_item_count({ name = "spiderbot", quality = quality }) ~= 1 then
             return false
         end
     end
@@ -4700,7 +4718,7 @@ function distant_non_entity_search_tasks_ignored_before_move(run)
         and chest.valid
         and module_inventory
         and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
+        and inventory_slot_empty(module_inventory, 1)
         and next(run.context.seen_tasks or {}) == nil
 end
 
@@ -4736,7 +4754,7 @@ function distant_non_entity_search_tasks_completed_after_move(run)
         and chest == nil
         and module_inventory
         and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) >= 1
+        and inventory_slot_contains(module_inventory, 1, "speed-module", "normal", 1)
         and all_spiderbots_idle(run.player_index)
     if complete then
         if proxy and proxy.valid then
@@ -4911,7 +4929,7 @@ function vehicle_inventory_build_complete(run)
     local trunk = require_inventory_from_entity(car, defines.inventory.car_trunk)
     return expected_task_was_seen(run)
         and find_entity_near("small-electric-pole", run.context.vehicle_build_ghost_position, nil, run.context.surface_name) ~= nil
-        and trunk.get_item_count({ name = "small-electric-pole", quality = "normal" }) < run.context.vehicle_pole_start_count
+        and trunk.get_item_count({ name = "small-electric-pole", quality = "normal" }) == run.context.vehicle_pole_start_count - 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -4966,8 +4984,8 @@ function vehicle_inventory_deconstruction_returned_to_trunk(run)
     local trunk = require_inventory_from_entity(car, defines.inventory.car_trunk)
     local completed = expected_task_was_seen(run)
         and find_entity_near("wooden-chest", run.context.vehicle_deconstruct_position, nil, run.context.surface_name) == nil
-        and trunk.get_item_count({ name = "wooden-chest", quality = "normal" }) > run.context.vehicle_deconstruct_trunk_chest_start
-        and trunk.get_item_count({ name = "iron-plate", quality = "normal" }) >= run.context.vehicle_deconstruct_trunk_content_start + 2
+        and trunk.get_item_count({ name = "wooden-chest", quality = "normal" }) == run.context.vehicle_deconstruct_trunk_chest_start + 1
+        and trunk.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.vehicle_deconstruct_trunk_content_start + 2
         and all_spiderbots_idle(run.player_index)
     if completed then
         local filler_item_name = run.context.vehicle_deconstruct_filler_item_name or "iron-plate"
@@ -4998,7 +5016,7 @@ function vehicle_recall_prefers_character_inventory(run)
     local trunk = require_inventory_from_entity(car, defines.inventory.car_trunk)
     local inventory = require_inventory(player)
     return spiderbot_count(run.player_index) == 0
-        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) > run.context.vehicle_recall_character_start
+        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) == run.context.vehicle_recall_character_start + 1
         and trunk.get_item_count({ name = "spiderbot", quality = "normal" }) == run.context.vehicle_recall_trunk_start
 end
 
@@ -5029,7 +5047,7 @@ function vehicle_recall_fallback_spiderbot_deployed(run)
         and spiderbot
         and spiderbot.valid
         and spiderbot.follow_target == car
-        and trunk.get_item_count({ name = "spiderbot", quality = "normal" }) < run.context.vehicle_fallback_deploy_trunk_start
+        and trunk.get_item_count({ name = "spiderbot", quality = "normal" }) == run.context.vehicle_fallback_deploy_trunk_start - 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -5055,7 +5073,7 @@ function vehicle_recall_fell_back_to_trunk(run)
     if not (car and car.valid) then return false end
     local trunk = require_inventory_from_entity(car, defines.inventory.car_trunk)
     return spiderbot_count(run.player_index) == 0
-        and trunk.get_item_count({ name = "spiderbot", quality = "normal" }) > run.context.vehicle_fallback_trunk_start
+        and trunk.get_item_count({ name = "spiderbot", quality = "normal" }) == run.context.vehicle_fallback_trunk_start + 1
 end
 
 function cleanup_vehicle_recall_fallback(run)
@@ -5151,7 +5169,7 @@ function spider_vehicle_inventory_build_complete(run)
         and spiderbot.valid
         and spiderbot.follow_target == spidertron
         and find_entity_near("small-electric-pole", run.context.spider_vehicle_build_ghost_position, nil, run.context.surface_name) ~= nil
-        and trunk.get_item_count({ name = "small-electric-pole", quality = "normal" }) < run.context.spider_vehicle_pole_start_count
+        and trunk.get_item_count({ name = "small-electric-pole", quality = "normal" }) == run.context.spider_vehicle_pole_start_count - 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -5314,7 +5332,7 @@ function cargo_wagon_inventory_build_complete(run)
         and spiderbot.valid
         and spiderbot.follow_target == wagon
         and built ~= nil
-        and trunk_count < run.context.cargo_wagon_pole_start_count
+        and trunk_count == run.context.cargo_wagon_pole_start_count - 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -5367,8 +5385,8 @@ function cargo_wagon_contents_deconstruction_complete(run)
     local player_inventory = require_inventory(player)
     local completed = expected_task_was_seen(run)
         and find_entity_near("cargo-wagon", run.context.cargo_wagon_contents_deconstruct_position, 3, run.context.surface_name) == nil
-        and player_inventory.get_item_count({ name = "cargo-wagon", quality = "normal" }) > run.context.cargo_wagon_contents_deconstruct_wagon_start_count
-        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) >= run.context.cargo_wagon_contents_deconstruct_content_start_count + run.context.cargo_wagon_contents_deconstruct_inserted_count
+        and player_inventory.get_item_count({ name = "cargo-wagon", quality = "normal" }) == run.context.cargo_wagon_contents_deconstruct_wagon_start_count + 1
+        and player_inventory.get_item_count({ name = "iron-plate", quality = "normal" }) == run.context.cargo_wagon_contents_deconstruct_content_start_count + run.context.cargo_wagon_contents_deconstruct_inserted_count
         and all_spiderbots_idle(run.player_index)
     if completed then
         for _, rail in pairs(run.context.cargo_wagon_contents_deconstruct_rails or {}) do
@@ -5880,7 +5898,7 @@ function mixed_simultaneous_tasks_complete(run)
         and find_entity_near("fast-transport-belt", run.context.mixed_upgrade_position, nil, run.context.surface_name) ~= nil
         and module_inventory
         and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) >= 1
+        and inventory_slot_contains(module_inventory, 1, "speed-module", "normal", 1)
         and deconstructed_tile
         and deconstructed_tile.valid
         and deconstructed_tile.name ~= "stone-path"
@@ -6048,7 +6066,7 @@ function remote_view_upgrade_complete(run)
     return player.controller_type == defines.controllers.remote
         and expected_task_was_seen(run)
         and find_entity_near("fast-transport-belt", run.context.remote_view_upgrade_position, nil, run.context.surface_name) ~= nil
-        and inventory.get_item_count({ name = "transport-belt", quality = "normal" }) > run.context.remote_view_upgrade_result_start_count
+        and inventory.get_item_count({ name = "transport-belt", quality = "normal" }) == run.context.remote_view_upgrade_result_start_count + 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -6087,7 +6105,7 @@ function remote_view_deconstruction_complete(run)
     return player.controller_type == defines.controllers.remote
         and expected_task_was_seen(run)
         and find_entity_near("wooden-chest", run.context.remote_view_deconstruct_position, nil, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "wooden-chest", quality = "normal" }) > run.context.remote_view_deconstruct_start_count
+        and inventory.get_item_count({ name = "wooden-chest", quality = "normal" }) == run.context.remote_view_deconstruct_start_count + 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -6133,7 +6151,7 @@ function remote_view_item_request_complete(run)
         and expected_task_was_seen(run)
         and module_inventory
         and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) >= 1
+        and inventory_slot_contains(module_inventory, 1, "speed-module", "normal", 1)
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -6209,7 +6227,7 @@ function remote_view_tile_deconstruction_complete(run)
         and tile
         and tile.valid
         and tile.name ~= "stone-path"
-        and inventory.get_item_count({ name = "stone-brick", quality = "normal" }) > run.context.remote_view_tile_deconstruct_start_count
+        and inventory.get_item_count({ name = "stone-brick", quality = "normal" }) == run.context.remote_view_tile_deconstruct_start_count + 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -6281,8 +6299,16 @@ function trigger_source_known_projectile_registration(run)
 end
 
 function source_known_projectile_registered(run)
+    local player = require_player(run)
+    local character = require_character(player)
     local projectiles = storage.spiderbot_projectiles and storage.spiderbot_projectiles[run.player_index]
+    local spiderbot = first_spiderbot(run.player_index)
     return spiderbot_count(run.player_index) == 1
+        and spiderbot
+        and spiderbot.valid
+        and spiderbot.surface == character.surface
+        and spiderbot.follow_target == character
+        and spiderbot.quality.name == "normal"
         and all_spiderbots_idle(run.player_index)
         and (not projectiles or #projectiles == 0)
 end
@@ -6364,10 +6390,17 @@ function trigger_source_known_projectile_owner_isolation(run)
 end
 
 function source_known_projectile_owner_isolated(run)
+    local player = require_player(run)
+    local character = require_character(player)
+    local spiderbot = first_spiderbot(run.player_index)
     local player_projectiles = storage.spiderbot_projectiles and storage.spiderbot_projectiles[run.player_index]
     local other_player_index = run.context.projectile_owner_isolation_other_player_index
     local other_projectiles = other_player_index and storage.spiderbot_projectiles and storage.spiderbot_projectiles[other_player_index]
     local isolated = spiderbot_count(run.player_index) == 1
+        and spiderbot
+        and spiderbot.valid
+        and spiderbot.surface == character.surface
+        and spiderbot.follow_target == character
         and all_spiderbots_idle(run.player_index)
         and (not player_projectiles or #player_projectiles == 0)
         and other_projectiles
@@ -6411,11 +6444,17 @@ function trigger_custom_label_registration(run)
 end
 
 function custom_label_registration_preserved(run)
+    local player = require_player(run)
+    local character = require_character(player)
+    local projectiles = storage.spiderbot_projectiles and storage.spiderbot_projectiles[run.player_index]
     local spiderbot = first_spiderbot(run.player_index)
     return spiderbot_count(run.player_index) == 1
         and spiderbot
         and spiderbot.valid
+        and spiderbot.surface == character.surface
+        and spiderbot.follow_target == character
         and spiderbot.entity_label == run.context.custom_spiderbot_label
+        and (not projectiles or #projectiles == 0)
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -6453,12 +6492,18 @@ function trigger_default_label_registration(run)
 end
 
 function default_label_registration_assigned(run)
+    local player = require_player(run)
+    local character = require_character(player)
+    local projectiles = storage.spiderbot_projectiles and storage.spiderbot_projectiles[run.player_index]
     local spiderbot = first_spiderbot(run.player_index)
     return spiderbot_count(run.player_index) == 1
         and spiderbot
         and spiderbot.valid
+        and spiderbot.surface == character.surface
+        and spiderbot.follow_target == character
         and spiderbot.entity_label
         and spiderbot.entity_label ~= ""
+        and (not projectiles or #projectiles == 0)
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -6491,8 +6536,16 @@ function trigger_source_missing_projectile_registration(run)
 end
 
 function source_missing_projectile_registered(run)
+    local player = require_player(run)
+    local character = require_character(player)
     local projectiles = storage.spiderbot_projectiles and storage.spiderbot_projectiles[run.player_index]
+    local spiderbot = first_spiderbot(run.player_index)
     return spiderbot_count(run.player_index) == 1
+        and spiderbot
+        and spiderbot.valid
+        and spiderbot.surface == character.surface
+        and spiderbot.follow_target == character
+        and spiderbot.quality.name == "normal"
         and all_spiderbots_idle(run.player_index)
         and (not projectiles or #projectiles == 0)
 end
@@ -6545,10 +6598,17 @@ function trigger_source_missing_projectile_stale_owner_cleanup(run)
 end
 
 function source_missing_projectile_stale_owner_cleaned_up(run)
+    local player = require_player(run)
+    local character = require_character(player)
+    local spiderbot = first_spiderbot(run.player_index)
     local player_projectiles = storage.spiderbot_projectiles and storage.spiderbot_projectiles[run.player_index]
     local stale_player_index = run.context.projectile_stale_owner_index
     local stale_projectiles = stale_player_index and storage.spiderbot_projectiles and storage.spiderbot_projectiles[stale_player_index]
     local cleaned = spiderbot_count(run.player_index) == 1
+        and spiderbot
+        and spiderbot.valid
+        and spiderbot.surface == character.surface
+        and spiderbot.follow_target == character
         and all_spiderbots_idle(run.player_index)
         and (not player_projectiles or #player_projectiles == 0)
         and (not stale_projectiles or #stale_projectiles == 0)
@@ -6591,8 +6651,16 @@ function trigger_expired_projectile_cleanup(run)
 end
 
 function expired_projectile_cleaned_up(run)
+    local player = require_player(run)
+    local character = require_character(player)
     local projectiles = storage.spiderbot_projectiles and storage.spiderbot_projectiles[run.player_index]
+    local spiderbot = first_spiderbot(run.player_index)
     return spiderbot_count(run.player_index) == 1
+        and spiderbot
+        and spiderbot.valid
+        and spiderbot.surface == character.surface
+        and spiderbot.follow_target == character
+        and spiderbot.quality.name == "normal"
         and all_spiderbots_idle(run.player_index)
         and (not projectiles or #projectiles == 0)
 end
@@ -6856,8 +6924,7 @@ function friendly_force_item_request_was_ignored(run)
         and proxy
         and proxy.valid
         and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
+        and inventory_slot_empty(module_inventory, 1)
         and next(run.context.seen_tasks or {}) == nil
         and first_spiderbot_idle_without_task(run)
     if ignored then
@@ -7123,8 +7190,7 @@ function other_force_item_request_was_ignored(run)
         and proxy
         and proxy.valid
         and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
+        and inventory_slot_empty(module_inventory, 1)
         and no_tasks_seen
         and first_spiderbot_idle_without_task(run)
     if ignored then
@@ -7305,7 +7371,7 @@ function terrain_invalid_entity_ghost_preserved_inventory(run)
         and ghost.valid
         and position
         and find_entity_near("small-electric-pole", position, nil, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "small-electric-pole", quality = "normal" }) >= run.context.terrain_invalid_ghost_start_poles
+        and inventory.get_item_count({ name = "small-electric-pole", quality = "normal" }) == run.context.terrain_invalid_ghost_start_poles
         and tile
         and tile.valid
         and tile.name == "water"
@@ -7447,7 +7513,7 @@ function full_inventory_deconstruction_completed_after_space(run)
     local chest = run.context.full_inventory_deconstruct_chest
     local completed = expected_task_was_seen(run)
         and (not chest or not chest.valid)
-        and inventory.get_item_count({ name = "wooden-chest", quality = "normal" }) >= 1
+        and inventory.get_item_count({ name = "wooden-chest", quality = "normal" }) == 1
         and all_spiderbots_idle(run.player_index)
     if completed then
         run.context.full_inventory_deconstruct_chest = nil
@@ -7550,7 +7616,7 @@ function quality_content_space_deconstruction_completed_after_space(run)
     local quality = quality_under_test(run)
     local completed = expected_task_was_seen(run)
         and (not chest or not chest.valid)
-        and inventory.get_item_count({ name = "speed-module", quality = quality }) > run.context.quality_content_space_quality_start_count
+        and inventory.get_item_count({ name = "speed-module", quality = quality }) == run.context.quality_content_space_quality_start_count + 1
         and all_spiderbots_idle(run.player_index)
     if completed then
         run.context.quality_content_space_chest = nil
@@ -7731,9 +7797,7 @@ function missing_item_request_completed_after_supply(run)
     if not (assembler and assembler.valid) then return false end
     local module_inventory = assembler.get_inventory(defines.inventory.crafter_modules)
     local completed = expected_task_was_seen(run)
-        and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) >= 1
+        and inventory_slot_contains(module_inventory, 1, "speed-module", "normal", 1)
         and all_spiderbots_idle(run.player_index)
     if completed then
         local proxy = run.context.missing_item_request_proxy
@@ -7811,8 +7875,7 @@ function upgrading_target_request_was_ignored(run)
         and proxy
         and proxy.valid
         and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
+        and inventory_slot_empty(module_inventory, 1)
         and no_tasks_seen
         and first_spiderbot_idle_without_task(run)
     if ignored then
@@ -8031,8 +8094,7 @@ function full_inventory_removal_request_was_ignored(run)
         and proxy
         and proxy.valid
         and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 1
+        and inventory_slot_contains(module_inventory, 1, "speed-module", "normal", 1)
         and no_tasks_seen
         and first_spiderbot_idle_without_task(run)
 end
@@ -8056,10 +8118,8 @@ function full_inventory_removal_completed_after_space(run)
     local assembler = run.context.full_inventory_removal_assembler
     local module_inventory = assembler and assembler.valid and assembler.get_inventory(defines.inventory.crafter_modules)
     return expected_task_was_seen(run)
-        and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
-        and inventory.get_item_count({ name = "speed-module", quality = "normal" }) >= 1
+        and inventory_slot_empty(module_inventory, 1)
+        and inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -8169,8 +8229,7 @@ function assigned_item_removal_no_space_reset_complete(run)
         and proxy
         and proxy.valid
         and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 1
+        and inventory_slot_contains(module_inventory, 1, "speed-module", "normal", 1)
         and inventory.get_item_count({ name = "speed-module", quality = "normal" }) == run.context.assigned_removal_no_space_start_speed
         and first_spiderbot_idle_without_task(run)
     if reset then
@@ -8361,8 +8420,14 @@ function trigger_no_path_request_reset(run)
 end
 
 function no_path_request_reset_complete(run)
-    cleanup_context_entity(run, "no_path_ghost")
-    return first_spiderbot_idle_without_task(run)
+    local ghost = run.context.no_path_ghost
+    local reset = ghost
+        and ghost.valid
+        and first_spiderbot_idle_without_task(run)
+    if reset then
+        cleanup_context_entity(run, "no_path_ghost")
+    end
+    return reset
 end
 
 function trigger_cleared_task_path_request_reset(run)
@@ -8375,8 +8440,14 @@ function trigger_cleared_task_path_request_reset(run)
 end
 
 function cleared_task_path_request_reset_complete(run)
-    cleanup_context_entity(run, "cleared_task_path_ghost")
-    return first_spiderbot_idle_without_task(run)
+    local ghost = run.context.cleared_task_path_ghost
+    local reset = ghost
+        and ghost.valid
+        and first_spiderbot_idle_without_task(run)
+    if reset then
+        cleanup_context_entity(run, "cleared_task_path_ghost")
+    end
+    return reset
 end
 
 function trigger_stale_path_response_wrong_status(run)
@@ -8435,12 +8506,19 @@ function trigger_disabled_path_request_reset(run)
         id = path_request_id,
         path = synthetic_path_to(position_near_player(run, 7, -7)),
     })
-    storage.spiderbots_enabled[run.player_index] = true
 end
 
 function disabled_path_request_reset_complete(run)
-    cleanup_context_entity(run, "disabled_path_ghost")
-    return first_spiderbot_idle_without_task(run)
+    local ghost = run.context.disabled_path_ghost
+    local reset = storage.spiderbots_enabled[run.player_index] == false
+        and ghost
+        and ghost.valid
+        and first_spiderbot_idle_without_task(run)
+    if reset then
+        cleanup_context_entity(run, "disabled_path_ghost")
+        storage.spiderbots_enabled[run.player_index] = true
+    end
+    return reset
 end
 
 function trigger_surface_mismatch_path_request_reset(run)
@@ -8470,8 +8548,15 @@ function trigger_surface_mismatch_path_request_reset(run)
 end
 
 function surface_mismatch_path_request_reset_complete(run)
-    cleanup_context_entity(run, "surface_mismatch_path_ghost")
-    return first_spiderbot_idle_without_task(run)
+    local ghost = run.context.surface_mismatch_path_ghost
+    local reset = ghost
+        and ghost.valid
+        and ghost.surface.name == TRANSITION_SURFACE_NAME
+        and first_spiderbot_idle_without_task(run)
+    if reset then
+        cleanup_context_entity(run, "surface_mismatch_path_ghost")
+    end
+    return reset
 end
 
 function trigger_invalid_target_path_request_reset(run)
@@ -8484,8 +8569,14 @@ function trigger_invalid_target_path_request_reset(run)
 end
 
 function invalid_target_path_request_reset_complete(run)
-    cleanup_context_entity(run, "invalid_target_path_ghost")
-    return first_spiderbot_idle_without_task(run)
+    local ghost = run.context.invalid_target_path_ghost
+    local reset = ghost
+        and not ghost.valid
+        and first_spiderbot_idle_without_task(run)
+    if reset then
+        run.context.invalid_target_path_ghost = nil
+    end
+    return reset
 end
 
 function trigger_distant_target_path_request_reset(run)
@@ -8510,8 +8601,14 @@ function trigger_distant_target_path_request_reset(run)
 end
 
 function distant_target_path_request_reset_complete(run)
-    cleanup_context_entity(run, "distant_target_path_ghost")
-    return first_spiderbot_idle_without_task(run)
+    local ghost = run.context.distant_target_path_ghost
+    local reset = ghost
+        and ghost.valid
+        and first_spiderbot_idle_without_task(run)
+    if reset then
+        cleanup_context_entity(run, "distant_target_path_ghost")
+    end
+    return reset
 end
 
 function trigger_far_assigned_task_command_reset(run)
@@ -8550,7 +8647,10 @@ end
 
 function far_assigned_task_command_reset_complete(run)
     local spiderbot = first_spiderbot(run.player_index)
-    local reset = first_spiderbot_idle_without_task(run)
+    local ghost = run.context.far_assigned_task_ghost
+    local reset = ghost
+        and ghost.valid
+        and first_spiderbot_idle_without_task(run)
     if reset then
         if spiderbot and spiderbot.valid then
             spiderbot.autopilot_destination = nil
@@ -8587,8 +8687,15 @@ end
 function destroyed_target_command_reset_complete(run)
     local player = require_player(run)
     local inventory = require_inventory(player)
-    return first_spiderbot_idle_without_task(run)
-        and inventory.get_item_count({ name = "small-electric-pole", quality = "normal" }) >= run.context.destroyed_target_start_poles
+    local ghost = run.context.destroyed_target_ghost
+    local reset = ghost
+        and not ghost.valid
+        and inventory.get_item_count({ name = "small-electric-pole", quality = "normal" }) == run.context.destroyed_target_start_poles
+        and first_spiderbot_idle_without_task(run)
+    if reset then
+        run.context.destroyed_target_ghost = nil
+    end
+    return reset
 end
 
 function create_destroyed_tile_ghost_command_reset_task(run)
@@ -8631,7 +8738,7 @@ function destroyed_tile_ghost_command_reset_complete(run)
     return tile
         and tile.valid
         and tile.name ~= "stone-path"
-        and inventory.get_item_count({ name = "stone-brick", quality = "normal" }) >= run.context.destroyed_tile_ghost_start_bricks
+        and inventory.get_item_count({ name = "stone-brick", quality = "normal" }) == run.context.destroyed_tile_ghost_start_bricks
         and first_spiderbot_idle_without_task(run)
 end
 
@@ -8691,8 +8798,7 @@ function destroyed_item_request_command_reset_complete(run)
     local reset = assembler
         and assembler.valid
         and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
+        and inventory_slot_empty(module_inventory, 1)
         and first_spiderbot_idle_without_task(run)
     if reset then
         assembler.destroy({ raise_destroy = true })
@@ -8793,11 +8899,15 @@ end
 
 function missing_cliff_explosives_command_reset_complete(run)
     local cliff = run.context.missing_cliff_explosives_cliff
-    if cliff and cliff.valid then
+    local reset = cliff
+        and cliff.valid
+        and cliff.to_be_deconstructed()
+        and first_spiderbot_idle_without_task(run)
+    if reset then
         cliff.destroy({ raise_destroy = true })
+        run.context.missing_cliff_explosives_cliff = nil
     end
-    run.context.missing_cliff_explosives_cliff = nil
-    return first_spiderbot_idle_without_task(run)
+    return reset
 end
 
 function create_missing_entity_item_command_task(run)
@@ -8924,8 +9034,20 @@ function trigger_missing_tile_item_command_reset(run)
 end
 
 function missing_tile_item_command_reset_complete(run)
-    cleanup_context_entity(run, "missing_tile_item_ghost")
-    return first_spiderbot_idle_without_task(run)
+    local surface = game.surfaces[run.context.surface_name]
+    local ghost = run.context.missing_tile_item_ghost
+    local position = ghost and ghost.valid and ghost.position
+    local tile = position and surface.get_tile(position.x, position.y)
+    local reset = ghost
+        and ghost.valid
+        and tile
+        and tile.valid
+        and tile.name ~= "stone-path"
+        and first_spiderbot_idle_without_task(run)
+    if reset then
+        cleanup_context_entity(run, "missing_tile_item_ghost")
+    end
+    return reset
 end
 
 function create_failed_entity_revive_preservation_task(run)
@@ -8978,7 +9100,7 @@ function failed_entity_revive_preserved_inventory(run)
     local tile = position and surface.get_tile(position.x, position.y)
     local preserved = run.context.failed_entity_revive_failed
         and find_entity_near("small-electric-pole", position, nil, run.context.surface_name) == nil
-        and inventory.get_item_count({ name = "small-electric-pole", quality = "normal" }) >= run.context.failed_entity_revive_start_poles
+        and inventory.get_item_count({ name = "small-electric-pole", quality = "normal" }) == run.context.failed_entity_revive_start_poles
         and first_spiderbot_idle_without_task(run)
     if preserved and tile and tile.valid and tile.name == "water" then
         set_square_tiles(surface, position, 0, natural_ground_tile_name())
@@ -9042,7 +9164,7 @@ function failed_tile_revive_preserved_inventory(run)
         and tile
         and tile.valid
         and tile.name ~= "stone-path"
-        and inventory.get_item_count({ name = "stone-brick", quality = "normal" }) >= run.context.failed_tile_revive_start_bricks
+        and inventory.get_item_count({ name = "stone-brick", quality = "normal" }) == run.context.failed_tile_revive_start_bricks
         and first_spiderbot_idle_without_task(run)
 end
 
@@ -9253,7 +9375,7 @@ function cleared_item_request_command_reset_complete(run)
     run.context.cleared_item_request_state = {
         proxy_valid = proxy and proxy.valid or false,
         proxy_cleared = proxy_cleared,
-        module_speed_count = module_inventory and module_inventory.valid and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) or nil,
+        module_slot_empty = module_inventory and module_inventory.valid and inventory_slot_empty(module_inventory, 1) or false,
         inventory_speed_count = player_inventory.get_item_count({ name = "speed-module", quality = "normal" }),
         start_speed_count = run.context.cleared_item_request_start_count,
         spiderbot_idle = spiderbot_id_idle_without_task(run, run.context.cleared_item_request_spiderbot_id) and true or false,
@@ -9262,9 +9384,8 @@ function cleared_item_request_command_reset_complete(run)
         and assembler.valid
         and proxy_cleared
         and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
-        and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) >= run.context.cleared_item_request_start_count
+        and inventory_slot_empty(module_inventory, 1)
+        and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == run.context.cleared_item_request_start_count
         and spiderbot_id_idle_without_task(run, run.context.cleared_item_request_spiderbot_id)
     if reset then
         if proxy and proxy.valid then
@@ -9360,9 +9481,8 @@ function changed_insert_request_command_reset_complete(run)
         and assembler.valid
         and proxy_finished
         and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 0
-        and module_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) == 1
+        and inventory_slot_empty(module_inventory, 1)
+        and inventory_slot_contains(module_inventory, 2, "efficiency-module", "normal", 1)
         and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == run.context.changed_insert_request_start_speed
         and player_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) == run.context.changed_insert_request_start_efficiency - 1
         and spiderbot_id_idle_without_task(run, run.context.changed_insert_request_spiderbot_id)
@@ -9467,9 +9587,8 @@ function changed_removal_request_command_reset_complete(run)
         and assembler.valid
         and proxy_finished
         and module_inventory
-        and module_inventory.valid
-        and module_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == 1
-        and module_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) == 0
+        and inventory_slot_contains(module_inventory, 1, "speed-module", "normal", 1)
+        and inventory_slot_empty(module_inventory, 2)
         and player_inventory.get_item_count({ name = "speed-module", quality = "normal" }) == run.context.changed_removal_request_start_speed
         and player_inventory.get_item_count({ name = "efficiency-module", quality = "normal" }) == run.context.changed_removal_request_start_efficiency + 1
         and spiderbot_id_idle_without_task(run, run.context.changed_removal_request_spiderbot_id)
@@ -10013,7 +10132,7 @@ function active_task_toggle_recall_complete(run)
     local player = require_player(run)
     local inventory = require_inventory(player)
     local complete = spiderbot_count(run.player_index) == 0
-        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) > run.context.active_toggle_recall_start_inventory
+        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) == run.context.active_toggle_recall_start_inventory + 1
     if complete then
         cleanup_context_entity(run, "active_toggle_recall_ghost")
     end
@@ -10744,7 +10863,7 @@ function disallowed_controller_toggle_recalled_after_restore(run)
     return player.controller_type == defines.controllers.character
         and storage.spiderbots_enabled[run.player_index] == false
         and spiderbot_count(run.player_index) == 0
-        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) > run.context.disallowed_toggle_start_inventory
+        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) == run.context.disallowed_toggle_start_inventory + 1
 end
 
 function trigger_cutscene_controller_work_ignore(run)
@@ -11105,7 +11224,7 @@ function custom_input_toggle_deploy_complete(run)
         and spiderbot
         and spiderbot.valid
         and spiderbot.follow_target == character
-        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) < run.context.custom_input_deploy_start_inventory
+        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) == run.context.custom_input_deploy_start_inventory - 1
         and all_spiderbots_idle(run.player_index)
 end
 
@@ -11128,7 +11247,7 @@ function custom_input_toggle_recall_complete(run)
     local inventory = require_inventory(player)
     return storage.spiderbots_enabled[run.player_index] == false
         and spiderbot_count(run.player_index) == 0
-        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) > run.context.custom_input_recall_start_inventory
+        and inventory.get_item_count({ name = "spiderbot", quality = "normal" }) == run.context.custom_input_recall_start_inventory + 1
         and shortcut_toggled(player) == false
 end
 
@@ -11163,7 +11282,7 @@ function manually_mined_spiderbot_removed(run)
     local quality = run.context.manual_mine_quality or "normal"
     return spiderbot_count(run.player_index) == 0
         and (not spiderbots or spiderbots[run.context.manual_mine_spiderbot_id] == nil)
-        and inventory.get_item_count({ name = "spiderbot", quality = quality }) > run.context.manual_mine_start_inventory
+        and inventory.get_item_count({ name = "spiderbot", quality = quality }) == run.context.manual_mine_start_inventory + 1
 end
 
 function destroy_tracked_spiderbot_externally(run)
