@@ -2296,4 +2296,4 @@ end
 
 script.on_configuration_changed(on_configuration_changed)
 
-require("tests")
+require("tests/runtime")
