@@ -3,7 +3,7 @@
 	"name": "spiderbots",
 	"version": "0.3.2",
 	"title": "Spiderbots",
-	"description": "Adds loyal prototype spidertrons that follow you around. They can deconstruct, build blueprints, and perform upgrades using your inventory.\nSpiderbots are a basic alternative to early construction mods such as Nanobots and Companion Drones.\nDeploy / Recall: Alt + S",
+	"description": "Adds loyal prototype spidertrons that follow you around. They can build, deconstruct, and upgrade blueprints using your inventory.\nSpiderbots are a basic alternative to early construction mods such as Nanobots and Companion Drones.\nDeploy / Recall: Alt + S",
 	"author": "asher_sky",
 	"dependencies": [
 		"base",
