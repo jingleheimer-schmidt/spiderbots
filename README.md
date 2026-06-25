@@ -8,7 +8,7 @@ This mod adds little spiders that crawl around and fulfill nearby work orders
 
 About:
 - Spiderbots are small, early-game prototype Spidertrons with basic construction abilities.
-- Spiderbots can build, upgrade, and deconstruct nearby machines and tiles using your inventory.
+- Spiderbots can build, deconstruct, and upgrade nearby machines and tiles using your inventory.
 - Throw a Spiderbot capsule at the ground to deploy it (or press **Alt + S** to launch all of them from your inventory).
 - Press **Alt + S** again to recall deployed spiderbots back to your inventory.
 - Spiderbots follow the player who deployed them, even while driving vehicles or traveling across planets.
@@ -33,6 +33,6 @@ There are currently no known mod compatibility issues. To report a compatibility
 
 ---------------------
 # License
-Spiderbots © 2023-2025 by asher_sky is licensed under Attribution-NonCommercial-ShareAlike 4.0 International.
+Spiderbots © 2023-2026 by asher_sky is licensed under Attribution-NonCommercial-ShareAlike 4.0 International.
 To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/
 [Spider](https://icons8.com/icon/d4fPEYVFaamW/spider) icon by [Icons8](https://icons8.com)

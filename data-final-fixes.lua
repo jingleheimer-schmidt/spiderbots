@@ -165,8 +165,25 @@ log(serpent.block(projectile_counts_to_print))
 
 local collision_mask_util = require("collision-mask-util")
 
-for name, entity_ghost in pairs(data.raw["entity-ghost"]) do
-    entity_ghost.collision_mask = entity_ghost.collision_mask or collision_mask_util.get_mask(entity_ghost)
-    entity_ghost.collision_mask.layers = entity_ghost.collision_mask.layers or {}
-    entity_ghost.collision_mask.layers["spiderbot_leg"] = true
+local function get_or_create_collision_mask(prototype)
+    prototype.collision_mask = prototype.collision_mask or table.deepcopy(collision_mask_util.get_mask(prototype))
+    prototype.collision_mask.layers = prototype.collision_mask.layers or {}
+    return prototype.collision_mask
+end
+
+local character_prototype = data.raw["character"] and data.raw["character"]["character"]
+local character_collision_mask = character_prototype
+    and collision_mask_util.get_mask(character_prototype)
+    or { layers = { player = true, train = true, is_object = true }, consider_tile_transitions = true }
+
+for _, tile in pairs(data.raw["tile"] or {}) do
+    local collision_mask = get_or_create_collision_mask(tile)
+    if collision_mask_util.masks_collide(character_collision_mask, collision_mask) then
+        collision_mask.layers["spiderbot_leg"] = true
+    end
+end
+
+for _, entity_ghost in pairs(data.raw["entity-ghost"] or {}) do
+    local collision_mask = get_or_create_collision_mask(entity_ghost)
+    collision_mask.layers["spiderbot_leg"] = true
 end

@@ -52,33 +52,13 @@ local function modify_spider_legs(spider_leg_specification)
     leg_prototype.working_sound.probability = sound_probability
     leg_prototype.collision_mask = {
         layers = {
-            -- ground_tile = true,
-            water_tile = true,
-            -- resource = true,
-            -- doodad = true,
-            -- floor = true,
-            rail = true,
-            -- transport_belt = true,
-            -- item = true,
-            -- ghost = true,
+            -- Tiles that block player movement are tagged with spiderbot_leg in data-final-fixes.
             object = true,
-            -- player = true,
-            -- car = true,
-            -- train = true,
-            -- elevated_rail = true,
-            -- elevated_train = true,
-            empty_space = true,
-            lava_tile = true,
-            -- meltable = true,
-            rail_support = true,
-            -- trigger_target = true,
             cliff = true,
-            -- is_lower_object = true,
-            -- is_object = true
             spiderbot_leg = true,
         },
         not_colliding_with_itself = true,
-        consider_tile_transitions = false,
+        consider_tile_transitions = true,
         colliding_with_tiles_only = false,
     }
     leg_prototype.minimal_step_size = leg_prototype.minimal_step_size * 4
