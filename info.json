@@ -17,7 +17,11 @@
 		"readme": "README.md",
 		"sync_portal_details": true,
 		"ignore": [
-			"**/*.psd"
-		]
+			"**/*.psd",
+			"tests/**"
+		],
+		"scripts": {
+			"prepackage": "if grep -q 'require(\"tests/runtime\")' control.lua; then echo 'Remove require(\"tests/runtime\") before packaging' >&2; exit 1; fi"
+		}
 	}
 }

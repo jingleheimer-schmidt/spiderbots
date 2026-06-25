@@ -2306,5 +2306,3 @@ local function on_configuration_changed(event)
 end
 
 script.on_configuration_changed(on_configuration_changed)
-
-require("tests/runtime")
