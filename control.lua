@@ -1174,8 +1174,19 @@ local function build_tile(spiderbot_data)
     if player and player.valid and ghost and ghost.valid and task then
         local player_character = get_player_character(player)
         if player_character and player_character.valid then
-            local item_to_place_this = task.item_to_place_this
             local tile_prototype = ghost and ghost.ghost_prototype
+            local item_to_place_this = task.item_to_place_this
+            if not item_to_place_this and tile_prototype then
+                local items_to_place_this = tile_prototype.items_to_place_this
+                local item_stack = items_to_place_this and items_to_place_this[1]
+                if item_stack then
+                    item_to_place_this = { name = item_stack.name, count = item_stack.count, quality = "normal" }
+                end
+            end
+            if not (item_to_place_this and tile_prototype) then
+                reset_task_data(spiderbot_id, player_index)
+                return
+            end
             local item_stack = { name = item_to_place_this.name, quality = item_to_place_this.quality } --[[@type ItemIDAndQualityIDPair]]
             local inventory = get_inventory_with_item(player, item_stack)
             if inventory then
