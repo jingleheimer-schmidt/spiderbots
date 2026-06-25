@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.2
-Date: ????
+Date: 2026-06-24
   Changes:
     - Item projectiles are now thrown from the player to the spiderbot, and then from the spiderbot to the target position
     - Added a Factoriopedia simulation preview for the Spiderbot item/recipe page
